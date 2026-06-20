@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Donate to WhiteImpact Development Initiative and support community-led programs across Nigeria.">
+    <title>Donate | WhiteImpact Development Initiative</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" type="image/svg+xml" href="./assets/images/favicon.svg">
+    <link rel="apple-touch-icon" href="./assets/images/favicon.svg">
+    <style>
+        /* Paystack SmartAid Minimalist Donation Page */
+        body.donate-page {
+            background: linear-gradient(135deg, #a8d8ea 0%, #e8f4f8 50%, #f5e6d3 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'DM Sans', sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+
+        body.donate-page [data-site-header],
+        body.donate-page [data-site-footer],
+        body.donate-page .partners {
+            display: none;
+        }
+
+        body.donate-page main {
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: auto;
+        }
+
+        body.donate-page .page-hero {
+            display: none;
+        }
+
+        body.donate-page .page-content {
+            padding: 0;
+            background: transparent;
+            width: 100%;
+        }
+
+        .donation-card-smartaid {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 51, 204, 0.1);
+            padding: 48px 40px;
+            width: 100%;
+            max-width: 460px;
+        }
+
+        .donate-header-smartaid {
+            text-align: center;
+            margin-bottom: 32px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .organization-name-smartaid {
+            font-size: 24px;
+            font-weight: 700;
+            color: #001a4d;
+            margin: 0 0 8px 0;
+            font-family: 'Playfair Display', serif;
+        }
+
+        .organization-subtitle-smartaid {
+            font-size: 14px;
+            color: #666;
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        .donation-form-smartaid {
+            width: 100%;
+        }
+
+        .form-group-smartaid {
+            margin-bottom: 20px;
+        }
+
+        .form-group-smartaid label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group-smartaid input,
+        .form-group-smartaid select,
+        .form-group-smartaid textarea {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: 'DM Sans', sans-serif;
+            color: #333;
+            transition: border-color 0.2s;
+            box-sizing: border-box;
+        }
+
+        .form-group-smartaid input:focus,
+        .form-group-smartaid select:focus,
+        .form-group-smartaid textarea:focus {
+            outline: none;
+            border-color: #0033cc;
+            box-shadow: 0 0 0 3px rgba(0, 51, 204, 0.1);
+        }
+
+        .form-group-smartaid input::placeholder {
+            color: #999;
+        }
+
+        .amount-input-wrapper-smartaid {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            position: relative;
+        }
+
+        .amount-input-wrapper-smartaid .currency {
+            position: absolute;
+            left: 14px;
+            font-weight: 600;
+            color: #0033cc;
+            font-size: 13px;
+        }
+
+        .amount-input-wrapper-smartaid input {
+            padding-left: 42px;
+        }
+
+        .form-row-smartaid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .form-row-smartaid .form-group-smartaid {
+            margin-bottom: 0;
+        }
+
+        @media (max-width: 480px) {
+            .form-row-smartaid {
+                grid-template-columns: 1fr;
+            }
+
+            .donation-card-smartaid {
+                padding: 32px 24px;
+            }
+
+            .organization-name-smartaid {
+                font-size: 20px;
+            }
+        }
+
+        .btn-pay-now-smartaid {
+            width: 100%;
+            padding: 14px 20px;
+            margin-top: 28px;
+            background: linear-gradient(135deg, #0033cc 0%, #0020a0 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        .btn-pay-now-smartaid:hover {
+            background: linear-gradient(135deg, #0020a0 0%, #001a4d 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 51, 204, 0.3);
+        }
+
+        .btn-pay-now-smartaid:active {
+            transform: translateY(0);
+        }
+
+        .btn-pay-now-smartaid:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .security-note-smartaid {
+            text-align: center;
+            font-size: 12px;
+            color: #999;
+            margin-top: 16px;
+            margin-bottom: 0;
+        }
+
+        .security-badge-smartaid {
+            display: inline-block;
+            padding: 6px 12px;
+            background: #f5f5f5;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #666;
+            margin-top: 12px;
+        }
+
+        /* Ensure proper layout */
+        body.donate-page {
+            padding: 0;
+        }
+
+        body.donate-page main {
+            background: transparent;
+            padding: 0;
+            margin: 0;
+        }
+
+        body.donate-page .page-content {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body class="inner-page donate-page" data-page="donate">
+    <div data-site-header></div>
+    <main id="main">
+        <section class="page-content donate-page-minimal">
+            <div class="donation-card-smartaid">
+                <!-- Logo Section -->
+                <div class="donate-header-smartaid">
+                    <h1 class="organization-name-smartaid">White Impact Development Initiative</h1>
+                    <p class="organization-subtitle-smartaid">Support community-led change across Nigeria</p>
+                </div>
+
+                <!-- Donation Form -->
+                <form class="donation-form-smartaid" data-donation-form novalidate>
+                    <!-- Name Row -->
+                    <div class="form-row-smartaid">
+                        <div class="form-group-smartaid">
+                            <label for="donor-first-name">First Name *</label>
+                            <input type="text" id="donor-first-name" name="firstName" placeholder="John" required>
+                        </div>
+                        <div class="form-group-smartaid">
+                            <label for="donor-last-name">Last Name *</label>
+                            <input type="text" id="donor-last-name" name="lastName" placeholder="Doe" required>
+                        </div>
+                    </div>
+
+                    <!-- Email -->
+                    <div class="form-group-smartaid">
+                        <label for="donor-email">Email Address *</label>
+                        <input type="email" id="donor-email" name="email" placeholder="john@example.com" required>
+                    </div>
+
+                    <!-- Phone -->
+                    <div class="form-group-smartaid">
+                        <label for="donor-phone">Phone Number *</label>
+                        <input type="tel" id="donor-phone" name="phone" placeholder="+234 8012345678" required>
+                    </div>
+
+                    <!-- Program Area -->
+                    <div class="form-group-smartaid">
+                        <label for="donation-category">Program Area *</label>
+                        <select id="donation-category" name="category" required>
+                            <option value="">Select a program...</option>
+                            <option value="education">Education Access</option>
+                            <option value="digital-learning">Digital Learning (DigitHer)</option>
+                            <option value="health-care">Health Care</option>
+                            <option value="civic-leadership">Civic Leadership</option>
+                            <option value="others">Others</option>
+                        </select>
+                    </div>
+
+                    <!-- Donation Amount -->
+                    <div class="form-group-smartaid">
+                        <label for="donation-amount">Donation Amount *</label>
+                        <div class="amount-input-wrapper-smartaid">
+                            <span class="currency">₦</span>
+                            <input type="number" id="donation-amount" name="amount" placeholder="5000" min="1000" required>
+                        </div>
+                    </div>
+
+                    <!-- Message -->
+                    <div class="form-group-smartaid">
+                        <label for="donor-message">Message (Optional)</label>
+                        <textarea id="donor-message" name="message" placeholder="Why are you supporting this cause?" rows="2"></textarea>
+                    </div>
+
+                    <!-- CTA Button -->
+                    <button class="btn-pay-now-smartaid" type="submit">Donate Now</button>
+
+                    <!-- Security Note -->
+                    <p class="security-note-smartaid">
+                        🔒 Secured by Paystack<br>
+                        <span class="security-badge-smartaid">PCI DSS Compliant</span>
+                    </p>
+                </form>
+            </div>
+        </section>
+    </main>
+    <div data-site-footer></div>
+    <script src="layout.js"></script>
+    <script src="api.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

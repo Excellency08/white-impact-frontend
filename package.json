@@ -1,0 +1,13 @@
+{
+  "name": "white-impact-frontend",
+  "version": "1.0.0",
+  "description": "White Impact Development Initiative - Frontend",
+  "main": "script.js",
+  "scripts": {
+    "serve": "npx http-server -p 5500 -c-1",
+    "start": "npm run serve"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
+}

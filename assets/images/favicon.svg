@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Background -->
+  <rect width="64" height="64" fill="#0033cc"/>
+  
+  <!-- Circle for diversity/impact -->
+  <circle cx="32" cy="32" r="24" fill="#e6f0ff" opacity="0.9"/>
+  
+  <!-- Inner accent -->
+  <circle cx="32" cy="32" r="18" fill="#001a4d"/>
+  
+  <!-- Heart symbol for initiative/care -->
+  <g transform="translate(32, 28)">
+    <path d="M -8 -2 Q -12 -6 -12 -10 Q -12 -14 -8 -14 Q -4 -10 0 -6 Q 4 -10 8 -14 Q 12 -14 12 -10 Q 12 -6 8 -2 L 0 8 Z" fill="#00cc99"/>
+  </g>
+  
+  <!-- Text mark -->
+  <text x="32" y="50" font-size="10" font-weight="bold" fill="#e6f0ff" text-anchor="middle" font-family="Arial">WII</text>
+</svg>
