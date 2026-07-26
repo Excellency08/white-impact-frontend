@@ -10,6 +10,8 @@
 
     if (yearEl) yearEl.textContent = new Date().getFullYear();
 
+    /* Theme toggling removed — site uses original styles only */
+
     /* Sticky header shadow */
     function onScroll() {
         if (header) {
@@ -29,7 +31,7 @@
     });
 
     /* Mobile menu */
-    mobileToggle?.addEventListener("click", () => {
+    mobileToggle.addEventListener("click", () => {
         const open = mobileToggle.classList.toggle("active");
         mobileToggle.setAttribute("aria-expanded", String(open));
         if (mobileNav) mobileNav.hidden = !open;

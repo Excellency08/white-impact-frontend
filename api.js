@@ -12,11 +12,15 @@
 (function () {
   "use strict";
 
-  // ── Change this to your deployed backend URL in production ──────
-  const API_BASE =
-    window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
-      ? "http://localhost:3000/api"
-      : "https://YOUR-BACKEND-URL.com/api"; // <-- update this after deployment
+  // Use the local backend for development, file:// pages, and local network hosts.
+  const LOCAL_HOSTS = ["localhost", "127.0.0.1"];
+  const LOCAL_PREFIXES = ["10.", "172.", "192.168."];
+  const isLocalHost = LOCAL_HOSTS.includes(window.location.hostname);
+  const isLocalNetwork = LOCAL_PREFIXES.some((prefix) => window.location.hostname.startsWith(prefix));
+  const isFileProtocol = window.location.protocol === "file:";
+  const API_BASE = isLocalHost || isLocalNetwork || isFileProtocol
+    ? "http://localhost:3030/api"
+    : `${window.location.origin}/api`;
 
   /* ─── Generic fetch wrapper ───────────────────────────────────── */
   async function apiPost(endpoint, data) {
@@ -38,8 +42,7 @@
     const toast = document.querySelector("[data-toast]");
     if (!toast) return;
     toast.textContent = message;
-    toast.className = `toast ${type}`;
-    toast.hidden = false;
+    toast.className = `toast ${type}`;     toast.hidden = false;
     toast.classList.add("show");
     clearTimeout(toast._timer);
     toast._timer = setTimeout(() => {
@@ -116,6 +119,123 @@
   }
 
   /* ─── Donation form ───────────────────────────────────────────── */
+  function showDonationInstructions(result) {
+    const formStep = document.querySelector('[data-donation-step="form"]');
+    const instructionsStep = document.querySelector('[data-donation-step="instructions"]');
+    if (!formStep || !instructionsStep) return;
+
+    const { reference, donation, bank } = result;
+    const amount = Number(donation?.amountNaira || 0);
+
+    document.querySelector("[data-bank-name]").textContent = bank?.bankName || "—";
+    document.querySelector("[data-bank-account-name]").textContent = bank?.accountName || "—";
+    document.querySelector("[data-bank-account-number]").textContent = bank?.accountNumber || "—";
+    document.querySelector("[data-donation-display-amount]").textContent = `₦${amount.toLocaleString()}`;
+    document.querySelector("[data-donation-reference]").textContent = reference || "—";
+
+    instructionsStep.dataset.reference = reference || "";
+    instructionsStep.dataset.programArea = donation?.programArea || "";
+
+    formStep.hidden = true;
+    instructionsStep.hidden = false;
+    instructionsStep.scrollIntoView({ behavior: "smooth", block: "start" });
+
+    const hero = document.querySelector(".page-hero-lead");
+    if (hero) {
+      hero.textContent = "Transfer to our account below, then submit your payment receipt for confirmation.";
+    }
+  }
+
+  function initReceiptForm() {
+    const form = document.querySelector("[data-receipt-form]");
+    const instructionsStep = document.querySelector('[data-donation-step="instructions"]');
+    const previewBox = document.querySelector("[data-receipt-file-preview]");
+    const fileInput = form?.querySelector('[name="receipt"]');
+    if (!form || !instructionsStep || !fileInput || !previewBox) return;
+
+    fileInput.addEventListener("change", () => {
+      const file = fileInput.files?.[0];
+      previewBox.innerHTML = "";
+
+      if (!file) {
+        previewBox.hidden = true;
+        return;
+      }
+
+      const card = document.createElement("div");
+      card.className = "receipt-file-preview-card";
+
+      const icon = document.createElement("div");
+      icon.className = "receipt-file-preview-icon";
+      icon.textContent = file.type.startsWith("image/") ? "🖼️" : "📄";
+
+      const content = document.createElement("div");
+      content.className = "receipt-file-preview-content";
+      content.innerHTML = `
+        <strong>${file.name}</strong>
+        <span>${(file.size / 1024).toFixed(1)} KB · ${file.type.replace("application/", "").replace("image/", "")}</span>
+      `;
+
+      card.append(icon, content);
+
+      if (file.type.startsWith("image/")) {
+        const thumb = document.createElement("img");
+        thumb.className = "receipt-file-preview-thumb";
+        thumb.alt = "Receipt file preview";
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          thumb.src = event.target.result;
+          previewBox.insertBefore(thumb, card);
+        };
+        reader.readAsDataURL(file);
+      }
+
+      previewBox.appendChild(card);
+      previewBox.hidden = false;
+    });
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const reference = instructionsStep.dataset.reference;
+      const file = fileInput.files?.[0];
+
+      if (!reference) {
+        showToast("Donation reference missing. Please submit the donation form again.", "error");
+        return;
+      }
+      if (!file) {
+        showToast("Please select your payment receipt to upload.", "error");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("reference", reference);
+      formData.append("receipt", file);
+
+      setFormLoading(form, true);
+      try {
+        const res = await fetch(`${API_BASE}/donate/receipt`, { method: "POST", body: formData });
+        const result = await res.json();
+
+        if (result.success) {
+          document.querySelector(".bank-transfer-details")?.setAttribute("hidden", "");
+          document.querySelector(".receipt-upload-section")?.setAttribute("hidden", "");
+          const successPanel = document.querySelector("[data-receipt-success]");
+          successPanel?.removeAttribute("hidden");
+          showToast(result.message || "Receipt submitted successfully!");
+        } else {
+          showToast(result.message || "Receipt upload failed. Please try again.", "error");
+        }
+      } catch {
+        showToast("Network error. Please check your connection.", "error");
+      } finally {
+        setFormLoading(form, false);
+      }
+    });
+  }
+
   function initDonationForm() {
     const form = document.querySelector("[data-donation-form]");
     if (!form) return;
@@ -124,11 +244,8 @@
       e.preventDefault();
       if (!form.checkValidity()) { form.reportValidity(); return; }
 
-      const firstName = document.querySelector("#donor-first-name")?.value || "";
-      const lastName = document.querySelector("#donor-last-name")?.value || "";
-
       const data = {
-        fullName: `${firstName} ${lastName}`.trim(),
+        fullName: document.querySelector("#donor-full-name")?.value,
         email:    document.querySelector("#donor-email")?.value,
         phone:    document.querySelector("#donor-phone")?.value,
         amount:   document.querySelector("#donation-amount")?.value,
@@ -141,17 +258,12 @@
         const result = await apiPost("/donate/initiate", data);
 
         if (result.success) {
-          if (result.demo) {
-            // Demo mode - redirect to home
-            setTimeout(() => {
-              window.location.href = "index.html";
-            }, 500);
-          } else {
-            // Redirect to Paystack checkout immediately (no message)
-            window.location.href = result.authorization_url;
-          }
+          showDonationInstructions(result);
         } else {
-          showToast(result.message || "Payment setup failed. Please try again.", "error");
+          const errorMessage = result.errors && result.errors.length
+            ? result.errors[0]
+            : result.message || "Could not process your donation. Please try again.";
+          showToast(errorMessage, "error");
         }
       } catch (err) {
         showToast("Network error. Please check your connection.", "error");
@@ -220,46 +332,14 @@
     });
   }
 
-  /* ─── Payment return page handler ────────────────────────────── */
-  function checkPaymentReturn() {
-    const params = new URLSearchParams(window.location.search);
-    const reference = params.get("reference") || params.get("trxref");
-    const isDemo = params.get("demo");
-
-    if (!reference) return;
-
-    // Show "verifying" state
-    const hero = document.querySelector(".page-hero-lead");
-    if (hero) hero.textContent = "Verifying your payment…";
-
-    if (isDemo) {
-      showToast("Demo donation recorded. Thank you!");
-      return;
-    }
-
-    apiGet(`/donate/verify?reference=${reference}`)
-      .then((result) => {
-        if (result.success) {
-          showToast(`Payment confirmed! Thank you for your generous donation. ❤️`);
-          if (hero) hero.textContent = "Your donation was successful! Thank you for supporting our mission.";
-        } else {
-          showToast("Payment verification failed. Please contact us.", "error");
-          if (hero) hero.textContent = "We couldn't verify your payment. Please email us at info@whiteimpactinitiative.org";
-        }
-      })
-      .catch(() => {
-        showToast("Verification error. Please contact us.", "error");
-      });
-  }
-
   /* ─── Init ────────────────────────────────────────────────────── */
   document.addEventListener("DOMContentLoaded", () => {
     initContactForm();
     initNewsletterForm();
     initDonationForm();
+    initReceiptForm();
     initTeamPhotoUpload();
     loadTeamPhotos();
-    checkPaymentReturn();
   });
 
   // Expose for debugging
