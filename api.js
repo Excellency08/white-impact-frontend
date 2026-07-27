@@ -12,15 +12,9 @@
 (function () {
   "use strict";
 
-  // Use the local backend for development, file:// pages, and local network hosts.
-  const LOCAL_HOSTS = ["localhost", "127.0.0.1"];
-  const LOCAL_PREFIXES = ["10.", "172.", "192.168."];
-  const isLocalHost = LOCAL_HOSTS.includes(window.location.hostname);
-  const isLocalNetwork = LOCAL_PREFIXES.some((prefix) => window.location.hostname.startsWith(prefix));
-  const isFileProtocol = window.location.protocol === "file:";
-  const API_BASE = isLocalHost || isLocalNetwork || isFileProtocol
-    ? "http://localhost:3030/api"
-    : `${window.location.origin}/api`;
+  // Point all frontend requests to the deployed Render API by default.
+  // You can override it locally with window.__WII_API_BASE__ if needed.
+  const API_BASE = window.__WII_API_BASE__ || "https://white-impact-api.onrender.com/api";
 
   /* ─── Generic fetch wrapper ───────────────────────────────────── */
   async function apiPost(endpoint, data) {
