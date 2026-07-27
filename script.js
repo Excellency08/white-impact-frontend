@@ -1,6 +1,12 @@
 (function () {
     "use strict";
 
+    const API_BASE = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
+        ? "https://white-impact-api.onrender.com/api"
+        : "https://white-impact-api.onrender.com/api";
+
+    window.__WII_API_BASE__ = API_BASE;
+
     const header = document.querySelector("[data-header]");
     const mobileToggle = document.querySelector("[data-mobile-toggle]");
     const mobileNav = document.querySelector("[data-mobile-nav]");
