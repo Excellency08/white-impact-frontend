@@ -55,8 +55,8 @@
             </div>
         </div>
         <div class="container header-inner">
-            <a class="brand" href="index.html" aria-label="White Impact Development Initiative home">
-                <img class="brand-logo" src="assets/images/logo.png" alt="White Impact Development Initiative logo" />
+            <a class="brand" href="index.html" aria-label="White-Impact Development Initiative home">
+                <img class="brand-logo" src="assets/images/logo.png" alt="White-Impact Development Initiative logo" />
                 <span class="brand-text">
                     <span class="brand-name">White Impact Development Initiative</span>
                     <span class="brand-tagline">Community-led change</span>
@@ -144,7 +144,7 @@
                 <div class="footer-col">
                     <p class="footer-title">Connect</p>
                     <a href="mailto:info@whiteimpactinitiative.org">info@whiteimpactinitiative.org</a>
-                    <a href="tel:+2348146600001">+234 814 660 0001</a>
+                    <a href="tel:+2347065299613">+234 706 529 9613</a>
                     <a href="#">Facebook</a>
                     <a href="#">LinkedIn</a>
                 </div>
