@@ -82,6 +82,7 @@
                     </div>
                 </div>
                 <a class="nav-link${isActive("work-with-us")}" href="work-with-us.html">Work With Us</a>
+                <a class="nav-link${isActive("partner-with-us")}" href="partner-with-us.html">Partner With Us</a>
             </nav>
             <div class="header-actions">
                 <a class="btn btn-primary" href="donate.html">Donate</a>
@@ -108,6 +109,7 @@
                     <div class="mobile-nav-row">
                         <a class="mobile-link mobile-link-sm${isActiveMobile("nextgen-civic-lab")}" href="nextgen-civic-lab.html">NextGen Civic Lab</a>
                         <a class="mobile-link mobile-link-sm${isActiveMobile("work-with-us")}" href="work-with-us.html">Work With Us</a>
+                        <a class="mobile-link mobile-link-sm${isActiveMobile("partner-with-us")}" href="partner-with-us.html">Partner With Us</a>
                     </div>
                 </div>
                 <a class="btn btn-primary btn-block" href="donate.html">Donate Now</a>
