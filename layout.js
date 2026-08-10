@@ -64,13 +64,8 @@
             </a>
             <nav class="nav" aria-label="Primary navigation" data-nav>
                 <a class="nav-link${isActive("home")}" href="index.html">Home</a>
-                <div class="nav-dropdown" data-dropdown>
-                    <button class="nav-link nav-btn${page.startsWith("our") || page === "advisory-board" ? " active" : ""}" type="button" data-dropdown-trigger aria-expanded="false">
-                        Our Story
-                        <svg class="chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
-                    </button>
-                    <div class="dropdown-panel">${dropdownLinks(nav.about)}</div>
-                </div>
+                <a class="nav-link${isActive("our-story")}" href="our-story.html">Our Story</a>
+                <a class="nav-link${isActive("advisory-board")}" href="advisory-board.html">Our Members</a>
                 <div class="nav-dropdown" data-dropdown>
                     <button class="nav-link nav-btn${nav.solutions.some((s) => s.id === page) || page === "solutions" ? " active" : ""}" type="button" data-dropdown-trigger aria-expanded="false">
                         Our Programs
