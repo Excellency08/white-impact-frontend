@@ -503,7 +503,7 @@ ul {
 }
 
 .mobile-nav-inner {
-    width: min(680px, 100% - 2rem);
+    width: min(680px, 100%);
     margin-inline: auto;
     display: flex;
     flex-direction: column;
@@ -796,6 +796,25 @@ ul {
 
     50% {
         transform: translateY(-10px);
+    }
+}
+
+/* Mobile: make mobile nav truly wall-to-wall */
+@media (max-width: 768px) {
+    .mobile-nav-inner {
+        width: 100%;
+        margin: 0;
+        padding: 1.25rem 0 1.5rem;
+    }
+
+    .mobile-nav {
+        padding: 0;
+        border-radius: 0;
+    }
+
+    .mobile-link,
+    .mobile-nav .btn-block {
+        border-radius: 0;
     }
 }
 
@@ -1911,6 +1930,36 @@ ul {
         display: none;
     }
 
+    /* Keep the expanded mobile menu flush with the viewport edges. */
+    .mobile-nav-inner {
+        width: 100%;
+        margin: 0;
+        gap: 0;
+        padding: 0;
+    }
+
+    .mobile-nav-section {
+        gap: 0;
+        border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+    }
+
+    .mobile-nav-label {
+        padding: 1rem 1rem 0.45rem;
+    }
+
+    .mobile-link {
+        padding: 1rem;
+        border: 0;
+        border-radius: 0;
+        border-top: 1px solid rgba(15, 23, 42, 0.06);
+    }
+
+    .mobile-nav .btn-block {
+        margin: 0;
+        border-radius: 0;
+        box-shadow: none;
+    }
+
     .hero {
         min-height: auto;
     }
@@ -1960,7 +2009,7 @@ ul {
 
 @media (max-width: 480px) {
     .container {
-        width: min(1200px, 100% - 1.5rem);
+        width: min(1200px, 100%);
     }
 
     .hero-actions {
@@ -1969,10 +2018,6 @@ ul {
 
     .hero-actions .btn {
         width: 100%;
-    }
-
-    .mobile-nav-inner {
-        width: min(680px, 100% - 1.5rem);
     }
 
     .donate-options {
