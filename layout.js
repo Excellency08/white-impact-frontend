@@ -86,7 +86,7 @@
                 </button>
             </div>
         </div>
-        <nav class="mobile-nav" id="mobile-navigation" aria-label="Mobile navigation" data-mobile-nav hidden>
+        <nav class="mobile-nav mobile-nav--side" id="mobile-navigation" aria-label="Mobile navigation" data-mobile-nav hidden>
             <div class="mobile-nav-inner">
                 <div class="mobile-nav-section">
                     <p class="mobile-nav-label">Main</p>
