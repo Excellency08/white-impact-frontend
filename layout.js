@@ -48,9 +48,9 @@
                     +234 706 529 9613
                 </a>
                 <div class="top-social" aria-label="Social media">
-                    <a href="https://www.facebook.com/share/18rQd6wgFj/" aria-label="Facebook" target="_blank"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" target="_blank"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></a>
-                    <a href="x.com/whiteimpactinitiative.com" aria-label="Twitter / X"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" target="_blank"><path d="M4 4l7.5 9.5L4 20h2.5l5.5-6.5L16.5 20H20l-7.8-10.2L19.5 4h-2.5l-5 5.8L7.5 4H4z"/></svg></a>
-                    <a href="https://linkedin.com/company/white-initiative-project" aria-label="LinkedIn" target="_blank"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6zM2 9h4v12H2zM4 6a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/></svg></a>
+                    <a href="https://www.facebook.com/share/18rQd6wgFj/" aria-label="Facebook" target="_blank" rel="noopener noreferrer"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></a>
+                    <a href="https://x.com/whiteimpactinitiative" aria-label="Twitter / X" target="_blank" rel="noopener noreferrer"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M4 4l7.5 9.5L4 20h2.5l5.5-6.5L16.5 20H20l-7.8-10.2L19.5 4h-2.5l-5 5.8L7.5 4H4z"/></svg></a>
+                    <a href="https://linkedin.com/company/white-initiative-project" aria-label="LinkedIn" target="_blank" rel="noopener noreferrer"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6zM2 9h4v12H2zM4 6a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/></svg></a>
                 </div>
             </div>
         </div>
@@ -81,35 +81,39 @@
             </nav>
             <div class="header-actions">
                 <a class="btn btn-primary" href="donate.html">Donate</a>
-                <button class="burger" type="button" data-mobile-toggle aria-label="Open menu" aria-expanded="false">
+                <button class="burger" type="button" data-mobile-toggle aria-label="Open menu" aria-controls="mobile-navigation" aria-expanded="false">
                     <span></span><span></span><span></span>
                 </button>
             </div>
         </div>
-        <div class="mobile-nav" data-mobile-nav hidden>
+        <nav class="mobile-nav" id="mobile-navigation" aria-label="Mobile navigation" data-mobile-nav hidden>
             <div class="mobile-nav-inner">
-                <p class="mobile-nav-label">Main</p>
-                <a class="mobile-link${isActiveMobile("home")}" href="index.html">Home</a>
-                <p class="mobile-nav-label">About</p>
-                <div class="mobile-nav-group">
+                <div class="mobile-nav-section">
+                    <p class="mobile-nav-label">Main</p>
+                    <a class="mobile-link${isActiveMobile("home")}" href="index.html">Home</a>
+                </div>
+                <div class="mobile-nav-section">
+                    <p class="mobile-nav-label">About</p>
                     <a class="mobile-link mobile-link-sm${isActiveMobile("our-story")}" href="our-story.html">Our Story</a>
                     <a class="mobile-link mobile-link-sm${isActiveMobile("advisory-board")}" href="advisory-board.html">Our Members</a>
                 </div>
-                <p class="mobile-nav-label">Programs</p>
-                <div class="mobile-nav-grid">
+                <div class="mobile-nav-section">
+                    <p class="mobile-nav-label">Programs</p>
                     <a class="mobile-link mobile-link-sm${isActiveMobile("solutions")}" href="solutions.html">All Programs</a>
                     <a class="mobile-link mobile-link-sm${isActiveMobile("edu4all")}" href="edu4all.html">Edu4All</a>
                     <a class="mobile-link mobile-link-sm${isActiveMobile("creative-lab")}" href="creative-lab.html">Creative Lab</a>
                     <a class="mobile-link mobile-link-sm${isActiveMobile("blood-donation")}" href="blood-donation.html">Blood Donation</a>
-                    <div class="mobile-nav-row">
-                        <a class="mobile-link mobile-link-sm${isActiveMobile("nextgen-civic-lab")}" href="nextgen-civic-lab.html">NextGen Civic Lab</a>
-                        <a class="mobile-link mobile-link-sm${isActiveMobile("work-with-us")}" href="work-with-us.html">Work With Us</a>
-                        <a class="mobile-link mobile-link-sm${isActiveMobile("partner-with-us")}" href="partner-with-us.html">Partner With Us</a>
-                    </div>
+                    <a class="mobile-link mobile-link-sm${isActiveMobile("nextgen-ai")}" href="nextgen-ai.html">NextGen AI</a>
+                    <a class="mobile-link mobile-link-sm${isActiveMobile("nextgen-civic-lab")}" href="nextgen-civic-lab.html">NextGen Civic Action Lab</a>
+                </div>
+                <div class="mobile-nav-section">
+                    <p class="mobile-nav-label">Get involved</p>
+                    <a class="mobile-link mobile-link-sm${isActiveMobile("work-with-us")}" href="work-with-us.html">Work With Us</a>
+                    <a class="mobile-link mobile-link-sm${isActiveMobile("partner-with-us")}" href="partner-with-us.html">Partner With Us</a>
                 </div>
                 <a class="btn btn-primary btn-block" href="donate.html">Donate Now</a>
             </div>
-        </div>
+        </nav>
     </header>`;
 
     const footerHTML = `
@@ -142,8 +146,8 @@
                     <p class="footer-title">Connect</p>
                     <a href="mailto:info@whiteimpactinitiative.org">info@whiteimpactinitiative.org</a>
                     <a href="tel:+2347065299613">+234 706 529 9613</a>
-                    <a href="#">Facebook</a>
-                    <a href="#">LinkedIn</a>
+                    <a href="https://www.facebook.com/share/18rQd6wgFj/" target="_blank" rel="noopener noreferrer">Facebook</a>
+                    <a href="https://linkedin.com/company/white-initiative-project" target="_blank" rel="noopener noreferrer">LinkedIn</a>
                 </div>
             </div>
         </div>
@@ -166,4 +170,3 @@
     if (headerSlot) headerSlot.innerHTML = headerHTML;
     if (footerSlot) footerSlot.innerHTML = footerHTML;
 })();
-

@@ -37,18 +37,35 @@
     });
 
     /* Mobile menu */
-    mobileToggle.addEventListener("click", () => {
-        const open = mobileToggle.classList.toggle("active");
+    function setMobileMenu(open) {
+        if (!mobileToggle || !mobileNav) return;
+
+        mobileToggle.classList.toggle("active", open);
         mobileToggle.setAttribute("aria-expanded", String(open));
-        if (mobileNav) mobileNav.hidden = !open;
+        mobileToggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+        mobileNav.hidden = !open;
+        document.body.classList.toggle("menu-open", open);
+    }
+
+    mobileToggle?.addEventListener("click", () => {
+        setMobileMenu(!mobileToggle.classList.contains("active"));
     });
 
     mobileNav?.querySelectorAll("a").forEach((link) => {
         link.addEventListener("click", () => {
-            mobileToggle?.classList.remove("active");
-            mobileToggle?.setAttribute("aria-expanded", "false");
-            if (mobileNav) mobileNav.hidden = true;
+            setMobileMenu(false);
         });
+    });
+
+    document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && mobileToggle?.classList.contains("active")) {
+            setMobileMenu(false);
+            mobileToggle.focus();
+        }
+    });
+
+    window.addEventListener("resize", () => {
+        if (window.innerWidth > 768) setMobileMenu(false);
     });
 
     /* Dropdown menus */
