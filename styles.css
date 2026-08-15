@@ -1946,9 +1946,9 @@ ul {
 }
 
 @media (max-width: 480px) {
-    .container {
+    /* .container {
         width: min(1200px, 100% - 1.5rem);
-    }
+    } */
 
     .hero-actions {
         flex-direction: column;

@@ -37,52 +37,18 @@
     });
 
     /* Mobile menu */
-    function ensureOverlay() {
-        let overlay = document.querySelector("[data-mobile-overlay]");
-        if (!overlay) {
-            overlay = document.createElement("div");
-            overlay.dataset.mobileOverlay = "";
-            overlay.className = "mobile-nav-overlay";
-            overlay.hidden = true;
-            document.body.appendChild(overlay);
-        }
-        return overlay;
-    }
-
-    function setMobileMenu(open, mode = "overlay") {
+    function setMobileMenu(open) {
         if (!mobileToggle || !mobileNav) return;
 
         mobileToggle.classList.toggle("active", open);
         mobileToggle.setAttribute("aria-expanded", String(open));
         mobileToggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
-
-        const overlay = ensureOverlay();
-
-        // If nav is side-drawer variant, toggle `open` class to animate width
-        if (mobileNav.classList.contains("mobile-nav--side")) {
-            mobileNav.classList.toggle("open", open);
-            mobileNav.classList.toggle("full", false); // leaving full control to callers
-            mobileNav.hidden = false;
-            overlay.hidden = !open;
-            document.body.classList.toggle("menu-open", open);
-        } else {
-            mobileNav.hidden = !open;
-            overlay.hidden = true;
-            document.body.classList.toggle("menu-open", open);
-        }
+        mobileNav.hidden = !open;
+        document.body.classList.toggle("menu-open", open);
     }
 
     mobileToggle?.addEventListener("click", () => {
-        const opening = !mobileToggle.classList.contains("active");
-        setMobileMenu(opening);
-    });
-
-    // overlay click closes menu
-    document.addEventListener("click", (e) => {
-        const overlay = ensureOverlay();
-        if (e.target === overlay) {
-            setMobileMenu(false);
-        }
+        setMobileMenu(!mobileToggle.classList.contains("active"));
     });
 
     mobileNav?.querySelectorAll("a").forEach((link) => {
