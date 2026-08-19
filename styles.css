@@ -1011,6 +1011,18 @@ ul {
     transition: all var(--transition);
 }
 
+.value-card.visible {
+    position: relative;
+    padding: 2rem 2rem 2rem 5.25rem;
+}
+
+.value-card.visible .value-icon {
+    position: absolute;
+    top: 2rem;
+    left: 1rem;
+    margin-bottom: 0;
+}
+
 .value-card:hover {
     border-color: var(--color-primary);
     box-shadow: var(--shadow-md);
@@ -1032,12 +1044,18 @@ ul {
 .value-card h3 {
     font-size: 1.125rem;
     color: var(--color-navy);
-    margin-bottom: 0.75rem;
+    margin: 0 0 0.75rem;
 }
 
 .value-card p {
     font-size: 0.9375rem;
     color: var(--color-gray-600);
+    margin: 0;
+}
+
+.value-card.visible h3,
+.value-card.visible p {
+    margin-left: 0;
 }
 
 /* Programs */
@@ -2244,9 +2262,9 @@ body.inner-page main {
 
 
 .cta-band {
-    background: var(--color-primary);
+    background: #e6f0ff;
     padding: 3.5rem 0;
-    color: var(--color-white);
+    color: #001a4d;
 }
 
 .cta-inner {
@@ -2264,7 +2282,7 @@ body.inner-page main {
 }
 
 .cta-inner p {
-    color: rgba(255, 255, 255, 0.85);
+    color: #001a4d;
 }
 
 /* Blog */
