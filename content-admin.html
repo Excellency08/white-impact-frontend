@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow, noarchive" />
+    <meta
+      name="description"
+      content="White Impact content editor for programs, projects, stories, and impact metrics."
+    />
+    <title>Content Editor | White Impact Development Initiative</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Playfair+Display:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="icon" type="image/png" href="./assets/images/logo.png" />
+    <link rel="apple-touch-icon" href="./assets/images/logo.png" />
+  </head>
+  <body class="inner-page" data-page="content-admin">
+    <div data-site-header></div>
+    <main id="main">
+      <section class="page-hero admin-hero">
+        <div class="container">
+          <nav class="breadcrumb" aria-label="Breadcrumb">
+            <a href="index.html">Home</a> / <a href="admin.html">Admin</a> /
+            <span>Content Editor</span>
+          </nav>
+          <h1>Content Editor</h1>
+          <p class="page-hero-lead" data-content-admin-status>
+            Sign in through the admin console to edit programs, projects,
+            stories, impact metrics, CMS pages, and team records.
+          </p>
+        </div>
+      </section>
+
+      <section class="section content-admin-section">
+        <div class="container content-admin-shell">
+          <aside class="admin-panel content-admin-sidebar">
+            <div class="section-head content-admin-head">
+              <p class="section-kicker">Overview</p>
+              <h2 data-content-admin-title>Content Editor</h2>
+              <p class="section-desc" data-content-admin-help>
+                Choose a record type to review live data and save changes back
+                to the CMS database.
+              </p>
+            </div>
+
+            <div
+              class="content-admin-summary-grid"
+              data-content-admin-summary
+            ></div>
+
+            <div class="content-admin-sidebar-actions">
+              <a class="btn btn-primary btn-block" href="admin.html"
+                >Back to Admin Console</a
+              >
+              <button
+                class="btn btn-ghost btn-block"
+                type="button"
+                data-content-admin-refresh
+              >
+                Refresh content
+              </button>
+            </div>
+          </aside>
+
+          <article class="admin-panel content-admin-workbench">
+            <div class="content-admin-toolbar">
+              <div>
+                <p class="section-kicker">Workbench</p>
+                <h2>Database-backed content</h2>
+                <p class="section-desc">
+                  Switch between tabs to edit the records that power the public
+                  site.
+                </p>
+              </div>
+              <button
+                class="btn btn-ghost"
+                type="button"
+                data-content-admin-logout
+              >
+                Sign Out
+              </button>
+            </div>
+
+            <div class="content-admin-tabs" data-content-admin-tabs></div>
+            <div class="content-admin-panels" data-content-admin-panels></div>
+          </article>
+        </div>
+      </section>
+    </main>
+    <div data-site-footer></div>
+    <script src="layout.js"></script>
+    <script src="api.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>

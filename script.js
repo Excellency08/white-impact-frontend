@@ -13,6 +13,9 @@
     const backToTop = document.querySelector("[data-back-to-top]");
     const yearEl = document.querySelector("[data-year]");
     const toast = document.querySelector("[data-toast]");
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const supportsIntersectionObserver = "IntersectionObserver" in window;
+    let scrollFrame = 0;
 
     if (yearEl) yearEl.textContent = new Date().getFullYear();
 
@@ -28,12 +31,20 @@
         }
     }
 
-    window.addEventListener("scroll", onScroll, { passive: true });
+    function scheduleScrollState() {
+        if (scrollFrame) return;
+        scrollFrame = window.requestAnimationFrame(() => {
+            scrollFrame = 0;
+            onScroll();
+        });
+    }
+
+    window.addEventListener("scroll", scheduleScrollState, { passive: true });
     onScroll();
 
     /* Back to top */
     backToTop?.addEventListener("click", () => {
-        window.scrollTo({ top: 0, behavior: "smooth" });
+        window.scrollTo({ top: 0, behavior: prefersReducedMotion ? "auto" : "smooth" });
     });
 
     /* Mobile menu */
@@ -94,34 +105,46 @@
 
     /* Scroll animations */
     const animateEls = document.querySelectorAll("[data-animate]");
-    const observer = new IntersectionObserver(
-        (entries) => {
-            entries.forEach((entry) => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add("visible");
-                    observer.unobserve(entry.target);
-                }
-            });
-        },
-        { threshold: 0.15, rootMargin: "0px 0px -40px 0px" }
-    );
-    animateEls.forEach((el) => observer.observe(el));
+    if (!supportsIntersectionObserver || prefersReducedMotion) {
+        animateEls.forEach((el) => el.classList.add("visible"));
+    } else {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add("visible");
+                        observer.unobserve(entry.target);
+                    }
+                });
+            },
+            { threshold: 0.15, rootMargin: "0px 0px -40px 0px" }
+        );
+        animateEls.forEach((el) => observer.observe(el));
+    }
 
     /* Animated counters */
     const statNumbers = document.querySelectorAll("[data-count]");
-    const counterObserver = new IntersectionObserver(
-        (entries) => {
-            entries.forEach((entry) => {
-                if (entry.isIntersecting) {
-                    animateCounter(entry.target);
-                    counterObserver.unobserve(entry.target);
-                }
-            });
-        },
-        { threshold: 0.5 }
-    );
+    if (!supportsIntersectionObserver || prefersReducedMotion) {
+        statNumbers.forEach((el) => {
+            const target = parseInt(el.dataset.count, 10) || 0;
+            const suffix = el.dataset.suffix || "";
+            el.textContent = target.toLocaleString() + suffix;
+        });
+    } else {
+        const counterObserver = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        animateCounter(entry.target);
+                        counterObserver.unobserve(entry.target);
+                    }
+                });
+            },
+            { threshold: 0.5 }
+        );
 
-    statNumbers.forEach((el) => counterObserver.observe(el));
+        statNumbers.forEach((el) => counterObserver.observe(el));
+    }
 
     function animateCounter(el) {
         const target = parseInt(el.dataset.count, 10);
@@ -172,6 +195,7 @@
         nextBtn?.addEventListener("click", () => goTo(current + 1));
 
         function startAutoplay() {
+            if (prefersReducedMotion) return;
             autoplayTimer = setInterval(() => goTo(current + 1), 6000);
         }
 
@@ -179,9 +203,18 @@
             clearInterval(autoplayTimer);
         }
 
-        slider.addEventListener("mouseenter", stopAutoplay);
-        slider.addEventListener("mouseleave", startAutoplay);
-        startAutoplay();
+        if (!prefersReducedMotion) {
+            slider.addEventListener("mouseenter", stopAutoplay);
+            slider.addEventListener("mouseleave", startAutoplay);
+            document.addEventListener("visibilitychange", () => {
+                if (document.hidden) {
+                    stopAutoplay();
+                } else {
+                    startAutoplay();
+                }
+            });
+            startAutoplay();
+        }
     }
 
     /* Donate amount selection */
@@ -214,81 +247,6 @@
 
     /* Forms handled by api.js for backend integration */
 
-    /* Team photo upload handler */
-    document.querySelectorAll(".team-photo-upload").forEach((fileInput) => {
-        const photoIndex = fileInput.dataset.photoIndex;
-        const teamCard = fileInput.closest(".team-card");
-        
-        fileInput.addEventListener("change", (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    const imageUrl = event.target.result;
-                    const photoDiv = teamCard.querySelector(`[data-team-photo]`);
-                    if (photoDiv) {
-                        photoDiv.style.backgroundImage = `url('${imageUrl}')`;
-                        photoDiv.style.backgroundSize = "cover";
-                        photoDiv.style.backgroundPosition = "center";
-                        localStorage.setItem(`team-photo-${photoIndex}`, imageUrl);
-                    }
-                };
-                reader.readAsDataURL(file);
-            }
-        });
-    });
-
-    // Load saved team photos from localStorage
-    document.querySelectorAll("[data-team-photo]").forEach((photoDiv) => {
-        const teamCard = photoDiv.closest(".team-card");
-        const photoIndex = teamCard.dataset.teamIndex;
-        const savedImage = localStorage.getItem(`team-photo-${photoIndex}`);
-        if (savedImage) {
-            photoDiv.style.backgroundImage = `url('${savedImage}')`;
-            photoDiv.style.backgroundSize = "cover";
-            photoDiv.style.backgroundPosition = "center";
-        }
-    });
-
-    /* Report year and PDF upload handler */
-    const reportYearSelect = document.querySelector("#report-year");
-    const reportPdfInput = document.querySelector("#report-pdf");
-    const previewYear = document.querySelector("#preview-year");
-    const reportMock = document.querySelector("#report-preview");
-
-    reportYearSelect?.addEventListener("change", (e) => {
-        const selectedYear = e.target.value;
-        if (selectedYear && previewYear) {
-            previewYear.textContent = selectedYear;
-        }
-    });
-
-    reportPdfInput?.addEventListener("change", (e) => {
-        const file = e.target.files[0];
-        if (file && file.type === "application/pdf") {
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                const year = reportYearSelect?.value || "2025";
-                const pdfUrl = event.target.result;
-                if (reportMock) {
-                    reportMock.innerHTML = `
-                        <span>${year}</span>
-                        <strong>Impact Report</strong>
-                        <div style="margin-top: 1rem; font-size: 0.875rem; color: #ddd;">
-                            <p>✓ PDF Ready</p>
-                            <p style="font-size: 0.75rem; margin-top: 0.5rem;">${file.name}</p>
-                        </div>
-                    `;
-                }
-                localStorage.setItem(`report-pdf-${year}`, pdfUrl);
-                showToast(`${year} report uploaded successfully!`);
-            };
-            reader.readAsDataURL(file);
-        } else {
-            showToast("Please upload a valid PDF file.");
-        }
-    });
-
     /* Toast notification */
     let toastTimer;
 
@@ -312,7 +270,10 @@
             const target = document.querySelector(id);
             if (target) {
                 e.preventDefault();
-                target.scrollIntoView({ behavior: "smooth" });
+                target.scrollIntoView({
+                    behavior: prefersReducedMotion ? "auto" : "smooth",
+                    block: "start",
+                });
             }
         });
     });

@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Editorial story detail page for White Impact Development Initiative."
+    />
+    <title>Story | White Impact Development Initiative</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Playfair+Display:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="icon" type="image/png" href="./assets/images/logo.png" />
+    <link rel="apple-touch-icon" href="./assets/images/logo.png" />
+  </head>
+  <body class="inner-page" data-page="story">
+    <div data-site-header></div>
+    <main id="main">
+      <section class="page-hero">
+        <div class="container">
+          <nav class="breadcrumb" aria-label="Breadcrumb">
+            <a href="index.html">Home</a> / <a href="stories.html">Stories</a> /
+            <span>Story</span>
+          </nav>
+          <h1>Story</h1>
+          <p class="page-hero-lead" data-story-summary>
+            Live story content will hydrate here from the database.
+          </p>
+        </div>
+      </section>
+
+      <section class="page-content">
+        <div class="container story-layout">
+          <article class="story-article">
+            <div class="story-article-head" data-animate>
+              <p class="section-kicker">Editorial feature</p>
+              <h2>Story overview</h2>
+              <div class="story-detail-meta">
+                <span data-story-meta-block="author">White Impact Team</span>
+                <span data-story-meta-block="program">Program story</span>
+                <span data-story-meta-block="location">Nigeria</span>
+                <span data-story-meta-block="date">Publication date</span>
+              </div>
+              <div class="story-tags" data-story-tags>
+                <span>Editorial</span>
+              </div>
+            </div>
+            <div class="story-content prose" data-story-content>
+              <p>
+                This section is populated from the stories table and can be
+                updated through the editorial workflow.
+              </p>
+              <p>
+                Each published story can include paragraphs, quotes, images, and
+                gallery items so field reporting feels as rich as the work
+                itself.
+              </p>
+            </div>
+          </article>
+          <aside class="story-aside" data-animate>
+            <img
+              src="./assets/images/hero image.jpeg"
+              alt="Story preview"
+              class="story-hero-image"
+              data-story-hero-image
+            />
+            <div class="story-aside-card">
+              <p class="section-kicker">Story details</p>
+              <h3>Publication notes</h3>
+              <ul class="story-note-list">
+                <li>
+                  <strong>Author</strong>
+                  <span data-story-author>White Impact Team</span>
+                </li>
+                <li>
+                  <strong>Program</strong>
+                  <span data-story-program>Program story</span>
+                </li>
+                <li>
+                  <strong>Location</strong>
+                  <span data-story-location>Nigeria</span>
+                </li>
+                <li>
+                  <strong>Date</strong>
+                  <span data-story-date>Publication date</span>
+                </li>
+              </ul>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <div class="story-page-end"></div>
+
+      <section class="cta-band">
+        <div class="container cta-inner">
+          <div>
+            <h2>Have a story worth publishing?</h2>
+            <p>
+              We turn program and community work into editorial pieces that are
+              clear, respectful, and built to last.
+            </p>
+          </div>
+          <a class="btn btn-light" href="contact.html">Pitch a Story</a>
+        </div>
+      </section>
+    </main>
+    <div data-site-footer></div>
+    <script src="layout.js"></script>
+    <script src="api.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>

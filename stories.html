@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Read editorial stories from White Impact Development Initiative, with field reporting, community voices, and program highlights."
+    />
+    <title>Stories | White Impact Development Initiative</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Playfair+Display:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="icon" type="image/png" href="./assets/images/logo.png" />
+    <link rel="apple-touch-icon" href="./assets/images/logo.png" />
+  </head>
+  <body class="inner-page" data-page="stories">
+    <div data-site-header></div>
+    <main id="main">
+      <section class="page-hero">
+        <div class="container">
+          <nav class="breadcrumb" aria-label="Breadcrumb">
+            <a href="index.html">Home</a> / <span>Stories</span>
+          </nav>
+          <h1>Stories</h1>
+          <p class="page-hero-lead">
+            Editorial narratives from the field, written to show the people,
+            places, and partnerships shaping White Impact's work.
+          </p>
+        </div>
+      </section>
+
+      <section class="page-content">
+        <div class="container">
+          <div class="section-head" data-animate>
+            <p class="section-kicker">Editorial desk</p>
+            <h2>Latest stories from the database</h2>
+            <p class="section-desc">
+              Each story pulls its title, excerpt, author, images, and tags
+              directly from PostgreSQL so the page stays current.
+            </p>
+          </div>
+          <div class="stories-grid">
+            <a class="story-card" href="#" data-animate>
+              <div class="story-card-image">
+                <img
+                  src="./assets/images/hero image.jpeg"
+                  alt="Loading stories"
+                  loading="lazy"
+                />
+              </div>
+              <div class="story-card-body">
+                <p class="story-meta">Editorial team</p>
+                <h3>Loading stories</h3>
+                <p>The live story records will appear here.</p>
+                <span class="program-link">Please wait →</span>
+              </div>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <section class="cta-band">
+        <div class="container cta-inner">
+          <div>
+            <h2>Want your project story told well?</h2>
+            <p>
+              Partner with White Impact to document community-led change with
+              care, clarity, and strong editorial framing.
+            </p>
+          </div>
+          <a class="btn btn-light" href="contact.html">Contact Us</a>
+        </div>
+      </section>
+    </main>
+    <div data-site-footer></div>
+    <script src="layout.js"></script>
+    <script src="api.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>

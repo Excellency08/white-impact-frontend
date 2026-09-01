@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Browse White Impact Development Initiative reports, publications, and downloadable resources."
+    />
+    <title>Reports | White Impact Development Initiative</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Playfair+Display:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="icon" type="image/png" href="./assets/images/logo.png" />
+    <link rel="apple-touch-icon" href="./assets/images/logo.png" />
+  </head>
+  <body class="inner-page" data-page="reports">
+    <div data-site-header></div>
+    <main id="main">
+      <section class="page-hero">
+        <div class="container">
+          <nav class="breadcrumb" aria-label="Breadcrumb">
+            <a href="index.html">Home</a> / <span>Reports</span>
+          </nav>
+          <h1>Reports</h1>
+          <p class="page-hero-lead">
+            Downloadable publications, plans, and reports for partners,
+            supporters, and the public.
+          </p>
+        </div>
+      </section>
+
+      <section class="page-content">
+        <div class="container">
+          <div class="section-head" data-animate>
+            <p class="section-kicker">Publications</p>
+            <h2>Library of downloadable reports</h2>
+            <p class="section-desc">
+              Reports are tracked in PostgreSQL and download clicks are counted
+              for basic analytics.
+            </p>
+          </div>
+          <div class="reports-grid">
+            <a class="report-card-item" href="#" data-animate>
+              <div class="report-card-item-top">
+                <span class="report-card-category">Publication</span>
+                <span class="report-card-downloads">0 downloads</span>
+              </div>
+              <div class="report-card-item-body">
+                <h3>Loading reports</h3>
+                <p>The live report records will appear here.</p>
+                <span class="program-link">Please wait →</span>
+              </div>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <section class="cta-band">
+        <div class="container cta-inner">
+          <div>
+            <h2>Need a publication or partner brief?</h2>
+            <p>
+              We can help package your work into a clear, downloadable report
+              with the right editorial structure.
+            </p>
+          </div>
+          <a class="btn btn-light" href="contact.html">Contact Us</a>
+        </div>
+      </section>
+    </main>
+    <div data-site-footer></div>
+    <script src="layout.js"></script>
+    <script src="api.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>

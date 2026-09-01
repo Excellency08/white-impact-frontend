@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow, noarchive" />
+    <title>Sign In | White Impact Admin</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="icon" type="image/png" href="./assets/images/logo.png" />
+  </head>
+  <body class="admin-login-page" data-page="admin-login">
+    <main class="admin-login-card" id="main">
+      <a class="admin-login-brand" href="index.html" aria-label="White Impact home">
+        <img src="assets/images/logo.png" alt="" />
+        <span>White Impact Admin</span>
+      </a>
+      <div class="section-head">
+        <p class="section-kicker">Secure workspace</p>
+        <h1>Sign in</h1>
+        <p class="section-desc">Use your verified administrator account to continue.</p>
+      </div>
+      <form class="admin-form" data-admin-login-form>
+        <div class="form-group">
+          <label for="admin-login-email">Email</label>
+          <input id="admin-login-email" name="email" type="email" autocomplete="username" required />
+        </div>
+        <div class="form-group">
+          <label for="admin-login-password">Password</label>
+          <input id="admin-login-password" name="password" type="password" autocomplete="current-password" required />
+        </div>
+        <button class="btn btn-primary" type="submit">Sign In</button>
+      </form>
+      <p class="form-message" data-admin-status role="status" aria-live="polite"></p>
+    </main>
+    <script src="api.js"></script>
+  </body>
+</html>

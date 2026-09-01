@@ -31,6 +31,16 @@
                 </div>
             </div>
         </section>
+        <section class="section volunteer-section">
+            <div class="container">
+                <div class="section-head" data-animate>
+                    <p class="section-kicker">Volunteer</p>
+                    <h2>Apply to volunteer</h2>
+                    <p class="section-desc">Tell us about your background, availability, and the kinds of programs you want to support. Applications are stored in PostgreSQL and reviewed by the team.</p>
+                </div>
+
+            </div>
+        </section>
         <section class="section contact" id="contact">
             <div class="container">
                 <div class="contact-grid">
@@ -39,24 +49,31 @@
                         <h2>Send Us a Message</h2>
                         <p>Tell us how you'd like to get involved and our team will respond within 2 business days.</p>
                         <ul class="contact-list">
-                            <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>No 06, Saminaka Street, Babban Saura 800104, Kaduna, Nigeria</li>
+                            <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>No. 4A Marafa Estate Kaduna, Kaduna State, Nigeria</li>
                             <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>+234 706 529 9613</li>
                             <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"/><path d="m22 6-10 7L2 6"/></svg>info@whiteimpactinitiative.org</li>
                         </ul>
                     </div>
-                    <form class="contact-form" data-contact novalidate data-animate>
-                        <div class="form-row">
-                            <div class="form-group"><label for="name">Full Name</label><input type="text" id="name" name="name" required autocomplete="name"></div>
-                            <div class="form-group"><label for="contact-email">Email</label><input type="email" id="contact-email" name="email" required autocomplete="email"></div>
-                        </div>
-                        <div class="form-group">
-                            <label for="subject">Subject</label>
-                            <input type="text" id="subject" name="subject" required autocomplete="subject" placeholder="Enter the subject of your message">
-                        </div>
-                        <div class="form-group"><label for="message">Message</label><textarea id="message" name="message" rows="5" required minlength="10"></textarea></div>
-                        <button class="btn btn-primary" type="submit">Send Message</button>
-                        <p class="form-message" data-form-message hidden></p>
-                    </form>
+                    <form class="contact-form volunteer-form" data-volunteer novalidate data-animate>
+                    <div class="form-row">
+                        <div class="form-group"><label for="volunteer-name">Full Name</label><input type="text" id="volunteer-name" name="fullName" required autocomplete="name"></div>
+                        <div class="form-group"><label for="volunteer-email">Email</label><input type="email" id="volunteer-email" name="email" required autocomplete="email"></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label for="volunteer-phone">Phone</label><input type="tel" id="volunteer-phone" name="phone" autocomplete="tel"></div>
+                        <div class="form-group"><label for="volunteer-location">Location</label><input type="text" id="volunteer-location" name="location" autocomplete="address-level2"></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label for="volunteer-availability">Availability</label><input type="text" id="volunteer-availability" name="availability" placeholder="Weekdays, weekends, remote" ></div>
+                        <div class="form-group"><label for="volunteer-experience">Experience Level</label><select id="volunteer-experience" name="experienceLevel"><option value="">Select experience</option><option>Student</option><option>Early career</option><option>Mid career</option><option>Senior professional</option></select></div>
+                    </div>
+                    <div class="form-group"><label for="volunteer-skills">Skills</label><input type="text" id="volunteer-skills" name="skills" placeholder="Example: design, facilitation, photography"></div>
+                    <div class="form-group"><label for="volunteer-interests">Interests</label><input type="text" id="volunteer-interests" name="interests" placeholder="Example: education, digital skills, advocacy"></div>
+                    <div class="form-group"><label for="volunteer-portfolio">Portfolio or LinkedIn</label><input type="url" id="volunteer-portfolio" name="portfolioUrl" placeholder="https://..."></div>
+                    <div class="form-group"><label for="volunteer-motivation">Why do you want to volunteer?</label><textarea id="volunteer-motivation" name="motivation" rows="5" minlength="20"></textarea></div>
+                    <button class="btn btn-primary" type="submit">Submit Volunteer Application</button>
+                    <p class="form-message" data-form-message hidden></p>
+                </form>
                 </div>
             </div>
         </section>

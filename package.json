@@ -4,7 +4,7 @@
   "description": "White Impact Development Initiative - Frontend",
   "main": "script.js",
   "scripts": {
-    "serve": "npx http-server -p 5500 -c-1",
+    "serve": "node node_modules/http-server/bin/http-server -p ${PORT:-5500} -c-1",
     "start": "npm run serve"
   },
   "devDependencies": {

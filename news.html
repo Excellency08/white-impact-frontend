@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Read White Impact Development Initiative news updates, announcements, and field news from the database."
+    />
+    <title>News | White Impact Development Initiative</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Playfair+Display:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="icon" type="image/png" href="./assets/images/logo.png" />
+    <link rel="apple-touch-icon" href="./assets/images/logo.png" />
+  </head>
+  <body class="inner-page" data-page="news">
+    <div data-site-header></div>
+    <main id="main">
+      <section class="page-hero">
+        <div class="container">
+          <nav class="breadcrumb" aria-label="Breadcrumb">
+            <a href="index.html">Home</a> / <span>News</span>
+          </nav>
+          <h1>News</h1>
+          <p class="page-hero-lead">
+            Announcements, updates, and field news from White Impact's ongoing
+            work.
+          </p>
+        </div>
+      </section>
+
+      <section class="page-content">
+        <div class="container">
+          <div class="section-head" data-animate>
+            <p class="section-kicker">Editorial desk</p>
+            <h2>Latest updates from the database</h2>
+            <p class="section-desc">
+              News items are loaded directly from PostgreSQL so editors can
+              publish without touching source files.
+            </p>
+          </div>
+          <div class="news-grid">
+            <a class="news-card" href="#" data-animate>
+              <div class="news-card-image">
+                <img
+                  src="./assets/images/hero image.jpeg"
+                  alt="Loading news"
+                  loading="lazy"
+                />
+              </div>
+              <div class="news-card-body">
+                <p class="story-meta">Editorial team</p>
+                <h3>Loading news</h3>
+                <p>The live news records will appear here.</p>
+                <span class="program-link">Please wait →</span>
+              </div>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <section class="cta-band">
+        <div class="container cta-inner">
+          <div>
+            <h2>Have a story or announcement to share?</h2>
+            <p>
+              Reach out if you need help turning a program update into a clear
+              public news item.
+            </p>
+          </div>
+          <a class="btn btn-light" href="contact.html">Contact Us</a>
+        </div>
+      </section>
+    </main>
+    <div data-site-footer></div>
+    <script src="layout.js"></script>
+    <script src="api.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>

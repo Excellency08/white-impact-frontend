@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="White Impact admin console for signed-in editors and managers."
+    />
+    <meta name="robots" content="noindex, nofollow, noarchive" />
+    <title>Admin | White Impact Development Initiative</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Playfair+Display:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="icon" type="image/png" href="./assets/images/logo.png" />
+    <link rel="apple-touch-icon" href="./assets/images/logo.png" />
+  </head>
+  <body class="inner-page" data-page="admin">
+    <div data-site-header></div>
+    <main id="main">
+      <section class="page-hero admin-hero">
+        <div class="container">
+          <nav class="breadcrumb" aria-label="Breadcrumb">
+            <a href="index.html">Home</a> / <span>Admin</span>
+          </nav>
+          <h1>Admin Console</h1>
+          <p class="page-hero-lead" data-admin-status>
+            Sign in to manage programs, projects, stories, impact, news,
+            reports, contacts, and donations.
+          </p>
+        </div>
+      </section>
+
+      <section class="section admin-section">
+        <div class="container admin-shell">
+          <article class="admin-panel" data-admin-login-panel>
+            <div class="section-head">
+              <p class="section-kicker">Secure access</p>
+              <h2>Sign in</h2>
+              <p class="section-desc">
+                Use a verified editor account to unlock the protected content
+                dashboard.
+              </p>
+            </div>
+            <form class="admin-form" data-admin-login-form>
+              <div class="form-group">
+                <label for="admin-email">Email</label>
+                <input
+                  id="admin-email"
+                  name="email"
+                  type="email"
+                  autocomplete="email"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="admin-password">Password</label>
+                <input
+                  id="admin-password"
+                  name="password"
+                  type="password"
+                  autocomplete="current-password"
+                  required
+                />
+              </div>
+              <button class="btn btn-primary" type="submit">Sign In</button>
+            </form>
+          </article>
+
+          <article
+            class="admin-panel admin-dashboard"
+            data-admin-dashboard-panel
+            hidden
+          >
+            <div class="admin-toolbar">
+              <div>
+                <p class="section-kicker">Dashboard</p>
+                <h2>Operations overview</h2>
+                <p class="admin-userline">
+                  <span data-admin-user-name>Admin</span>
+                  <span aria-hidden="true">•</span>
+                  <span data-admin-user-role>content_manager</span>
+                </p>
+              </div>
+              <button class="btn btn-ghost" type="button" data-admin-logout>
+                Sign Out
+              </button>
+            </div>
+
+            <div class="admin-summary-grid" data-admin-summary></div>
+
+            <section class="admin-analytics-panel" aria-labelledby="admin-analytics-title">
+              <div class="admin-toolbar">
+                <div>
+                  <p class="section-kicker">Privacy-conscious analytics</p>
+                  <h2 id="admin-analytics-title">Engagement, last 30 days</h2>
+                </div>
+                <p class="admin-panel-status" data-admin-analytics-status>Loading analytics…</p>
+              </div>
+              <div class="admin-analytics-grid" data-admin-analytics></div>
+            </section>
+
+            <section class="content-admin-inline" aria-labelledby="admin-management-title">
+              <div class="content-admin-toolbar">
+                <div>
+                  <p class="section-kicker">Management workspace</p>
+                  <h2 id="admin-management-title" data-content-admin-title>Manage system content</h2>
+                  <p class="section-desc" data-content-admin-help>
+                    Create, update, publish, archive, and upload content without editing source files.
+                  </p>
+                </div>
+                <button class="btn btn-ghost" type="button" data-content-admin-refresh>
+                  Refresh content
+                </button>
+              </div>
+              <p class="admin-panel-status" data-content-admin-status></p>
+              <div class="admin-summary-grid" data-content-admin-summary></div>
+              <div class="content-admin-tabs" data-content-admin-tabs></div>
+              <div class="content-admin-panels" data-content-admin-panels></div>
+            </section>
+
+            <div class="admin-links-grid">
+              <a class="admin-link-card" href="solutions.html" data-animate>
+                <strong>Programs</strong>
+                <p>Review live program content and public pages.</p>
+              </a>
+              <a class="admin-link-card" href="projects.html" data-animate>
+                <strong>Projects</strong>
+                <p>Manage initiative-level project stories and details.</p>
+              </a>
+              <a class="admin-link-card" href="stories.html" data-animate>
+                <strong>Stories</strong>
+                <p>Open the editorial story hub and its published content.</p>
+              </a>
+              <a class="admin-link-card" href="news.html" data-animate>
+                <strong>News</strong>
+                <p>Manage news posts and the public article library.</p>
+              </a>
+              <a class="admin-link-card" href="reports.html" data-animate>
+                <strong>Reports</strong>
+                <p>Review research reports and download analytics.</p>
+              </a>
+              <a class="admin-link-card" href="index.html#impact" data-animate>
+                <strong>Impact</strong>
+                <p>Check the homepage metrics and related reporting data.</p>
+              </a>
+              <a class="admin-link-card" href="content-admin.html" data-animate>
+                <strong>CMS</strong>
+                <p>
+                  Open the database-backed workspace for site content and
+                  settings.
+                </p>
+              </a>
+              <a class="admin-link-card" href="work-with-us.html" data-animate>
+                <strong>Contacts</strong>
+                <p>Review the public contact and work-with-us entry points.</p>
+              </a>
+              <a class="admin-link-card" href="donate.html" data-animate>
+                <strong>Donations</strong>
+                <p>Review donation workflows and payment entry points.</p>
+              </a>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>
+    <div data-site-footer></div>
+    <script src="layout.js"></script>
+    <script src="api.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>

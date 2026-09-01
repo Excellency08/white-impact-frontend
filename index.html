@@ -1,512 +1,1025 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="White Impact Development Initiative empowers underserved youth and c
-        ommunities through inclusive education, digital skills, and sustainable development.">
-    <title>White Impact Development Initiative | Empowering Futures, One Community at a Time</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="White Impact Development Initiative empowers underserved youth and c
+        ommunities through inclusive education, digital skills, and sustainable development."
+    />
+    <title>
+      White Impact Development Initiative | Empowering Futures, One Community at
+      a Time
+    </title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-        href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Playfair+Display:wght@600;700&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
-    <link rel="icon" type="image/png" href="./assets/images/logo.png">
-    <link rel="apple-touch-icon" href="./assets/images/logo.png">
-</head>
-
-<body data-page="home">
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Playfair+Display:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="icon" type="image/png" href="./assets/images/logo.png" />
+    <link rel="apple-touch-icon" href="./assets/images/logo.png" />
+  </head>
+  <body data-page="home">
     <div data-site-header></div>
-
     <main id="main">
-        <section class="hero" id="home">
-            <div class="hero-bg" aria-hidden="true">
-                <!-- <img src="./assets/images/hero image.jpeg" alt="" class="hero-gradient"> -->
-                <div class="hero-pattern"></div>
+      <section class="hero hero-home" id="home">
+        <div class="hero-bg" aria-hidden="true">
+          <div class="hero-pattern"></div>
+        </div>
+        <div class="container hero-grid">
+          <div class="hero-content" data-animate>
+            <p class="kicker" data-home-hero-kicker>
+              Youth led · Community centered · Impact driven
+            </p>
+            <h1>
+              <span data-home-hero-title>
+                Empowering Communities, Unlocking Potentials, Driving Sustainable Growth.
+              </span>
+            </h1>
+            <p class="hero-lead" data-home-hero-lead>
+              White Impact Development Initiative works with young people,
+              women, and crisis-affected communities to expand education,
+              digital opportunity, protection, and civic participation across
+              Nigeria.
+            </p>
+            <div class="hero-actions">
+              <a
+                class="btn btn-primary btn-lg"
+                href="#programs"
+                data-home-primary-cta
+                >See Our Work</a
+              >
+              <a
+                class="btn btn-outline btn-lg"
+                href="work-with-us.html"
+                data-home-secondary-cta
+                >Get Involved</a
+              >
             </div>
-            <div class="container hero-grid">
-                <div class="hero-content" data-animate>
-                    <p class="kicker">Youth led · Community centered · Impact driven</p>
-                    <h1>Empowering Futures, One Community at a Time</h1>
-                    <p class="hero-lead">
-                        We work directly with communities to unlock potential, nurture talent, and create pathways to
-                        opportunity ensuring individuals have the skills, confidence, and support they need to shape
-                        better futures.
-                    </p>
-                    <div class="hero-actions">
-                        <a class="btn btn-outline btn-lg" href="our-story.html">Explore Programs</a>
-                        <a class="btn btn-outline btn-lg" href="work-with-us.html">Connect With Us</a>
-                    </div>
-                </div>
-                <div class="hero-visual visible" data-animate aria-hidden="true">
-                    <div class="hero-card hero-card-main">
-                        <div class="hero-card-img">
-                            <img src="./assets/images/education  3.jpg" alt="Edu4All Initiative - Children in classroom"
-                                loading="lazy">
-                        </div>
-                        <div class="hero-card-body">
-                            <span class="pill">Featured Program</span>
-                            <h3>Edu4All Initiative</h3>
-                            <p>Bridging education gaps for displaced and underserved children.</p>
-                            <a href="edu4all.html" class="btn btn-primary btn-sm" style="margin-top: 1rem;">Learn
-                                More</a>
-                        </div>
-                    </div>
-                    <div class="hero-float hero-float-1">
-                        <span class="float-icon">📚</span>
-                        <div>
-                            <strong>5,721+</strong>
-                            <span>Young people trained</span>
-                        </div>
-                    </div>
-                    <div class="hero-float hero-float-2">
-                        <span class="float-icon">🌍</span>
-                        <div>
-                            <strong>14,000+</strong>
-                            <span>Lives reached</span>
-                        </div>
-                    </div>
-                </div>
+            <div class="hero-storyline" aria-label="Homepage highlights">
+              <div class="hero-storyline-item">
+                <strong>2025</strong>
+                <span>Registered NGO</span>
+              </div>
+              <div
+                class="hero-storyline-item"
+                data-impact-stat="people_reached"
+              >
+                <strong data-impact-number>0</strong>
+                <span>People reached</span>
+              </div>
+              <div
+                class="hero-storyline-item"
+                data-impact-stat="communities_reached"
+              >
+                <strong data-impact-number>0</strong>
+                <span>Communities reached</span>
+              </div>
+              <div
+                class="hero-storyline-item"
+                data-impact-stat="young_people_trained"
+              >
+                <strong data-impact-number>0</strong>
+                <span>Young people trained</span>
+              </div>
             </div>
-            <div class="hero-scroll" aria-hidden="true">
-                <span>Scroll to explore</span>
-                <div class="scroll-line"></div>
+          </div>
+          <div class="hero-visual visible" data-animate aria-hidden="true">
+            <div class="hero-card hero-card-main">
+              <div class="hero-card-img">
+                <img
+                  src="./assets/images/education  3.jpg"
+                  alt="Children learning together in a classroom"
+                  loading="lazy"
+                />
+              </div>
+              <div class="hero-card-body">
+                <span class="pill">Featured response</span>
+                <h3 data-home-featured-title>Edu4All Initiative</h3>
+                <p data-home-featured-summary>
+                  Bridging education gaps for displaced and underserved
+                  children.
+                </p>
+                <a
+                  href="edu4all.html"
+                  class="btn btn-primary btn-sm"
+                  style="margin-top: 1rem"
+                  >Learn More</a
+                >
+              </div>
             </div>
-        </section>
+            <div
+              class="hero-float hero-float-1"
+              data-impact-stat="young_people_trained"
+            >
+              <span class="float-icon">📚</span>
+              <div>
+                <strong data-impact-number>0</strong>
+                <span>Young people trained</span>
+              </div>
+            </div>
+            <div
+              class="hero-float hero-float-2"
+              data-impact-stat="social_engagements"
+            >
+              <span class="float-icon">🌍</span>
+              <div>
+                <strong data-impact-number>0</strong>
+                <span>Social engagements</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
-        <section class="section about" id="story">
-            <div class="container split-section">
-                <div class="about-media" data-animate>
-                    <img src="./assets/images/donation 1.jpg" alt="Our Story" class="about-image">
-                    <div class="about-badge">
-                        <span class="badge-year">Since 2025</span>
-                        <span class="badge-text">Registered NGO · Nigeria</span>
-                    </div>
-                </div>
-                <div class="about-content" data-animate>
-                    <p class="section-kicker">About White Impact Development Initiative</p>
-                    <h2>Empowering Underserved Youth Through Inclusive Education, Digital Skills & Gender Justice</h2>
-                    <p>
-                        White Impact Development Initiative was founded in 2025 and registered with the Corporate
-                        Affairs
-                        Commission of Nigeria in 2025, in response to the intersecting humanitarian, social, and
-                        governance challenges
-                        affecting underserved communities across Nigeria.
-                    </p>
-                    <p>
-                        As a Youth led Non-Governmental Organisation, we believe communities experiencing crisis are not
-                        passive
-                        beneficiaries of aid, they are the active leaders of change. Our work strengthens access to
-                        education,
-                        protection services, safe civic spaces, and digital opportunity for young women, persons with
-                        disabilities,
-                        and displaced populations.
-                    </p>
-                    <div style="display:flex;flex-wrap:wrap;gap:1rem;margin-top:0.5rem;">
-                        <a class="btn btn-ghost" href="our-story.html">Read our full story</a>
-                        <a class="btn btn-primary"
-                            href="./assets/images/PROPOSED PLAN OF ACTION FOR 2026 COMMUNITY OUTREACH (1).pdf"
-                            target="_blank">2025 Impact Report</a>
-                    </div>
-                </div>
+      <section class="section mission" id="mission">
+        <div class="container split-section">
+          <div class="about-media" data-animate>
+            <img
+              src="./assets/images/donation 1.jpg"
+              alt="White Impact team and community members"
+              class="about-image"
+            />
+            <div class="about-badge">
+              <span class="badge-year">Since 2025</span>
+              <span class="badge-text">Registered NGO · Nigeria</span>
             </div>
-        </section>
-
-        <section class="stats-band" id="impact" aria-label="Impact statistics">
-            <div class="container">
-                <div class="stats-grid">
-                    <div class="stat-item" data-animate>
-                        <p class="stat-number" data-count="14000" data-suffix="+">0</p>
-                        <p class="stat-label">People Reached</p>
-                    </div>
-                    <div class="stat-item" data-animate>
-                        <p class="stat-number" data-count="96">0</p>
-                        <p class="stat-label">Communities Reached</p>
-                    </div>
-                    <div class="stat-item" data-animate>
-                        <p class="stat-number" data-count="5721">0</p>
-                        <p class="stat-label">Young People Trained</p>
-                    </div>
-                    <div class="stat-item" data-animate>
-                        <p class="stat-number" data-count="45000" data-suffix="+">0</p>
-                        <p class="stat-label">Social Media Engagements</p>
-                    </div>
+          </div>
+          <div class="about-content prose" data-animate>
+            <p class="section-kicker">Mission</p>
+            <h2>
+              Communities experiencing crisis are not passive beneficiaries of
+              aid.
+            </h2>
+            <p>
+              White Impact Development Initiative was founded in 2025 and
+              registered with the Corporate Affairs Commission of Nigeria in
+              2025 in response to the intersecting humanitarian, social, and
+              governance challenges affecting underserved communities across
+              Nigeria.
+            </p>
+            <p>
+              As a youth-led non-governmental organisation, we believe
+              communities experiencing crisis are the active leaders of change.
+              Our work strengthens access to education, protection services,
+              safe civic spaces, and digital opportunity for young women,
+              persons with disabilities, and displaced populations.
+            </p>
+            <div class="feature-list">
+              <div class="feature-item">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                  <path d="m9 11 3 3L22 4" />
+                </svg>
+                <div>
+                  <strong>Education access</strong>
+                  <span>Humanitarian education and child protection</span>
                 </div>
+              </div>
+              <div class="feature-item">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                  <path d="m9 11 3 3L22 4" />
+                </svg>
+                <div>
+                  <strong>Protection</strong>
+                  <span>SRHR, safeguarding, and anti-GBV action</span>
+                </div>
+              </div>
+              <div class="feature-item">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                  <path d="m9 11 3 3L22 4" />
+                </svg>
+                <div>
+                  <strong>Digital opportunity</strong>
+                  <span>AI literacy, creative work, and civic tech</span>
+                </div>
+              </div>
             </div>
-        </section>
-
-        <section class="partners" aria-label="Our partners">
-            <div class="container">
-                <p class="partners-label">Our Partners</p>
+            <div
+              style="
+                display: flex;
+                flex-wrap: wrap;
+                gap: 1rem;
+                margin-top: 0.5rem;
+              "
+            >
+              <a class="btn btn-ghost" href="our-story.html"
+                >Read our full story</a
+              >
+              <a
+                class="btn btn-primary"
+                href="./assets/images/PROPOSED PLAN OF ACTION FOR 2026 COMMUNITY OUTREACH (1).pdf"
+                target="_blank"
+                >View our report</a
+              >
             </div>
-            <div class="marquee" aria-hidden="true">
-                <div class="marquee-track">
-                    <span class="partner-logo">Ministry of Environment Kaduna State</span>
-                    <span class="partner-logo">Center For Energy and Environmental Strategy Research</span>
-                    <span class="partner-logo">GIZ</span>
-                    <span class="partner-logo">Ministry of Environment Kaduna State</span>
-                    <span class="partner-logo">Ministry of Environment Kaduna State</span>
-                    <span class="partner-logo">Center For Energy and Environmental Strategy Research</span>
-                    <span class="partner-logo">GIZ</span>
-                    <span class="partner-logo">Ministry of Environment Kaduna State</span>
-                </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="stats-band" id="impact" aria-label="Impact statistics">
+        <div class="container">
+          <div class="stats-grid">
+            <div
+              class="stat-item"
+              data-animate
+              data-impact-stat="people_reached"
+            >
+              <p class="stat-number" data-impact-number>0</p>
+              <p class="stat-label">People reached</p>
             </div>
-        </section>
-
-        <section class="section values" id="values">
-            <div class="container">
-                <div class="section-head" data-animate>
-                    <p class="section-kicker">What guides us</p>
-                    <h2>Our Core Values</h2>
-                    <p class="section-desc">Principles that shape every program, partnership, and decision we make.</p>
-                </div>
-                <div class="values-grid">
-                    <article class="value-card" data-animate>
-                        <div class="value-icon">
-                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="1.5">
-                                <circle cx="12" cy="8" r="4" />
-                                <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
-                            </svg>
-                        </div>
-                        <h3>Inclusion</h3>
-                        <p>We ensure underserved groups especially young women and persons with disabilities are
-                            actively involved in our programs and decision-making.</p>
-                    </article>
-                    <article class="value-card" data-animate>
-                        <div class="value-icon">
-                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="1.5">
-                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                            </svg>
-                        </div>
-                        <h3>Integrity</h3>
-                        <p>We act with honesty, transparency, and ethical responsibility, building trust with
-                            communities, partners, and stakeholders.</p>
-                    </article>
-                    <article class="value-card" data-animate>
-                        <div class="value-icon">
-                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="1.5">
-                                <path
-                                    d="M9.663 17h4.673M12 3v1m6.364 1.636-.707.707M21 12h-1M4 12H3m3.343-5.657-.707-.707m2.828 9.9a5 5 0 1 1 7.072 0l-.548.547A3.374 3.374 0 0 0 14 18.469V19a2 2 0 1 1-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                            </svg>
-                        </div>
-                        <h3>Innovation</h3>
-                        <p>We embrace creative, forward thinking approaches
-                            leveraging technology and new ideas to solve
-                            complex social challenges.</p>
-                    </article>
-                    <article class="value-card" data-animate>
-                        <div class="value-icon">
-                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="1.5">
-                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                                <circle cx="9" cy="7" r="4" />
-                                <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
-                            </svg>
-                        </div>
-                        <h3>Collaboration</h3>
-                        <p>We work with communities, partners, and institutions to strengthen impact through shared
-                            goals and collective action.</p>
-                    </article>
-                    <article class="value-card" data-animate>
-                        <div class="value-icon">
-                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="1.5">
-                                <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" />
-                                <path d="M12 6v6l4 2" />
-                            </svg>
-                        </div>
-                        <h3>Sustainability</h3>
-                        <p>We design programs that create long-lasting change, building resilience and self-reliance in
-                            the communities we serve.</p>
-                    </article>
-                    <article class="value-card" data-animate>
-                        <div class="value-icon">
-                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="1.5">
-                                <path
-                                    d="M20.42 4.58a5.4 5.4 0 0 0-7.65 0L12 5.34l-.77-.76a5.4 5.4 0 0 0-7.65 7.65l.77.76L12 21l7.65-7.65.77-.76a5.4 5.4 0 0 0 0-7.65z" />
-                            </svg>
-                        </div>
-                        <h3>Equity</h3>
-                        <p>We are committed to fairness in access, opportunity, and outcomes ensuring no one is left
-                            behind because of background, gender, or ability.</p>
-                    </article>
-                </div>
+            <div
+              class="stat-item"
+              data-animate
+              data-impact-stat="communities_reached"
+            >
+              <p class="stat-number" data-impact-number>0</p>
+              <p class="stat-label">Communities reached</p>
             </div>
-        </section>
-
-        <section class="section programs" id="programs">
-            <div class="container">
-                <div class="section-head" data-animate>
-                    <p class="section-kicker">What we do</p>
-                    <h2>In Focus</h2>
-                    <p class="section-desc">Six pillars of impact driving change across education, technology, gender
-                        justice, and governance. <a href="solutions.html"
-                            style="color:var(--color-primary);font-weight:600;">View all programs →</a></p>
-                </div>
-                <div class="programs-grid">
-                    <article class="program-card" data-animate>
-                        <div class="program-icon">🩺</div>
-                        <h3>SRHR, Safeguarding & Anti GBV Action</h3>
-                        <p>Expanding access to sexual and reproductive health rights through technology,
-                            survivor centered advocacy, and community accountability.</p>
-                        <a class="program-link" href="blood-donation.html">Learn about Blood Donation →</a>
-                    </article>
-                    <article class="program-card" data-animate>
-                        <div class="program-icon">🤖</div>
-                        <h3>Ethical & Responsible AI for Social Equity</h3>
-                        <p>Advocating for inclusive AI systems by advancing data rights, fairness, accessibility, and
-                            community participation in tech governance.</p>
-                        <a class="program-link" href="nextgen-ai.html">Learn about NextGen AI →</a>
-                    </article>
-                    <article class="program-card" data-animate>
-                        <div class="program-icon">🏛️</div>
-                        <h3>Youth Civic Accountability & Good Governance</h3>
-                        <p>Building youth networks to promote transparency, participation, social monitoring, and
-                            inclusive decision-making.</p>
-                        <a class="program-link" href="nextgen-civic-lab.html">Learn about NextGen Lab →</a>
-                    </article>
-                    <article class="program-card" data-animate>
-                        <div class="program-icon">📖</div>
-                        <h3>Humanitarian Education & Protection</h3>
-                        <p>Strengthening education, child protection, and safeguarding systems through innovation and
-                            community action in crisis settings.</p>
-                        <a class="program-link" href="edu4all.html">Learn about Edu4All →</a>
-                    </article>
-                    <article class="program-card" data-animate>
-                        <div class="program-icon">📢</div>
-                        <h3>Policy Advocacy & Systems Reform</h3>
-                        <p>Leading evidence based advocacy to influence laws and institutional reforms affecting
-                            education, digital inclusion, and social protection.</p>
-                        <a class="program-link" href="partner-with-us.html">Partner on advocacy →</a>
-                    </article>
-                </div>
+            <div
+              class="stat-item"
+              data-animate
+              data-impact-stat="young_people_trained"
+            >
+              <p class="stat-number" data-impact-number>0</p>
+              <p class="stat-label">Young people trained</p>
             </div>
-        </section>
-
-        <section class="section impact-report" id="impact-report">
-            <div class="container">
-                <div class="report-card" data-animate>
-                    <div class="report-content">
-                        <span class="pill pill-light">Annual Reports</span>
-                        <h2>View Reports</h2>
-                        <p>Explore our milestones, community stories, and measurable outcomes from our annual reports.
-                        </p>
-                        <div class="report-form" style="margin-top: 2rem;">
-                            <div class="form-group">
-                                <label class="report-pdf"
-                                    style="color: #001a4d; display: block; margin-bottom: 0.5rem; font-weight: 500;">View
-                                    PDF Report</label>
-                                <a class="btn btn-primary"
-                                    href="./assets/images/PROPOSED PLAN OF ACTION FOR 2026 COMMUNITY OUTREACH (1).pdf"
-                                    target="_blank">View Our Report</a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="report-visual" aria-hidden="true">
-                        <div class="report-mock" id="report-preview">
-                            <span id="preview-year">2026</span>
-                            <strong>Impact Report</strong>
-                        </div>
-                    </div>
-                </div>
+            <div
+              class="stat-item"
+              data-animate
+              data-impact-stat="social_engagements"
+            >
+              <p class="stat-number" data-impact-number>0</p>
+              <p class="stat-label">Social media engagements</p>
             </div>
-        </section>
+          </div>
+        </div>
+      </section>
 
-        <section class="section testimonials" id="testimonials">
-            <div class="container">
-                <div class="section-head" data-animate>
-                    <p class="section-kicker">Voices of change</p>
-                    <h2>What People Are Saying</h2>
-                    <p class="section-desc">Stories that inspire change and highlight the impact of our initiatives.</p>
+      <section class="section challenge" id="challenge">
+        <div class="container">
+          <div class="section-head" data-animate>
+            <p class="section-kicker">The challenge</p>
+            <h2>Barriers are interconnected, so our response is too.</h2>
+            <p class="section-desc">
+              The same communities that face gaps in schooling often face
+              protection risks, limited digital access, and weak civic voice. We
+              design programs that address those barriers together.
+            </p>
+          </div>
+          <div class="challenge-grid">
+            <article class="challenge-card" data-animate>
+              <span class="challenge-index">01</span>
+              <h3>Education gaps</h3>
+              <p>
+                Children and young people still need safe access to learning,
+                mentorship, and school support.
+              </p>
+            </article>
+            <article class="challenge-card" data-animate>
+              <span class="challenge-index">02</span>
+              <h3>Protection risks</h3>
+              <p>
+                Communities need stronger safeguarding, SRHR, and anti-GBV
+                systems that people can trust.
+              </p>
+            </article>
+            <article class="challenge-card" data-animate>
+              <span class="challenge-index">03</span>
+              <h3>Digital exclusion</h3>
+              <p>
+                Young people deserve access to skills, tools, and opportunities
+                that match a changing world.
+              </p>
+            </article>
+            <article class="challenge-card" data-animate>
+              <span class="challenge-index">04</span>
+              <h3>Low civic participation</h3>
+              <p>
+                Transparent systems work better when young citizens can see,
+                question, and help shape them.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section values" id="values">
+        <div class="container">
+          <div class="section-head" data-animate>
+            <p class="section-kicker">What guides us</p>
+            <h2>Our Core Values</h2>
+            <p class="section-desc">
+              Principles that shape every program, partnership, and decision we
+              make.
+            </p>
+          </div>
+          <div class="values-grid">
+            <article class="value-card" data-animate>
+              <div class="value-icon">
+                <svg
+                  width="28"
+                  height="28"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                >
+                  <circle cx="12" cy="8" r="4" />
+                  <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
+                </svg>
+              </div>
+              <h3>Inclusion</h3>
+              <p>
+                We ensure underserved groups, especially young women and persons
+                with disabilities, are actively involved in our programs and
+                decision-making.
+              </p>
+            </article>
+            <article class="value-card" data-animate>
+              <div class="value-icon">
+                <svg
+                  width="28"
+                  height="28"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                >
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                </svg>
+              </div>
+              <h3>Integrity</h3>
+              <p>
+                We act with honesty, transparency, and ethical responsibility,
+                building trust with communities, partners, and stakeholders.
+              </p>
+            </article>
+            <article class="value-card" data-animate>
+              <div class="value-icon">
+                <svg
+                  width="28"
+                  height="28"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                >
+                  <path
+                    d="M9.663 17h4.673M12 3v1m6.364 1.636-.707.707M21 12h-1M4 12H3m3.343-5.657-.707-.707m2.828 9.9a5 5 0 1 1 7.072 0l-.548.547A3.374 3.374 0 0 0 14 18.469V19a2 2 0 1 1-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                  />
+                </svg>
+              </div>
+              <h3>Innovation</h3>
+              <p>
+                We embrace creative, forward thinking approaches leveraging
+                technology and new ideas to solve complex social challenges.
+              </p>
+            </article>
+            <article class="value-card" data-animate>
+              <div class="value-icon">
+                <svg
+                  width="28"
+                  height="28"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                >
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <path
+                    d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"
+                  />
+                </svg>
+              </div>
+              <h3>Collaboration</h3>
+              <p>
+                We work with communities, partners, and institutions to
+                strengthen impact through shared goals and collective action.
+              </p>
+            </article>
+            <article class="value-card" data-animate>
+              <div class="value-icon">
+                <svg
+                  width="28"
+                  height="28"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                >
+                  <path
+                    d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"
+                  />
+                  <path d="M12 6v6l4 2" />
+                </svg>
+              </div>
+              <h3>Sustainability</h3>
+              <p>
+                We design programs that create long-lasting change, building
+                resilience and self-reliance in the communities we serve.
+              </p>
+            </article>
+            <article class="value-card" data-animate>
+              <div class="value-icon">
+                <svg
+                  width="28"
+                  height="28"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                >
+                  <path
+                    d="M20.42 4.58a5.4 5.4 0 0 0-7.65 0L12 5.34l-.77-.76a5.4 5.4 0 0 0-7.65 7.65l.77.76L12 21l7.65-7.65.77-.76a5.4 5.4 0 0 0 0-7.65z"
+                  />
+                </svg>
+              </div>
+              <h3>Equity</h3>
+              <p>
+                We are committed to fairness in access, opportunity, and
+                outcomes ensuring no one is left behind because of background,
+                gender, or ability.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section programs" id="programs">
+        <div class="container">
+          <div class="section-head" data-animate>
+            <p class="section-kicker">Our response</p>
+            <h2>Programs built around real community needs.</h2>
+            <p class="section-desc">
+              Six pillars of impact driving change across education, technology,
+              gender justice, and governance.
+              <a
+                href="solutions.html"
+                style="color: var(--color-primary); font-weight: 600"
+                >View all programs →</a
+              >
+            </p>
+          </div>
+          <div class="programs-grid">
+            <article class="program-card" data-animate>
+              <div class="program-icon">🩺</div>
+              <h3>SRHR, Safeguarding & Anti GBV Action</h3>
+              <p>
+                Expanding access to sexual and reproductive health rights
+                through technology, survivor centered advocacy, and community
+                accountability.
+              </p>
+              <a class="program-link" href="blood-donation.html"
+                >Learn about Blood Donation →</a
+              >
+            </article>
+            <article class="program-card" data-animate>
+              <div class="program-icon">🤖</div>
+              <h3>Ethical & Responsible AI for Social Equity</h3>
+              <p>
+                Advocating for inclusive AI systems by advancing data rights,
+                fairness, accessibility, and community participation in tech
+                governance.
+              </p>
+              <a class="program-link" href="nextgen-ai.html"
+                >Learn about NextGen AI →</a
+              >
+            </article>
+            <article class="program-card" data-animate>
+              <div class="program-icon">🏛️</div>
+              <h3>Youth Civic Accountability & Good Governance</h3>
+              <p>
+                Building youth networks to promote transparency, participation,
+                social monitoring, and inclusive decision-making.
+              </p>
+              <a class="program-link" href="nextgen-civic-lab.html"
+                >Learn about NextGen Lab →</a
+              >
+            </article>
+            <article class="program-card" data-animate>
+              <div class="program-icon">📖</div>
+              <h3>Humanitarian Education & Protection</h3>
+              <p>
+                Strengthening education, child protection, and safeguarding
+                systems through innovation and community action in crisis
+                settings.
+              </p>
+              <a class="program-link" href="edu4all.html"
+                >Learn about Edu4All →</a
+              >
+            </article>
+            <article class="program-card" data-animate>
+              <div class="program-icon">📢</div>
+              <h3>Policy Advocacy & Systems Reform</h3>
+              <p>
+                Leading evidence based advocacy to influence laws and
+                institutional reforms affecting education, digital inclusion,
+                and social protection.
+              </p>
+              <a class="program-link" href="partner-with-us.html"
+                >Partner on advocacy →</a
+              >
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section impact-visualization">
+        <div class="container impact-visual-grid">
+          <div class="impact-chart-card" data-animate>
+            <p class="section-kicker">Impact visualization</p>
+            <h2>What our work looks like in practice.</h2>
+            <p>
+              A simple snapshot of the current program footprint, showing where
+              our work reaches people and how the strongest signals connect
+              across the site.
+            </p>
+            <div class="impact-bar-list">
+              <div class="impact-bar-item" data-impact-bar="education_access">
+                <div class="impact-bar-head">
+                  <span data-impact-bar-label>People reached</span>
+                  <strong data-impact-bar-value>0</strong>
                 </div>
-                <div class="testimonial-slider" data-slider>
-                    <div class="testimonial-track" data-slider-track>
-                        <article class="testimonial-slide active">
-                            <div class="quote-mark" aria-hidden="true">"</div>
-                            <blockquote>
-                                We have been displaced here in this host community for one year now without resources to
-                                enroll our children in school. I am beyond happy to see my son enrolled in school and to
-                                have received empowerment to start a business. May God bless WhiteImpact Development
-                                Iniative.
-                            </blockquote>
-                            <footer>
-                                <div class="testimonial-avatar">E</div>
-                                <div>
-                                    <cite>Edu4All Beneficiary</cite>
-                                    <span>Saminaka Community</span>
-                                </div>
-                            </footer>
-                        </article>
-                        <article class="testimonial-slide">
-                            <div class="quote-mark" aria-hidden="true">"</div>
-                            <blockquote>
-                                The past three years with WhiteImpact Development Iniative have been transformative. The
-                                holistic approach to community empowerment is remarkable.
-                            </blockquote>
-                            <footer>
-                                <div class="testimonial-avatar">M</div>
-                                <div>
-                                    <cite>Community Leader</cite>
-                                    <span>Program Participant</span>
-                                </div>
-                            </footer>
-                        </article>
-                    </div>
-                    <div class="slider-controls">
-                        <button class="slider-btn" type="button" data-slider-prev aria-label="Previous testimonial">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <path d="m15 18-6-6 6-6" />
-                            </svg>
-                        </button>
-                        <div class="slider-dots" data-slider-dots></div>
-                        <button class="slider-btn" type="button" data-slider-next aria-label="Next testimonial">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <path d="m9 18 6-6-6-6" />
-                            </svg>
-                        </button>
-                    </div>
+                <div class="impact-bar-track">
+                  <span data-impact-bar-fill style="--bar: 31%"></span>
                 </div>
+              </div>
+              <div
+                class="impact-bar-item"
+                data-impact-bar="protection_response"
+              >
+                <div class="impact-bar-head">
+                  <span data-impact-bar-label>Communities reached</span>
+                  <strong data-impact-bar-value>0</strong>
+                </div>
+                <div class="impact-bar-track">
+                  <span data-impact-bar-fill style="--bar: 18%"></span>
+                </div>
+              </div>
+              <div
+                class="impact-bar-item"
+                data-impact-bar="digital_opportunity"
+              >
+                <div class="impact-bar-head">
+                  <span data-impact-bar-label>Young people trained</span>
+                  <strong data-impact-bar-value>0</strong>
+                </div>
+                <div class="impact-bar-track">
+                  <span data-impact-bar-fill style="--bar: 84%"></span>
+                </div>
+              </div>
+              <div
+                class="impact-bar-item"
+                data-impact-bar="civic_participation"
+              >
+                <div class="impact-bar-head">
+                  <span data-impact-bar-label>Social engagements</span>
+                  <strong data-impact-bar-value>0</strong>
+                </div>
+                <div class="impact-bar-track">
+                  <span data-impact-bar-fill style="--bar: 100%"></span>
+                </div>
+              </div>
             </div>
-        </section>
+          </div>
+          <div class="impact-narrative prose" data-animate>
+            <h2>Programs designed to reinforce one another.</h2>
+            <p>
+              Education access, protection, digital inclusion, and civic
+              participation are stronger when they move together. That is why
+              our programs are built as a connected response instead of separate
+              silos.
+            </p>
+            <blockquote>
+              Communities experiencing crisis are not passive beneficiaries of
+              aid. They are active leaders of change.
+            </blockquote>
+            <p>
+              Explore the annual report for the broader story behind the
+              numbers, community feedback, and the priorities shaping the next
+              phase of work.
+            </p>
+            <a
+              class="btn btn-primary"
+              href="./assets/images/PROPOSED PLAN OF ACTION FOR 2026 COMMUNITY OUTREACH (1).pdf"
+              target="_blank"
+              >Open the latest report</a
+            >
+          </div>
+        </div>
+      </section>
 
-        <section class="section team" id="team">
-            <div class="container">
-                <div class="section-head" data-animate>
-                    <p class="section-kicker">Leadership</p>
-                    <h2>Advisory Board</h2>
-                    <p class="section-desc"><a href="advisory-board.html"
-                            style="color:var(--color-primary);font-weight:600;">Meet the full board →</a></p>
-                </div>
-                <div class="team-grid">
-                    <article class="team-card" data-animate data-team-index="1">
-                        <div class="team-photo team-photo-1" data-team-photo></div>
-                        <h3>Dr. Amina Yusuf</h3>
-
-                        <p class="team-role">Board Chair · Education Policy</p>
-                    </article>
-                    <article class="team-card" data-animate data-team-index="2">
-                        <div class="team-photo team-photo-2" data-team-photo></div>
-                        <h3>Emmanuel Okonkwo</h3>
-                        <p class="team-role">Director · Programs & Partnerships</p>
-                    </article>
-                    <article class="team-card" data-animate data-team-index="3">
-                        <div class="team-photo team-photo-3" data-team-photo></div>
-                        <h3>Fatima Bello</h3>
-                        <p class="team-role">Advisor · Gender & Human Rights</p>
-                    </article>
-                    <article class="team-card" data-animate data-team-index="4">
-                        <div class="team-photo team-photo-4" data-team-photo></div>
-                        <h3>Chidi Nwosu</h3>
-                        <p class="team-role">Advisor · Digital Innovation</p>
-                    </article>
-                </div>
+      <section class="section testimonials" id="testimonials">
+        <div class="container">
+          <div class="section-head" data-animate>
+            <p class="section-kicker">Stories from the field</p>
+            <h2>What people are saying</h2>
+            <p class="section-desc">
+              Voices from beneficiaries and community leaders who experience the
+              work firsthand.
+            </p>
+          </div>
+          <div class="testimonial-slider" data-slider>
+            <div class="testimonial-track" data-slider-track>
+              <article class="testimonial-slide active">
+                <div class="quote-mark" aria-hidden="true">"</div>
+                <blockquote>
+                  We have been displaced here in this host community for one
+                  year now without resources to enroll our children in school. I
+                  am beyond happy to see my son enrolled in school and to have
+                  received empowerment to start a business. May God bless White
+                  Impact Development Iniative.
+                </blockquote>
+                <footer>
+                  <div class="testimonial-avatar">E</div>
+                  <div>
+                    <cite>Edu4All Beneficiary</cite>
+                    <span>Saminaka Community</span>
+                  </div>
+                </footer>
+              </article>
+              <article class="testimonial-slide">
+                <div class="quote-mark" aria-hidden="true">"</div>
+                <blockquote>
+                  The past three years with White Impact Development Iniative
+                  have been transformative. The holistic approach to community
+                  empowerment is remarkable.
+                </blockquote>
+                <footer>
+                  <div class="testimonial-avatar">M</div>
+                  <div>
+                    <cite>Community Leader</cite>
+                    <span>Program Participant</span>
+                  </div>
+                </footer>
+              </article>
             </div>
-        </section>
-
-        <section class="section newsletter-donate-grid" id="blog">
-            <div class="container">
-                <div class="grid-2col">
-                    <div class="newsletter-card" data-animate>
-                        <div class="newsletter-content">
-                            <h2>Sign Up for Our Mailing List</h2>
-                            <p>Subscribe to receive monthly updates on our programs, impact stories, and opportunities
-                                to get involved straight to your inbox.</p>
-                        </div>
-                        <form class="newsletter-form" data-newsletter novalidate>
-                            <label class="sr-only" for="email">Email address</label>
-                            <input type="email" id="email" name="email" placeholder="Enter your email address" required
-                                autocomplete="email">
-                            <button class="btn btn-primary" type="submit">Subscribe</button>
-                            <p class="form-message" data-form-message hidden></p>
-                        </form>
-                    </div>
-
-                    <div class="donate-card" data-animate>
-                        <div class="donate-content">
-                            <p class="section-kicker section-kicker-light">Every contribution matters</p>
-                            <h2>Support Our Mission</h2>
-                            <p>Your generous donation empowers youth, strengthens communities, and creates lasting
-                                pathways to opportunity across Nigeria. Choose the program area that speaks to your
-                                heart.</p>
-                            <a class="btn btn-accent btn-lg" href="donate.html">Make a Donation</a>
-                        </div>
-                    </div>
-                </div>
+            <div class="slider-controls">
+              <button
+                class="slider-btn"
+                type="button"
+                data-slider-prev
+                aria-label="Previous testimonial"
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="m15 18-6-6 6-6" />
+                </svg>
+              </button>
+              <div class="slider-dots" data-slider-dots></div>
+              <button
+                class="slider-btn"
+                type="button"
+                data-slider-next
+                aria-label="Next testimonial"
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="m9 18 6-6-6-6" />
+                </svg>
+              </button>
             </div>
-        </section>
+          </div>
+        </div>
+      </section>
 
-        <section class="section contact" id="contact">
-            <div class="container">
-                <div class="contact-grid">
-                    <div class="contact-info" data-animate>
-                        <p class="section-kicker">Get in touch</p>
-                        <h2>Work With Us</h2>
-                        <p>Partner with us, volunteer, or explore collaboration opportunities to amplify impact across
-                            Nigeria.</p>
-                        <ul class="contact-list">
-                            <li>
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                                    <circle cx="12" cy="10" r="3" />
-                                </svg>
-                                No 06, Saminaka Street, Babban Saura 800104, Kaduna, Nigeria
-                            </li>
-                            <li>
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <path
-                                        d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
-                                </svg>
-                                +234 706 529 9613
-                            </li>
-                            <li>
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <path d="M4 4h16v16H4z" />
-                                    <path d="m22 6-10 7L2 6" />
-                                </svg>
-                                info@whiteimpactinitiative.org
-                            </li>
-                        </ul>
-                    </div>
-                    <form class="contact-form" data-contact novalidate data-animate>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="name">Full Name</label>
-                                <input type="text" id="name" name="name" required autocomplete="name"
-                                    placeholder="Enter your full name">
-                            </div>
-                            <div class="form-group">
-                                <label for="contact-email">Email</label>
-                                <input type="email" id="contact-email" name="email" required autocomplete="email"
-                                    placeholder="Enter your email address">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="subject">Subject</label>
-                            <input type="text" id="subject" name="subject" required autocomplete="subject"
-                                placeholder="Enter the subject of your message">
-                        </div>
-                        <div class="form-group">
-                            <label for="message">Message</label>
-                            <textarea id="message" name="message" rows="5" required minlength="10"
-                                placeholder="Tell us how you'd like to get involved"></textarea>
-                        </div>
-                        <button class="btn btn-primary" type="submit">Send Message</button>
-                        <p class="form-message" data-form-message hidden></p>
-                    </form>
+      <section class="section reach" id="where-we-work">
+        <div class="container">
+          <div class="section-head" data-animate>
+            <p class="section-kicker">Geographic reach</p>
+            <h2>Where we work</h2>
+            <p class="section-desc">
+              From our Kaduna base, we collaborate with communities,
+              institutions, and partner networks across Nigeria.
+            </p>
+          </div>
+          <div class="reach-grid">
+            <article class="reach-card reach-card-lg" data-animate>
+              <p class="section-kicker">Base</p>
+              <h3>Kaduna, Nigeria</h3>
+              <p>Our coordination hub and registered address.</p>
+              <p class="reach-address">
+                No. 4A Marafa Estate Kaduna, Kaduna State, Nigeria.
+              </p>
+              <div id="reach-map" class="reach-map" aria-label="Map showing our Kaduna office location"></div>
+            </article>
+            <article class="reach-card" data-animate>
+              <h3>Community settings</h3>
+              <p>
+                School communities, host communities, and outreach sites where
+                support is most needed.
+              </p>
+            </article>
+            <article class="reach-card" data-animate>
+              <h3>Digital and civic spaces</h3>
+              <p>
+                Training, awareness, advocacy, and online engagement that extend
+                the reach of every program.
+              </p>
+            </article>
+            <article class="reach-card" data-animate>
+              <h3>Partner networks</h3>
+              <p>
+                Work across Nigeria with public, private, and civil society
+                actors that share our goals.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="partners" aria-label="Our partners">
+        <div class="container">
+          <p class="partners-label">Our Partners</p>
+        </div>
+        <div class="marquee" aria-hidden="true">
+          <div class="marquee-track">
+            <span class="partner-logo"
+              >Ministry of Environment Kaduna State</span
+            >
+            <span class="partner-logo"
+              >Center For Energy and Environmental Strategy Research</span
+            >
+            <span class="partner-logo">GIZ</span>
+            <span class="partner-logo"
+              >Ministry of Environment Kaduna State</span
+            >
+            <span class="partner-logo"
+              >Ministry of Environment Kaduna State</span
+            >
+            <span class="partner-logo"
+              >Center For Energy and Environmental Strategy Research</span
+            >
+            <span class="partner-logo">GIZ</span>
+            <span class="partner-logo"
+              >Ministry of Environment Kaduna State</span
+            >
+          </div>
+        </div>
+      </section>
+
+      <section class="section impact-report" id="impact-report">
+        <div class="container">
+          <div class="section-head" data-animate>
+            <p class="section-kicker">Transparency</p>
+            <h2>Reports and accountability</h2>
+            <p class="section-desc">
+              Explore our milestones, community stories, and measurable outcomes
+              from the latest annual report.
+            </p>
+          </div>
+          <div class="report-card" data-animate>
+            <div class="report-content">
+              <span class="pill pill-light">Annual reports</span>
+              <h2>View reports</h2>
+              <p>
+                Download the current report to review our progress, community
+                priorities, and the next phase of work.
+              </p>
+              <div class="report-form" style="margin-top: 2rem">
+                <div class="form-group">
+                  <label
+                    class="report-pdf"
+                    style="
+                      color: #001a4d;
+                      display: block;
+                      margin-bottom: 0.5rem;
+                      font-weight: 500;
+                    "
+                    >View PDF report</label
+                  >
+                  <a
+                    class="btn btn-primary"
+                    href="./assets/images/PROPOSED PLAN OF ACTION FOR 2026 COMMUNITY OUTREACH (1).pdf"
+                    target="_blank"
+                    >Open the report</a
+                  >
                 </div>
+              </div>
             </div>
-        </section>
+            <div class="report-visual" aria-hidden="true">
+              <div class="report-mock" id="report-preview">
+                <span id="preview-year">2026</span>
+                <strong>Impact Report</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="cta-band">
+        <div class="container cta-inner">
+          <div>
+            <h2>Support a program that matters to you</h2>
+            <p>
+              Every donation directly funds community-led programs across
+              Nigeria.
+            </p>
+          </div>
+          <a class="btn btn-light" href="donate.html">Donate Now</a>
+        </div>
+      </section>
+
+      <section class="section newsletter-donate-grid" id="support">
+        <div class="container">
+          <div class="grid-2col">
+            <div class="newsletter-card" data-animate>
+              <div class="newsletter-content">
+                <h2>Stay informed</h2>
+                <p>
+                  Subscribe to receive monthly updates on our programs, impact
+                  stories, and opportunities to get involved straight to your
+                  inbox.
+                </p>
+              </div>
+              <form class="newsletter-form" data-newsletter novalidate>
+                <label class="sr-only" for="email">Email address</label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  placeholder="Enter your email address"
+                  required
+                  autocomplete="email"
+                />
+                <button class="btn btn-primary" type="submit">Subscribe</button>
+                <p class="form-message" data-form-message hidden></p>
+              </form>
+            </div>
+
+            <div class="donate-card" data-animate>
+              <div class="donate-content">
+                <p class="section-kicker section-kicker-light">
+                  Every contribution matters
+                </p>
+                <h2>Support our mission</h2>
+                <p>
+                  Your generous donation empowers youth, strengthens
+                  communities, and creates lasting pathways to opportunity
+                  across Nigeria. Choose the program area that speaks to your
+                  heart.
+                </p>
+                <a class="btn btn-accent btn-lg" href="donate.html"
+                  >Make a Donation</a
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section contact" id="contact">
+        <div class="container">
+          <div class="contact-grid">
+            <div class="contact-info" data-animate>
+              <p class="section-kicker">Get in touch</p>
+              <h2>Work with us</h2>
+              <p>
+                Partner with us, volunteer, or explore collaboration
+                opportunities to amplify impact across Nigeria.
+              </p>
+              <ul class="contact-list">
+                <li>
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                    <circle cx="12" cy="10" r="3" />
+                  </svg>
+                  No. 4A Marafa Estate Kaduna, Kaduna State, Nigeria
+                </li>
+                <li>
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path
+                      d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"
+                    />
+                  </svg>
+                  +234 706 529 9613
+                </li>
+                <li>
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path d="M4 4h16v16H4z" />
+                    <path d="m22 6-10 7L2 6" />
+                  </svg>
+                  info@whiteimpactinitiative.org
+                </li>
+              </ul>
+            </div>
+            <form class="contact-form" data-contact novalidate data-animate>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="name">Full Name</label>
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    required
+                    autocomplete="name"
+                    placeholder="Enter your full name"
+                  />
+                </div>
+                <div class="form-group">
+                  <label for="contact-email">Email</label>
+                  <input
+                    type="email"
+                    id="contact-email"
+                    name="email"
+                    required
+                    autocomplete="email"
+                    placeholder="Enter your email address"
+                  />
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="subject">Subject</label>
+                <input
+                  type="text"
+                  id="subject"
+                  name="subject"
+                  required
+                  autocomplete="subject"
+                  placeholder="Enter the subject of your message"
+                />
+              </div>
+              <div class="form-group">
+                <label for="message">Message</label>
+                <textarea
+                  id="message"
+                  name="message"
+                  rows="5"
+                  required
+                  minlength="10"
+                  placeholder="Tell us how you'd like to get involved"
+                ></textarea>
+              </div>
+              <button class="btn btn-primary" type="submit">
+                Send Message
+              </button>
+              <p class="form-message" data-form-message hidden></p>
+            </form>
+          </div>
+        </div>
+      </section>
     </main>
 
     <div data-site-footer></div>
@@ -514,6 +1027,77 @@
     <script src="layout.js"></script>
     <script src="api.js"></script>
     <script src="script.js"></script>
-</body>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        var el = document.getElementById('reach-map');
+        if (!el) return;
+        try {
+          var lat = 10.5105; // approximate Kaduna coordinates
+          var lng = 7.4165;
+          var officeCoords = [lat, lng];
+          var map = L.map('reach-map', { scrollWheelZoom: false, attributionControl: false }).setView(officeCoords, 13);
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap contributors'
+          }).addTo(map);
+          var officeMarker = L.marker(officeCoords).addTo(map).bindPopup('White Impact — No. 4A Marafa Estate Kaduna, Kaduna State, Nigeria');
 
+          // Add a locate / navigate control with pin icon
+          var LocateControl = L.Control.extend({
+            options: { position: 'topright' },
+            onAdd: function (map) {
+              var container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+              var btn = document.createElement('a');
+              btn.href = '#';
+              btn.id = 'locate-btn';
+              btn.className = 'map-locate-btn';
+              btn.title = 'Navigate to office';
+              btn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path fill="currentColor" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5z"/></svg><span style="margin-left:6px;">Navigate</span>';
+              L.DomEvent.disableClickPropagation(container);
+              container.appendChild(btn);
+              return container;
+            }
+          });
+          map.addControl(new LocateControl());
+
+          var userMarker = null;
+          var currentRoute = null;
+
+          function handleLocationSuccess(position) {
+            var uLat = position.coords.latitude;
+            var uLng = position.coords.longitude;
+            if (userMarker) map.removeLayer(userMarker);
+            if (currentRoute) map.removeLayer(currentRoute);
+            userMarker = L.marker([uLat, uLng]).addTo(map).bindPopup('You are here').openPopup();
+            currentRoute = L.polyline([[uLat, uLng], officeCoords], { color: '#001a4d', weight: 4, opacity: 0.9 }).addTo(map);
+            var bounds = L.latLngBounds([[uLat, uLng], officeCoords]);
+            map.fitBounds(bounds.pad(0.2));
+          }
+
+          function handleLocationError(err) {
+            var msg = (err && err.message) ? err.message : 'Unable to determine location';
+            alert('Location error: ' + msg + '\nPlease allow location access or try again.');
+          }
+
+          document.addEventListener('click', function (ev) {
+            if (!ev.target) return;
+            var el = ev.target.closest && ev.target.closest('#locate-btn');
+            if (el) {
+              ev.preventDefault();
+              if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(handleLocationSuccess, handleLocationError, { enableHighAccuracy: true, timeout: 10000 });
+              } else {
+                alert('Geolocation is not supported by this browser.');
+              }
+            }
+          });
+
+          officeMarker.openPopup();
+        } catch (e) {
+          console.warn('Map init failed', e);
+        }
+      });
+    </script>
+  </body>
 </html>
