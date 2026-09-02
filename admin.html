@@ -15,12 +15,11 @@
       href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Playfair+Display:wght@600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles.css?v=20260902-admin" />
     <link rel="icon" type="image/png" href="./assets/images/logo.png" />
     <link rel="apple-touch-icon" href="./assets/images/logo.png" />
   </head>
-  <body class="inner-page" data-page="admin">
-    <div data-site-header></div>
+  <body class="admin-app-page" data-page="admin">
     <main id="main">
       <section class="page-hero admin-hero">
         <div class="container">
@@ -76,7 +75,33 @@
             data-admin-dashboard-panel
             hidden
           >
-            <div class="admin-toolbar">
+            <div class="admin-dashboard-layout">
+              <aside class="admin-sidebar" aria-label="Administration navigation">
+                <div class="admin-sidebar-brand">
+                  <img src="assets/images/logo.png" alt="" />
+                  <div><strong>White Impact</strong><span>Administration</span></div>
+                </div>
+                <nav class="admin-sidebar-nav">
+                  <a class="is-active" href="#admin-overview">Dashboard</a>
+                  <p>Content</p>
+                  <a href="#admin-management" data-admin-section="programs">Programs</a>
+                  <a href="#admin-management" data-admin-section="projects">Projects</a>
+                  <a href="#admin-management" data-admin-section="stories">Stories</a>
+                  <a href="#admin-management" data-admin-section="news">News &amp; insights</a>
+                  <a href="#admin-management" data-admin-section="reports">Reports</a>
+                  <p>People &amp; engagement</p>
+                  <a href="#admin-management" data-admin-section="team">Team members</a>
+                  <a href="#admin-management" data-admin-section="volunteers">Volunteers</a>
+                  <a href="#admin-management" data-admin-section="contacts">Contacts</a>
+                  <a href="#admin-management" data-admin-section="donations">Donations</a>
+                  <p>System</p>
+                  <a href="#admin-management" data-admin-section="media">Media library</a>
+                  <a href="#admin-management" data-admin-section="impact">Impact metrics</a>
+                  <a href="index.html">View website</a>
+                </nav>
+              </aside>
+              <div class="admin-dashboard-main">
+            <div class="admin-toolbar" id="admin-overview">
               <div>
                 <p class="section-kicker">Dashboard</p>
                 <h2>Operations overview</h2>
@@ -104,7 +129,7 @@
               <div class="admin-analytics-grid" data-admin-analytics></div>
             </section>
 
-            <section class="content-admin-inline" aria-labelledby="admin-management-title">
+            <section class="content-admin-inline" id="admin-management" aria-labelledby="admin-management-title">
               <div class="content-admin-toolbar">
                 <div>
                   <p class="section-kicker">Management workspace</p>
@@ -164,13 +189,12 @@
                 <p>Review donation workflows and payment entry points.</p>
               </a>
             </div>
+              </div>
+            </div>
           </article>
         </div>
       </section>
     </main>
-    <div data-site-footer></div>
-    <script src="layout.js"></script>
-    <script src="api.js"></script>
-    <script src="script.js"></script>
+    <script src="api.js?v=20260902"></script>
   </body>
 </html>

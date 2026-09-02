@@ -15,8 +15,9 @@
   // Use the local API during local development; production keeps the hosted API.
   const isLocal = ["localhost", "127.0.0.1"].includes(window.location.hostname);
   const API_BASE =
-    window.__WII_API_BASE__ ||
-    (isLocal ? "http://localhost:3030/api" : "https://white-impact-api.onrender.com/api");
+    isLocal
+      ? "http://localhost:3030/api"
+      : window.__WII_API_BASE__ || "https://white-impact-api.onrender.com/api";
 
   const ANALYTICS_SESSION_KEY = "wii.analytics.session";
 
@@ -2207,6 +2208,15 @@
     const form = document.querySelector("[data-admin-login-form]");
     const logoutBtn = document.querySelector("[data-admin-logout]");
 
+    document.querySelectorAll("[data-admin-section]").forEach((link) => {
+      link.addEventListener("click", () => {
+        const tab = document.querySelector(
+          `[data-content-admin-tab="${link.dataset.adminSection}"]`,
+        );
+        if (tab) tab.click();
+      });
+    });
+
     if (page === "admin") {
       setAdminPanelState(Boolean(readAdminSession()?.accessToken));
       loadAdminDashboard();
@@ -2237,13 +2247,15 @@
 
         form.reset();
         if (page === "admin-login") {
-          window.location.href = "../admin.html";
+          window.location.href = "admin.html";
         } else {
           await loadAdminDashboard();
           showToast("Signed in successfully.");
         }
       } catch (error) {
-        if (status) status.textContent = "Sign in failed. Please try again.";
+        if (status) {
+          status.textContent = error.message || "Sign in failed. Please try again.";
+        }
         showToast(error.message || "Sign in failed.", "error");
       } finally {
         setFormLoading(form, false);
