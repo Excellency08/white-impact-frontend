@@ -1,10 +1,12 @@
 (function () {
     "use strict";
 
-    const isLocal = ["localhost", "127.0.0.1"].includes(window.location.hostname);
+    const isLocal =
+        ["localhost", "127.0.0.1"].includes(window.location.hostname) ||
+        ["5500", "5501"].includes(window.location.port);
     const API_BASE = isLocal
-        ? "http://localhost:3030/api"
-        : "https://white-impact-api.onrender.com/api";
+        ? `http://${window.location.hostname}:3030/api`
+        : window.__WII_API_BASE__ || "/api";
 
     window.__WII_API_BASE__ = API_BASE;
 

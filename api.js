@@ -12,12 +12,14 @@
 (function () {
   "use strict";
 
-  // Use the local API during local development; production keeps the hosted API.
-  const isLocal = ["localhost", "127.0.0.1"].includes(window.location.hostname);
+  // Support localhost and LAN access to the local frontend server.
+  const isLocal =
+    ["localhost", "127.0.0.1"].includes(window.location.hostname) ||
+    ["5500", "5501"].includes(window.location.port);
   const API_BASE =
     isLocal
-      ? "http://localhost:3030/api"
-      : window.__WII_API_BASE__ || "https://white-impact-api.onrender.com/api";
+      ? `http://${window.location.hostname}:3030/api`
+      : window.__WII_API_BASE__ || "/api";
   const API_ORIGIN = API_BASE.replace(/\/api\/?$/, "");
 
   const ANALYTICS_SESSION_KEY = "wii.analytics.session";
@@ -61,18 +63,38 @@
   trackAnalyticsEvent("page_view");
 
   /* ─── Generic fetch wrapper ───────────────────────────────────── */
+  async function parseJsonResponse(res) {
+    const body = await res.text();
+    if (!body.trim()) {
+      throw new Error(`API request failed (${res.status} ${res.statusText || "Unknown error"}).`);
+    }
+    try {
+      return JSON.parse(body);
+    } catch {
+      throw new Error(`API returned an invalid response (${res.status}).`);
+    }
+  }
+
+  function formatDateInputValue(value) {
+    if (!value) return "";
+    const text = String(value);
+    if (/^\d{4}-\d{2}-\d{2}$/.test(text)) return text;
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? "" : date.toISOString().slice(0, 10);
+  }
+
   async function apiPost(endpoint, data) {
     const res = await fetch(`${API_BASE}${endpoint}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
-    return res.json();
+    return parseJsonResponse(res);
   }
 
   async function apiGet(endpoint) {
     const res = await fetch(`${API_BASE}${endpoint}`, { cache: "no-store" });
-    return res.json();
+    return parseJsonResponse(res);
   }
 
   const AUTH_STORAGE_KEY = "wii.admin.session";
@@ -111,7 +133,7 @@
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ refreshToken }),
     });
-    const result = await res.json();
+    const result = await parseJsonResponse(res);
     if (result.success && result.accessToken && result.refreshToken) {
       writeAdminSession({
         accessToken: result.accessToken,
@@ -163,7 +185,7 @@
 
   async function authGet(endpoint) {
     const res = await authRequest(endpoint, { method: "GET" });
-    return res.json();
+    return parseJsonResponse(res);
   }
 
   async function authPost(endpoint, data) {
@@ -172,7 +194,7 @@
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
-    return res.json();
+    return parseJsonResponse(res);
   }
 
   async function authUpload(endpoint, formData, method = "POST") {
@@ -180,7 +202,7 @@
       method,
       body: formData,
     });
-    return res.json();
+    return parseJsonResponse(res);
   }
 
   async function authPut(endpoint, data) {
@@ -189,7 +211,7 @@
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
-    return res.json();
+    return parseJsonResponse(res);
   }
 
   function escapeHtml(value) {
@@ -3866,7 +3888,7 @@
               id="${escapeHtml(id)}"
               name="${escapeHtml(field.name)}"
               type="date"
-              value="${escapeHtml(value || "")}"
+              value="${escapeHtml(formatDateInputValue(value))}"
               ${required}
             />
             ${help}
@@ -4768,7 +4790,7 @@
           method: "POST",
           body: formData,
         });
-        const result = await res.json();
+        const result = await parseJsonResponse(res);
 
         if (result.success) {
           document
@@ -5048,7 +5070,7 @@
             method: "POST",
             body: formData,
           });
-          const result = await res.json();
+          const result = await parseJsonResponse(res);
 
           if (result.success) {
             const photoDiv = card.querySelector("[data-team-photo]");
