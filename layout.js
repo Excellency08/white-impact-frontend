@@ -51,8 +51,6 @@
   const activeGroup = (group) => activeIf(group.has(page));
 
   const workLinks = [
-    { href: "solutions.html", label: "All Programs", id: "solutions" },
-    { href: "projects.html", label: "Projects", id: "projects" },
     { href: "edu4all.html", label: "Edu4All", id: "edu4all" },
     {
       href: "blood-donation.html",
@@ -71,7 +69,6 @@
   const aboutLinks = [
     { href: "our-story.html", label: "Our Story", id: "our-story" },
     { href: "advisory-board.html", label: "Our Members", id: "advisory-board" },
-    { href: "partner-with-us.html", label: "Partners", id: "partner-with-us" },
   ];
 
   const involvementLinks = [
@@ -173,6 +170,15 @@
             <nav class="nav" aria-label="Primary navigation" data-nav>
                 <a class="nav-link${activePage("home")}" href="index.html">Home</a>
                 <div class="nav-dropdown" data-dropdown>
+                    <button class="nav-link nav-btn${activeGroup(aboutPages)}" type="button" data-dropdown-trigger aria-expanded="false">
+                        About
+                        <svg class="chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+                    </button>
+                    <div class="dropdown-panel">
+                        ${renderLinks(aboutLinks)}
+                    </div>
+                </div>
+                <div class="nav-dropdown" data-dropdown>
                     <button class="nav-link nav-btn${activeGroup(workPages)}" type="button" data-dropdown-trigger aria-expanded="false">
                         Our Work
                         <svg class="chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
@@ -192,15 +198,7 @@
                     </div>
                 </div>
                 <a class="nav-link${activePage("projects")}" href="projects.html">Projects</a>
-                <div class="nav-dropdown" data-dropdown>
-                    <button class="nav-link nav-btn${activeGroup(aboutPages)}" type="button" data-dropdown-trigger aria-expanded="false">
-                        About
-                        <svg class="chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
-                    </button>
-                    <div class="dropdown-panel">
-                        ${renderLinks(aboutLinks)}
-                    </div>
-                </div>
+                <a class="nav-link${activePage("solutions")}" href="solutions.html">All Programs</a>
                 <div class="nav-dropdown" data-dropdown>
                     <button class="nav-link nav-btn${activeGroup(involvementPages)}" type="button" data-dropdown-trigger aria-expanded="false">
                         Get Involved
@@ -232,6 +230,7 @@
                     <a class="mobile-link mobile-link-sm" href="search.html">Search</a>
                     <a class="mobile-link mobile-link-sm" href="index.html#impact-report">Insights</a>
                     <a class="mobile-link${activePage("projects")}" href="projects.html">Projects</a>
+                    <a class="mobile-link${activePage("solutions")}" href="solutions.html">All Programs</a>
                     <a class="mobile-link mobile-link-sm" href="index.html#contact">Contact</a>
                 </div>
                 <div class="mobile-nav-section">
@@ -239,12 +238,12 @@
                     ${renderLinks(insightLinks, "mobile-link mobile-link-sm")}
                 </div>
                 <div class="mobile-nav-section">
-                    <p class="mobile-nav-label">Our Work</p>
-                    ${renderLinks(workLinks, "mobile-link mobile-link-sm")}
-                </div>
-                <div class="mobile-nav-section">
                     <p class="mobile-nav-label">About</p>
                     ${renderLinks(aboutLinks, "mobile-link mobile-link-sm")}
+                </div>
+                <div class="mobile-nav-section">
+                    <p class="mobile-nav-label">Our Work</p>
+                    ${renderLinks(workLinks, "mobile-link mobile-link-sm")}
                 </div>
                 <div class="mobile-nav-section">
                     <p class="mobile-nav-label">Get Involved</p>

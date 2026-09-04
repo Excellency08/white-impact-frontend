@@ -44,15 +44,8 @@
               Base on the Communities.
             </p>
           </div>
-          <div class="solutions-hub-grid projects-hub-grid">
-            <a class="solution-hub-card" href="#" data-animate>
-              <div class="solution-hub-icon">●</div>
-              <div>
-                <h3>Loading projects</h3>
-                <p>The live project records will appear here.</p>
-                <span class="program-link">Please wait →</span>
-              </div>
-            </a>
+          <div class="solutions-hub-grid projects-hub-grid" data-project-grid aria-live="polite">
+            <p class="content-loading-state">Loading projects...</p>
           </div>
         </div>
       </section>
@@ -72,7 +65,7 @@
     </main>
     <div data-site-footer></div>
     <script src="layout.js"></script>
-    <script src="api.js?v=20260904-supabase-api"></script>
+    <script src="api.js?v=20260904-content-api3"></script>
     <script src="script.js"></script>
   </body>
 </html>

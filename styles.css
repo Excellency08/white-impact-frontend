@@ -1485,6 +1485,16 @@ ul {
   text-align: center;
 }
 
+.content-loading-state {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 2.5rem;
+  border: 1px dashed var(--color-gray-200);
+  border-radius: var(--radius-lg);
+  color: var(--color-primary);
+  text-align: center;
+}
+
 .team-card {
   text-align: center;
   background: var(--color-surface);
@@ -5042,6 +5052,12 @@ body.inner-page main {
     font-size: clamp(2.8rem, 14vw, 4.2rem);
   }
 
+  .hero-content h3 {
+    font-size: clamp(1.9rem, 8vw, 2.8rem);
+    line-height: 1.05;
+    max-width: 18ch;
+  }
+
   .hero-visual {
     min-height: 440px;
   }
@@ -5475,12 +5491,19 @@ body::before {
     auto;
 }
 
-.hero-content h1 {
+.hero-content h1,
+.hero-content h3 {
   font-size: clamp(3.4rem, 7.4vw, 6.2rem);
   line-height: 0.9;
   letter-spacing: -0.06em;
   max-width: 10ch;
+  color: var(--color-white);
+}
 
+.hero-content h3 {
+  font-size: clamp(2.2rem, 4.8vw, 3.8rem);
+  line-height: 1.05;
+  max-width: 18ch;
 }
 
 .hero-lead {
@@ -6022,6 +6045,12 @@ body.inner-page main {
     font-size: clamp(2.8rem, 14vw, 4.2rem);
   }
 
+  .hero-content h3 {
+    font-size: clamp(1.9rem, 8vw, 2.8rem);
+    line-height: 1.05;
+    max-width: 18ch;
+  }
+
   .hero-visual {
     min-height: 440px;
   }
@@ -6178,6 +6207,12 @@ body,
 
 .section-head {
   margin-bottom: 1rem !important;
+}
+
+/* Keep the admin hero on the primary brand color despite global hero overrides. */
+.admin-app-page .page-hero.admin-hero {
+  background: #001a4d !important;
+  background-color: #001a4d !important;
 }
 
 /* Keep page hero with larger original padding */
@@ -6531,7 +6566,7 @@ body,
 }
 
 .admin-app-page .admin-hero {
-  background: linear-gradient(135deg, var(--admin-primary-deep), var(--admin-primary));
+  background: var(--color-primary);
   padding-bottom: 3.75rem;
 }
 
@@ -6565,6 +6600,11 @@ body,
   border: 1px solid var(--admin-line);
   background: rgba(255, 255, 255, 0.96);
   box-shadow: 0 18px 50px rgba(0, 26, 77, 0.1);
+}
+
+/* Keep admin container text aligned with the site's primary color system. */
+.admin-app-page .container {
+  color: var(--color-primary);
 }
 
 .admin-app-page .admin-panel[data-admin-login-panel] {

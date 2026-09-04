@@ -316,8 +316,12 @@
   }
 
   function renderProgramCards(programs) {
-    const grid = document.querySelector(".solutions-hub-grid");
-    if (!grid || !programs.length) return;
+    const grid = document.querySelector("[data-program-grid]");
+    if (!grid) return;
+    if (!programs.length) {
+      grid.innerHTML = '<p class="content-loading-state">No programs are currently available.</p>';
+      return;
+    }
 
     const cards = programs
       .map(
@@ -352,8 +356,12 @@
   }
 
   function renderProjectCards(projects) {
-    const grid = document.querySelector(".solutions-hub-grid");
-    if (!grid || !projects.length) return;
+    const grid = document.querySelector("[data-project-grid]");
+    if (!grid) return;
+    if (!projects.length) {
+      grid.innerHTML = '<p class="content-loading-state">No projects are currently available.</p>';
+      return;
+    }
 
     const cards = projects
       .map(
@@ -1573,14 +1581,16 @@
     const page = document.body.dataset.page;
     if (!page) return;
 
-    if (page === "solutions") {
+    if (page === "solutions" || page === "home") {
       try {
         const result = await apiGet("/programs");
         if (result.success && Array.isArray(result.data)) {
           renderProgramCards(result.data);
+        } else {
+          renderProgramCards([]);
         }
       } catch {
-        // Static fallback stays visible.
+        renderProgramCards([]);
       }
       return;
     }
@@ -1614,6 +1624,8 @@
         const result = await apiGet("/projects");
         if (result.success && Array.isArray(result.data)) {
           renderProjectCards(result.data);
+        } else {
+          renderProjectCards([]);
         }
         return;
       }
