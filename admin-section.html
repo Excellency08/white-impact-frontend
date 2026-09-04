@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow, noarchive" />
+    <title>Content Management | White Impact Admin</title>
+    <link rel="stylesheet" href="styles.css?v=20260904-admin9" />
+    <link rel="icon" type="image/png" href="./assets/images/logo.png" />
+  </head>
+  <body class="admin-app-page" data-page="admin-section">
+    <main id="main">
+      <section class="section content-admin-section">
+        <div class="container content-admin-shell">
+          <aside class="admin-panel content-admin-sidebar">
+            <a class="admin-login-brand" href="admin.html">
+              <img src="assets/images/logo.png" alt="" />
+              <span>White Impact Admin</span>
+            </a>
+            <p class="section-kicker">Management workspace</p>
+            <h1 data-content-admin-title>Content management</h1>
+            <p class="section-desc" data-content-admin-help>Manage the selected content collection.</p>
+            <p class="admin-panel-status" data-content-admin-status></p>
+            <div class="content-admin-sidebar-actions">
+              <a class="btn btn-primary btn-block" href="admin.html">Back to dashboard</a>
+              <button class="btn btn-ghost btn-block" type="button" data-content-admin-refresh>Refresh data</button>
+            </div>
+            <div class="admin-section-switcher">
+              <label for="admin-section-select">Switch workspace</label>
+              <select id="admin-section-select" data-admin-section-select>
+                <optgroup label="Content">
+                  <option value="programs">Programs</option>
+                  <option value="projects">Projects</option>
+                  <option value="stories">Stories</option>
+                  <option value="news">News &amp; insights</option>
+                  <option value="reports">Reports</option>
+                </optgroup>
+                <optgroup label="People &amp; engagement">
+                  <option value="team">Team members</option>
+                  <option value="volunteers">Volunteers</option>
+                  <option value="contacts">Contacts</option>
+                  <option value="donations">Donations</option>
+                  <option value="partners">Partners</option>
+                </optgroup>
+              </select>
+              <p>Choose a workspace to manage its records.</p>
+            </div>
+          </aside>
+          <div class="content-admin-workbench">
+            <div class="content-admin-summary-grid" data-content-admin-summary></div>
+            <div class="content-admin-tabs" data-content-admin-tabs></div>
+            <div class="content-admin-panels" data-content-admin-panels></div>
+          </div>
+        </div>
+      </section>
+    </main>
+    <script src="api.js?v=20260904-admin10"></script>
+  </body>
+</html>

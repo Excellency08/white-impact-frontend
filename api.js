@@ -18,6 +18,7 @@
     isLocal
       ? "http://localhost:3030/api"
       : window.__WII_API_BASE__ || "https://white-impact-api.onrender.com/api";
+  const API_ORIGIN = API_BASE.replace(/\/api\/?$/, "");
 
   const ANALYTICS_SESSION_KEY = "wii.analytics.session";
 
@@ -70,7 +71,7 @@
   }
 
   async function apiGet(endpoint) {
-    const res = await fetch(`${API_BASE}${endpoint}`);
+    const res = await fetch(`${API_BASE}${endpoint}`, { cache: "no-store" });
     return res.json();
   }
 
@@ -1857,6 +1858,13 @@
       }
 
       if (page === "home") {
+        const heroImage = document.querySelector(".hero-card-img img");
+        if (heroImage && hero.heroImageUrl) {
+          heroImage.src = hero.heroImageUrl.startsWith("/")
+            ? `${API_ORIGIN}${hero.heroImageUrl}`
+            : hero.heroImageUrl;
+          heroImage.alt = hero.heroImageAlt || "White Impact featured response";
+        }
         updateElementText(
           document,
           "[data-home-hero-kicker]",
@@ -2282,7 +2290,7 @@
 
   function initContentAdmin() {
     const page = document.body.dataset.page;
-    if (page !== "content-admin" && page !== "admin") return;
+    if (page !== "content-admin" && page !== "admin" && page !== "admin-section") return;
 
     const tabsEl = document.querySelector("[data-content-admin-tabs]");
     const panelsEl = document.querySelector("[data-content-admin-panels]");
@@ -2350,7 +2358,7 @@
             rows: 4,
             required: true,
           },
-          { name: "heroImageUrl", label: "Hero image URL", type: "text" },
+          { name: "heroImageUrl", label: "Upload hero image", type: "image", accept: "image/*" },
           { name: "heroImageAlt", label: "Hero image alt text", type: "text" },
           { name: "cardIcon", label: "Card icon", type: "text" },
           {
@@ -2387,55 +2395,55 @@
           { name: "isActive", label: "Active", type: "checkbox" },
           {
             name: "bodyCopy",
-            label: "Body copy JSON",
+            label: "Body copy",
             type: "json",
             rows: 5,
             help: "Array of body paragraphs.",
           },
           {
             name: "heroStats",
-            label: "Hero stats JSON",
+            label: "Hero stats",
             type: "json",
             rows: 5,
             help: "Array of stat objects with label and value.",
           },
           {
             name: "featureItems",
-            label: "Feature items JSON",
+            label: "Feature items",
             type: "json",
             rows: 5,
             help: "Array of feature cards.",
           },
           {
             name: "objectives",
-            label: "Objectives JSON",
+            label: "Objectives",
             type: "json",
             rows: 5,
           },
           {
             name: "activities",
-            label: "Activities JSON",
+            label: "Activities",
             type: "json",
             rows: 5,
           },
           {
             name: "beneficiaries",
-            label: "Beneficiaries JSON",
+            label: "Beneficiaries",
             type: "json",
             rows: 5,
           },
-          { name: "locations", label: "Locations JSON", type: "json", rows: 5 },
-          { name: "timeline", label: "Timeline JSON", type: "json", rows: 5 },
-          { name: "gallery", label: "Gallery JSON", type: "json", rows: 5 },
+          { name: "locations", label: "Locations", type: "json", rows: 5 },
+          { name: "timeline", label: "Timeline", type: "json", rows: 5 },
+          { name: "gallery", label: "Gallery", type: "json", rows: 5 },
           {
             name: "impactMetrics",
-            label: "Impact metrics JSON",
+            label: "Impact metrics",
             type: "json",
             rows: 5,
           },
-          { name: "stories", label: "Stories JSON", type: "json", rows: 5 },
-          { name: "reports", label: "Reports JSON", type: "json", rows: 5 },
-          { name: "partners", label: "Partners JSON", type: "json", rows: 5 },
+          { name: "stories", label: "Stories", type: "json", rows: 5 },
+          { name: "reports", label: "Reports", type: "json", rows: 5 },
+          { name: "partners", label: "Partners", type: "json", rows: 5 },
         ],
       },
       projects: {
@@ -2496,7 +2504,7 @@
             type: "textarea",
             rows: 3,
           },
-          { name: "heroImageUrl", label: "Hero image URL", type: "text" },
+          { name: "heroImageUrl", label: "Upload hero image", type: "image", accept: "image/*" },
           { name: "heroImageAlt", label: "Hero image alt text", type: "text" },
           {
             name: "status",
@@ -2521,30 +2529,30 @@
           { name: "displayOrder", label: "Display order", type: "number" },
           { name: "isFeatured", label: "Featured", type: "checkbox" },
           { name: "isActive", label: "Active", type: "checkbox" },
-          { name: "bodyCopy", label: "Body copy JSON", type: "json", rows: 5 },
-          { name: "timeline", label: "Timeline JSON", type: "json", rows: 5 },
+          { name: "bodyCopy", label: "Body copy", type: "json", rows: 5 },
+          { name: "timeline", label: "Timeline", type: "json", rows: 5 },
           {
             name: "objectives",
-            label: "Objectives JSON",
+            label: "Objectives",
             type: "json",
             rows: 5,
           },
-          { name: "outcomes", label: "Outcomes JSON", type: "json", rows: 5 },
-          { name: "media", label: "Media JSON", type: "json", rows: 5 },
+          { name: "outcomes", label: "Outcomes", type: "json", rows: 5 },
+          { name: "media", label: "Media", type: "json", rows: 5 },
           {
             name: "impactMetrics",
-            label: "Impact metrics JSON",
+            label: "Impact metrics",
             type: "json",
             rows: 5,
           },
           {
             name: "relatedStories",
-            label: "Related stories JSON",
+            label: "Related stories",
             type: "json",
             rows: 5,
           },
-          { name: "reports", label: "Reports JSON", type: "json", rows: 5 },
-          { name: "partners", label: "Partners JSON", type: "json", rows: 5 },
+          { name: "reports", label: "Reports", type: "json", rows: 5 },
+          { name: "partners", label: "Partners", type: "json", rows: 5 },
         ],
       },
       stories: {
@@ -2593,7 +2601,7 @@
           { name: "programSlug", label: "Program slug", type: "text" },
           { name: "location", label: "Location", type: "text" },
           { name: "publicationDate", label: "Publication date", type: "date" },
-          { name: "heroImageUrl", label: "Hero image URL", type: "text" },
+          { name: "heroImageUrl", label: "Upload hero image", type: "image", accept: "image/*" },
           { name: "heroImageAlt", label: "Hero image alt text", type: "text" },
           { name: "seoTitle", label: "SEO title", type: "text" },
           {
@@ -2607,7 +2615,7 @@
           { name: "isActive", label: "Active", type: "checkbox" },
           {
             name: "content",
-            label: "Content blocks JSON",
+            label: "Content blocks",
             type: "json",
             rows: 6,
             required: true,
@@ -2615,12 +2623,12 @@
           },
           {
             name: "images",
-            label: "Inline images JSON",
+            label: "Inline images",
             type: "json",
             rows: 5,
           },
-          { name: "gallery", label: "Gallery JSON", type: "json", rows: 5 },
-          { name: "tags", label: "Tags JSON", type: "json", rows: 5 },
+          { name: "gallery", label: "Gallery", type: "json", rows: 5 },
+          { name: "tags", label: "Tags", type: "json", rows: 5 },
         ],
       },
       news: {
@@ -2655,7 +2663,7 @@
           { name: "authorName", label: "Author name", type: "text" },
           { name: "authorRole", label: "Author role", type: "text" },
           { name: "category", label: "Category", type: "text" },
-          { name: "heroImageUrl", label: "Hero image URL", type: "text" },
+          { name: "heroImageUrl", label: "Upload hero image", type: "image", accept: "image/*" },
           { name: "heroImageAlt", label: "Hero image alt text", type: "text" },
           { name: "publicationDate", label: "Publication date", type: "date" },
           { name: "status", label: "Status", type: "select", options: ["Draft", "Review", "Published", "Archived"] },
@@ -2665,9 +2673,9 @@
           { name: "seoTitle", label: "SEO title", type: "text" },
           { name: "seoDescription", label: "SEO description", type: "textarea", rows: 3 },
           { name: "ogImageUrl", label: "Open Graph image URL", type: "text" },
-          { name: "content", label: "Content blocks JSON", type: "json", rows: 8, required: true },
-          { name: "tags", label: "Tags JSON", type: "json", rows: 4 },
-          { name: "relatedArticles", label: "Related articles JSON", type: "json", rows: 4 },
+          { name: "content", label: "Content blocks", type: "json", rows: 8, required: true },
+          { name: "tags", label: "Tags", type: "json", rows: 4 },
+          { name: "relatedArticles", label: "Related articles", type: "json", rows: 4 },
         ],
       },
       reports: {
@@ -2700,8 +2708,7 @@
           { name: "summary", label: "Summary", type: "textarea", rows: 3, required: true },
           { name: "description", label: "Description", type: "textarea", rows: 4 },
           { name: "category", label: "Category", type: "text" },
-          { name: "fileUrl", label: "Report file URL", type: "text", required: true },
-          { name: "previewUrl", label: "Preview URL", type: "text" },
+          { name: "fileUrl", label: "Upload report file", type: "asset", required: true, accept: ".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document", assetCategory: "document" },
           { name: "fileType", label: "File type", type: "text" },
           { name: "publicationDate", label: "Publication date", type: "date" },
           { name: "status", label: "Status", type: "select", options: ["Draft", "Review", "Published", "Archived"] },
@@ -2711,7 +2718,7 @@
           { name: "seoTitle", label: "SEO title", type: "text" },
           { name: "seoDescription", label: "SEO description", type: "textarea", rows: 3 },
           { name: "ogImageUrl", label: "Open Graph image URL", type: "text" },
-          { name: "tags", label: "Tags JSON", type: "json", rows: 4 },
+          { name: "tags", label: "Tags", type: "json", rows: 4 },
         ],
       },
       impact: {
@@ -2809,7 +2816,7 @@
           },
           { name: "title", label: "Title", type: "text", required: true },
           { name: "summary", label: "Summary", type: "textarea", rows: 3 },
-          { name: "heroImageUrl", label: "Hero image URL", type: "text" },
+          { name: "heroImageUrl", label: "Upload hero image", type: "image", accept: "image/*" },
           { name: "heroImageAlt", label: "Hero image alt text", type: "text" },
           { name: "seoTitle", label: "SEO title", type: "text" },
           {
@@ -2828,14 +2835,14 @@
           { name: "isActive", label: "Active", type: "checkbox" },
           {
             name: "body",
-            label: "Body JSON",
+            label: "Body",
             type: "json",
             rows: 8,
             help: "Global site settings such as contact details, social links, and footer copy.",
           },
           {
             name: "settings",
-            label: "Settings JSON",
+            label: "Settings",
             type: "json",
             rows: 6,
             help: "Optional structured settings used by the header, footer, and theme.",
@@ -2901,14 +2908,14 @@
           { name: "isActive", label: "Active", type: "checkbox" },
           {
             name: "body",
-            label: "Body JSON",
+            label: "Body",
             type: "json",
             rows: 10,
             help: "Homepage sections, messaging, and layout sequence.",
           },
           {
             name: "settings",
-            label: "Settings JSON",
+            label: "Settings",
             type: "json",
             rows: 6,
           },
@@ -2956,7 +2963,7 @@
           },
           { name: "title", label: "Title", type: "text", required: true },
           { name: "summary", label: "Summary", type: "textarea", rows: 3 },
-          { name: "heroImageUrl", label: "Hero image URL", type: "text" },
+          { name: "heroImageUrl", label: "Upload hero image", type: "image", accept: "image/*" },
           { name: "heroImageAlt", label: "Hero image alt text", type: "text" },
           { name: "seoTitle", label: "SEO title", type: "text" },
           {
@@ -2975,14 +2982,14 @@
           { name: "isActive", label: "Active", type: "checkbox" },
           {
             name: "body",
-            label: "Body JSON",
+            label: "Body",
             type: "json",
             rows: 10,
             help: "Hero kicker, title, lead, buttons, and featured response copy.",
           },
           {
             name: "settings",
-            label: "Settings JSON",
+            label: "Settings",
             type: "json",
             rows: 6,
           },
@@ -3047,14 +3054,14 @@
           { name: "isActive", label: "Active", type: "checkbox" },
           {
             name: "body",
-            label: "Body JSON",
+            label: "Body",
             type: "json",
             rows: 8,
             help: "Footer links, address, social connectors, and support copy.",
           },
           {
             name: "settings",
-            label: "Settings JSON",
+            label: "Settings",
             type: "json",
             rows: 6,
           },
@@ -3119,14 +3126,14 @@
           { name: "isActive", label: "Active", type: "checkbox" },
           {
             name: "body",
-            label: "Body JSON",
+            label: "Body",
             type: "json",
             rows: 10,
             help: "Global SEO defaults and page-specific title/description maps.",
           },
           {
             name: "settings",
-            label: "Settings JSON",
+            label: "Settings",
             type: "json",
             rows: 6,
           },
@@ -3191,14 +3198,14 @@
           { name: "isActive", label: "Active", type: "checkbox" },
           {
             name: "body",
-            label: "Body JSON",
+            label: "Body",
             type: "json",
             rows: 10,
             help: "Array or object describing partner names, logos, and links.",
           },
           {
             name: "settings",
-            label: "Settings JSON",
+            label: "Settings",
             type: "json",
             rows: 6,
           },
@@ -3263,14 +3270,14 @@
           { name: "isActive", label: "Active", type: "checkbox" },
           {
             name: "body",
-            label: "Body JSON",
+            label: "Body",
             type: "json",
             rows: 10,
             help: "Event list items, dates, locations, and CTA links.",
           },
           {
             name: "settings",
-            label: "Settings JSON",
+            label: "Settings",
             type: "json",
             rows: 6,
           },
@@ -3333,7 +3340,7 @@
           },
           {
             name: "tags",
-            label: "Tags JSON",
+            label: "Tags",
             type: "json",
             rows: 4,
             defaultValue: [],
@@ -3364,7 +3371,7 @@
         title: "Team",
         description:
           "Edit leadership names, roles, bios, photos, and display ordering.",
-        load: () => apiGet("/team"),
+        load: () => authGet("/team/admin"),
         loadRecords: (result) =>
           Array.isArray(result?.data)
             ? result.data.map((row) => ({
@@ -3403,13 +3410,14 @@
             type: "textarea",
             rows: 4,
           },
-          { name: "photoUrl", label: "Photo URL", type: "text" },
+          { name: "photoUrl", label: "Upload photo", type: "image", accept: "image/*" },
           { name: "displayOrder", label: "Display order", type: "number" },
           { name: "isActive", label: "Active", type: "checkbox" },
         ],
       },
       volunteers: {
         label: "Volunteers",
+        readOnly: true,
         singular: "volunteer application",
         title: "Volunteer applications",
         description:
@@ -3439,8 +3447,8 @@
             label: "Experience level",
             type: "text",
           },
-          { name: "skills", label: "Skills JSON", type: "json", rows: 4, defaultValue: [] },
-          { name: "interests", label: "Interests JSON", type: "json", rows: 4, defaultValue: [] },
+          { name: "skills", label: "Skills", type: "json", rows: 4, defaultValue: [] },
+          { name: "interests", label: "Interests", type: "json", rows: 4, defaultValue: [] },
           { name: "portfolioUrl", label: "Portfolio URL", type: "text" },
           {
             name: "motivation",
@@ -3460,6 +3468,7 @@
       },
       contacts: {
         label: "Contacts",
+        readOnly: true,
         singular: "contact submission",
         title: "Contact submissions",
         description:
@@ -3527,6 +3536,7 @@
       },
       donations: {
         label: "Donations",
+        readOnly: true,
         singular: "donation",
         title: "Donations",
         description:
@@ -3569,7 +3579,24 @@
       },
     };
 
-    const keys = Object.keys(configs);
+    const allKeys = Object.keys(configs);
+    const removedAdminSections = new Set([
+      "site-settings",
+      "homepage",
+      "footer",
+      "impact",
+      "media",
+      "hero",
+      "seo",
+    ]);
+    const availableKeys = allKeys.filter((key) => !removedAdminSections.has(key));
+    const requestedSection = new URLSearchParams(window.location.search).get("section");
+    const keys =
+      page === "admin-section" && availableKeys.includes(requestedSection)
+        ? [requestedSection]
+        : page === "admin-section"
+          ? [availableKeys[0]]
+          : availableKeys;
     const state = {
       activeKey: keys[0],
       records: Object.fromEntries(keys.map((key) => [key, []])),
@@ -3590,28 +3617,127 @@
     function getSelectedRecord(key) {
       const records = getRecords(key);
       const selectedId = state.selectedIds[key];
-      return (
-        records.find((record) => record.id === selectedId) || records[0] || null
-      );
+      if (selectedId === null || selectedId === undefined || selectedId === "") {
+        return null;
+      }
+      return records.find((record) => String(record.id) === String(selectedId)) || null;
     }
 
     function getDefaultRecord(config) {
       return JSON.parse(JSON.stringify(config.defaultRecord || {}));
     }
 
-    function formatJsonValue(value, fallback = []) {
-      const input =
-        value === undefined || value === null || value === ""
-          ? fallback
-          : value;
-      if (typeof input === "string") {
-        try {
-          return JSON.stringify(JSON.parse(input), null, 2);
-        } catch {
-          return input;
+    function structuredItems(value) {
+      if (Array.isArray(value)) return value;
+      if (!value || typeof value !== "object") return [];
+      return [value];
+    }
+
+    function structuredKeys(items) {
+      const keys = new Set();
+      items.forEach((item) => {
+        if (item && typeof item === "object" && !Array.isArray(item)) {
+          Object.keys(item).forEach((key) => keys.add(key));
         }
-      }
-      return JSON.stringify(input, null, 2);
+      });
+      return [...keys];
+    }
+
+    function renderStructuredItem(keys, item = {}) {
+      const primitive = typeof item !== "object" || item === null || Array.isArray(item);
+      const itemKeys = keys.length ? keys : ["value"];
+      return `
+        <div class="structured-list-item" data-structured-item>
+          <div class="structured-list-fields">
+            ${itemKeys.map((key) => {
+              const rawValue = primitive ? (key === "value" ? item : "") : item[key];
+              const value = Array.isArray(rawValue) ? rawValue.join(", ") : rawValue ?? "";
+              return `
+                <label>
+                  <span>${escapeHtml(key.replace(/([A-Z])/g, " $1"))}</span>
+                  <input type="text" data-structured-key="${escapeHtml(key)}" value="${escapeHtml(value)}" />
+                </label>
+              `;
+            }).join("")}
+          </div>
+          <button class="btn btn-ghost structured-list-remove" type="button" data-structured-remove>Remove</button>
+        </div>
+      `;
+    }
+
+    function renderStructuredList(field, value) {
+      const items = structuredItems(value);
+      const defaultKeys = {
+        bodyCopy: ["value"],
+        heroStats: ["value", "label"],
+        featureItems: ["title", "summary"],
+        objectives: ["title", "summary"],
+        activities: ["title", "summary"],
+        beneficiaries: ["title", "summary", "imageUrl"],
+        locations: ["title", "summary", "country", "state", "city"],
+        timeline: ["year", "title", "summary"],
+        gallery: ["url", "alt", "caption"],
+        impactMetrics: ["label", "value", "description"],
+        stories: ["quote", "attribution"],
+        reports: ["title", "url", "description"],
+        partners: ["title", "description", "logoUrl"],
+        images: ["url", "alt", "caption"],
+        tags: ["value"],
+        relatedArticles: ["title", "slug"],
+      };
+      const keys = structuredKeys(items).length
+        ? structuredKeys(items)
+        : defaultKeys[field.name] || [];
+      return `
+        <div class="form-group content-admin-span-full structured-list-field" data-structured-list data-structured-keys="${escapeHtml(keys.join(","))}">
+          <div class="structured-list-head">
+            <div>
+              <label>${escapeHtml(field.label)}</label>
+              <p class="field-help">Add and edit entries using labeled fields. No JSON editing is required.</p>
+            </div>
+            <button class="btn btn-ghost" type="button" data-structured-add>Add item</button>
+          </div>
+          <div data-structured-items>
+            ${items.map((item) => renderStructuredItem(keys, item)).join("") || `<p class="content-admin-empty" data-structured-empty>No items added yet.</p>`}
+          </div>
+          <input type="hidden" name="${escapeHtml(field.name)}" value="" />
+          ${field.help ? `<p class="field-help">${escapeHtml(field.help)}</p>` : ""}
+        </div>
+      `;
+    }
+
+    function readStructuredList(container) {
+      return [...container.querySelectorAll("[data-structured-item]")].map((item) => {
+        const values = [...item.querySelectorAll("[data-structured-key]")];
+        const result = {};
+        values.forEach((input) => {
+          result[input.dataset.structuredKey] = input.value.trim();
+        });
+        return values.length === 1 && values[0].dataset.structuredKey === "value"
+          ? result.value
+          : result;
+      });
+    }
+
+    function bindStructuredEditors(form) {
+      form.querySelectorAll("[data-structured-list]").forEach((container) => {
+        const itemsEl = container.querySelector("[data-structured-items]");
+        const keys = container.dataset.structuredKeys
+          ? container.dataset.structuredKeys.split(",").filter(Boolean)
+          : [];
+        container.addEventListener("click", (event) => {
+          if (event.target.closest("[data-structured-add]")) {
+            container.querySelector("[data-structured-empty]")?.remove();
+            itemsEl.insertAdjacentHTML("beforeend", renderStructuredItem(keys));
+          }
+          if (event.target.closest("[data-structured-remove]")) {
+            event.target.closest("[data-structured-item]")?.remove();
+            if (!itemsEl.querySelector("[data-structured-item]")) {
+              itemsEl.innerHTML = `<p class="content-admin-empty" data-structured-empty>No items added yet.</p>`;
+            }
+          }
+        });
+      });
     }
 
     function renderField(config, field, record) {
@@ -3665,6 +3791,34 @@
         `;
       }
 
+      if (field.type === "image" || field.type === "asset") {
+        const currentUrl = value || "";
+        const resolvedUrl = currentUrl.startsWith("/")
+          ? `${API_ORIGIN}${currentUrl}`
+          : currentUrl;
+        const preview = currentUrl && field.type === "image"
+          ? `<img class="content-admin-image-preview" src="${escapeHtml(resolvedUrl)}" alt="Current image preview" loading="lazy" />`
+          : currentUrl
+            ? `<a class="content-admin-image-preview-empty" href="${escapeHtml(resolvedUrl)}" target="_blank" rel="noopener noreferrer">Open current file</a>`
+            : `<span class="content-admin-image-preview-empty">No file selected</span>`;
+
+        return `
+          <div class="form-group content-admin-span-full content-admin-image-field">
+            <label for="${escapeHtml(id)}">${escapeHtml(field.label)}</label>
+            <div class="content-admin-image-picker">
+              ${preview}
+              <input
+                id="${escapeHtml(id)}"
+                name="${escapeHtml(field.name)}"
+                type="file"
+                accept="${escapeHtml(field.accept || "image/*")}" />
+            </div>
+            <p class="field-help">Choose a file from your computer. It will upload when you save this record.</p>
+            ${help}
+          </div>
+        `;
+      }
+
       if (field.type === "select") {
         return `
           <div class="form-group">
@@ -3701,13 +3855,7 @@
       }
 
       if (field.type === "json") {
-        return `
-          <div class="form-group content-admin-span-full">
-            <label for="${escapeHtml(id)}">${escapeHtml(field.label)}</label>
-            <textarea id="${escapeHtml(id)}" name="${escapeHtml(field.name)}" rows="${field.rows || 5}" ${required}>${escapeHtml(formatJsonValue(value, field.defaultValue || []))}</textarea>
-            ${help}
-          </div>
-        `;
+        return renderStructuredList(field, value ?? field.defaultValue ?? []);
       }
 
       if (field.type === "date") {
@@ -3743,21 +3891,21 @@
       `;
     }
 
-    function renderForm(config, record) {
+    function renderForm(key, config, record) {
       const heading = record?.id
         ? `Editing ${config.itemLabel(record)}`
         : `Create a new ${config.singular || config.label.toLowerCase()}`;
 
       return `
-        <form class="content-admin-form" data-content-admin-form="${escapeHtml(config.label)}">
+        <form class="content-admin-form" data-content-admin-form="${escapeHtml(key)}">
           <div class="content-admin-form-head">
             <div>
               <p class="section-kicker">Editor</p>
               <h3>${escapeHtml(heading)}</h3>
             </div>
             <div class="content-admin-form-actions">
-              <button class="btn btn-ghost" type="button" data-content-admin-new="${escapeHtml(config.label)}">New</button>
-              ${record?.id && config.archive ? `<button class="btn btn-ghost" type="button" data-content-admin-archive="${escapeHtml(config.label)}" data-record-id="${escapeHtml(record.id)}">Archive</button>` : ""}
+              <button class="btn btn-ghost" type="button" data-content-admin-new="${escapeHtml(key)}">New</button>
+              ${record?.id && config.archive ? `<button class="btn btn-ghost" type="button" data-content-admin-archive="${escapeHtml(key)}" data-record-id="${escapeHtml(record.id)}">Deactivate</button>` : ""}
               <button class="btn btn-primary" type="submit">Save ${escapeHtml(config.label)}</button>
             </div>
           </div>
@@ -3770,7 +3918,38 @@
       `;
     }
 
-    function renderList(config, records, selectedId) {
+    function displayReadOnlyValue(value) {
+      if (value === null || value === undefined || value === "") return "Not provided";
+      if (Array.isArray(value)) return value.join(", ") || "Not provided";
+      if (typeof value === "object") return Object.values(value).filter(Boolean).join(", ") || "Not provided";
+      return String(value);
+    }
+
+    function renderReadOnlyRecord(config, record) {
+      if (!record) return `<p class="content-admin-empty">Select a record to view its details.</p>`;
+      return `
+        <div class="content-admin-readonly">
+          <div class="content-admin-form-head">
+            <div>
+              <p class="section-kicker">Submission record</p>
+              <h3>${escapeHtml(config.itemLabel(record))}</h3>
+              <p class="section-desc">This record is received from the public website and is available for review.</p>
+            </div>
+            <span class="content-admin-record-badge">${escapeHtml(config.itemMeta(record))}</span>
+          </div>
+          <dl class="content-admin-record-details">
+            ${config.fields.map((field) => `
+              <div>
+                <dt>${escapeHtml(field.label)}</dt>
+                <dd>${escapeHtml(displayReadOnlyValue(record[field.name]))}</dd>
+              </div>
+            `).join("")}
+          </dl>
+        </div>
+      `;
+    }
+
+    function renderList(key, config, records, selectedId) {
       if (!records.length) {
         return `<p class="content-admin-empty">${escapeHtml(config.emptyLabel)}</p>`;
       }
@@ -3779,12 +3958,12 @@
         <div class="content-admin-list">
           ${records
             .map((record) => {
-              const active = record.id === selectedId ? " is-active" : "";
+              const active = String(record.id) === String(selectedId) ? " is-active" : "";
               return `
                 <button
                   type="button"
                   class="content-admin-list-item${active}"
-                  data-content-admin-select="${escapeHtml(config.label)}"
+                  data-content-admin-select="${escapeHtml(key)}"
                   data-record-id="${escapeHtml(record.id)}"
                 >
                   <strong>${escapeHtml(config.itemLabel(record))}</strong>
@@ -3862,12 +4041,14 @@
                 <aside class="content-admin-list-panel">
                   <div class="content-admin-list-toolbar">
                     <strong>Records</strong>
-                    <button class="btn btn-ghost" type="button" data-content-admin-new="${escapeHtml(config.label)}">New ${escapeHtml(config.singular || config.label.toLowerCase())}</button>
+                    ${config.readOnly ? "" : `<button class="btn btn-ghost" type="button" data-content-admin-new="${escapeHtml(key)}">New ${escapeHtml(config.singular || config.label.toLowerCase())}</button>`}
                   </div>
-                  ${renderList(config, records, selected?.id || null)}
+                  ${renderList(key, config, records, selected?.id || null)}
                 </aside>
                 <div class="content-admin-editor-panel">
-                  ${renderForm(config, selected || getDefaultRecord(config))}
+                  ${config.readOnly
+                    ? renderReadOnlyRecord(config, selected)
+                    : renderForm(key, config, selected || getDefaultRecord(config))}
                 </div>
               </div>
             </article>
@@ -3881,7 +4062,8 @@
           button.addEventListener("click", () => {
             const key = button.dataset.contentAdminSelect;
             const recordId = Number(button.dataset.recordId);
-            state.activeKey = keys.includes(key) ? key : state.activeKey;
+            if (!keys.includes(key)) return;
+            state.activeKey = key;
             state.selectedIds[key] = recordId;
             renderTabs();
             renderPanels();
@@ -3893,9 +4075,7 @@
         .querySelectorAll("[data-content-admin-new]")
         .forEach((button) => {
           button.addEventListener("click", () => {
-            const key = keys.find(
-              (item) => configs[item].label === button.dataset.contentAdminNew,
-            );
+            const key = button.dataset.contentAdminNew;
             if (!key) return;
             state.activeKey = key;
             state.selectedIds[key] = null;
@@ -3907,36 +4087,36 @@
 
       panelsEl.querySelectorAll("[data-content-admin-archive]").forEach((button) => {
         button.addEventListener("click", async () => {
-          const key = keys.find(
-            (item) => configs[item].label === button.dataset.contentAdminArchive,
-          );
+          const key = button.dataset.contentAdminArchive;
           const record = key
-            ? getRecords(key).find((item) => item.id === Number(button.dataset.recordId))
+            ? getRecords(key).find(
+                (item) => String(item.id) === String(button.dataset.recordId),
+              )
             : null;
-          if (!key || !record || !window.confirm(`Archive this ${configs[key].singular || "record"}? It will be removed from public listings.`)) {
+          if (!key || !record || !window.confirm(`Deactivate this ${configs[key].singular || "record"}? It will stay in the admin list but be hidden from public pages.`)) {
             return;
           }
 
           button.disabled = true;
-          syncPanelState(key, `Archiving ${configs[key].label.toLowerCase()}…`);
+          syncPanelState(key, `Deactivating ${configs[key].label.toLowerCase()}…`);
           try {
             const result = await configs[key].archive(record);
-            if (!result.success) throw new Error(result.message || "Archive failed.");
+            if (!result.success) throw new Error(result.message || "Deactivation failed.");
             await loadSection(key);
-            showToast(`${configs[key].singular || configs[key].label} archived.`);
+            showToast(`${configs[key].singular || configs[key].label} deactivated.`);
           } catch (error) {
-            syncPanelState(key, error.message || "Archive failed.", "error");
-            showToast(error.message || "Archive failed.", "error");
+            syncPanelState(key, error.message || "Deactivation failed.", "error");
+            showToast(error.message || "Deactivation failed.", "error");
           } finally {
             button.disabled = false;
           }
         });
       });
 
+      panelsEl.querySelectorAll("[data-content-admin-form]").forEach(bindStructuredEditors);
+
       panelsEl.querySelectorAll("[data-content-admin-form]").forEach((form) => {
-        const key = keys.find(
-          (item) => configs[item].label === form.dataset.contentAdminForm,
-        );
+        const key = form.dataset.contentAdminForm;
         if (!key) return;
         form.addEventListener("submit", async (event) => {
           event.preventDefault();
@@ -3966,9 +4146,66 @@
             }
           }
 
+          const imageFields = config.fields.filter(
+            (field) => field.type === "image" || field.type === "asset",
+          );
+          const uploadedImages = {};
+          if (imageFields.length) {
+            setFormLoading(form, true);
+            try {
+              for (const field of imageFields) {
+                const input = form.elements.namedItem(field.name);
+                const file = input?.files?.[0];
+                if (field.required && !file && !current?.[field.name]) {
+                  throw new Error(`${field.label} is required.`);
+                }
+                if (!file) continue;
+
+                syncPanelState(key, `Uploading ${field.label.toLowerCase()}…`);
+                const assetKey = `${key}-${current?.id || current?.slug || Date.now()}-${Date.now()}`
+                  .toLowerCase()
+                  .replace(/[^a-z0-9]+/g, "-")
+                  .replace(/^-+|-+$/g, "");
+                const imageData = new FormData();
+                imageData.append("file", file);
+                imageData.append("assetKey", assetKey);
+                imageData.append(
+                  "title",
+                  current?.title || current?.fullName || `${config.label} image`,
+                );
+                imageData.append("category", field.assetCategory || "image");
+                imageData.append("usageType", `${key}-image`);
+                imageData.append("status", "Published");
+
+                const result = await authUpload("/media/admin", imageData);
+                if (!result.success || !result.data?.fileUrl) {
+                  throw new Error(result.message || `Failed to upload ${field.label.toLowerCase()}.`);
+                }
+                const fileUrl = result.data.fileUrl;
+                // Store the backend path so the record remains portable across environments.
+                uploadedImages[field.name] = fileUrl;
+              }
+            } catch (error) {
+              syncPanelState(key, error.message || "Image upload failed.", "error");
+              showToast(error.message || "Image upload failed.", "error");
+              setFormLoading(form, false);
+              return;
+            }
+          }
+
           for (const field of config.fields) {
             const input = form.elements.namedItem(field.name);
             if (!input) continue;
+
+            if (field.type === "image" || field.type === "asset") {
+              const value = uploadedImages[field.name] || current?.[field.name] || "";
+              if (hasFileField) {
+                payload.append(field.name, value);
+              } else {
+                payload[field.name] = value;
+              }
+              continue;
+            }
 
             if (field.type === "file") {
               const file = input.files?.[0];
@@ -4001,34 +4238,12 @@
             }
 
             if (field.type === "json") {
-              const raw = String(input.value || "").trim();
-              if (!raw) {
-                if (hasFileField) {
-                  payload.append(
-                    field.name,
-                    JSON.stringify(field.defaultValue || []),
-                  );
-                } else {
-                  payload[field.name] = field.defaultValue || [];
-                }
-                continue;
-              }
-
-              try {
-                const parsed = JSON.parse(raw);
-                if (hasFileField) {
-                  payload.append(field.name, JSON.stringify(parsed));
-                } else {
-                  payload[field.name] = parsed;
-                }
-              } catch {
-                syncPanelState(
-                  key,
-                  `${field.label} contains invalid JSON.`,
-                  "error",
-                );
-                return;
-              }
+              const structured = input.closest("[data-structured-list]");
+              const parsed = structured
+                ? readStructuredList(structured)
+                : field.defaultValue || [];
+              if (hasFileField) payload.append(field.name, JSON.stringify(parsed));
+              else payload[field.name] = parsed;
               continue;
             }
 
@@ -4110,10 +4325,12 @@
               : [];
         state.records[key] = records;
         state.selectedIds[key] =
-          preferredId && records.some((record) => record.id === preferredId)
+          preferredId && records.some((record) => String(record.id) === String(preferredId))
             ? preferredId
             : state.selectedIds[key] &&
-                records.some((record) => record.id === state.selectedIds[key])
+                records.some(
+                  (record) => String(record.id) === String(state.selectedIds[key]),
+                )
               ? state.selectedIds[key]
               : records[0]?.id || null;
         if (state.activeKey === key && titleEl) {
@@ -4153,6 +4370,10 @@
     }
 
     if (!readAdminSession()?.accessToken) {
+      if (page === "admin-section") {
+        window.location.href = "admin-login.html";
+        return;
+      }
       setStatus("Sign in from the admin console to edit content.", "warning");
       if (helpEl) {
         helpEl.textContent =
@@ -4187,6 +4408,19 @@
       if (!button) return;
       setActiveKey(button.dataset.contentAdminTab);
     });
+
+    const sectionSelect = document.querySelector("[data-admin-section-select]");
+    if (sectionSelect) {
+      sectionSelect.value = requestedSection && availableKeys.includes(requestedSection)
+        ? requestedSection
+        : keys[0];
+      sectionSelect.addEventListener("change", () => {
+        const nextSection = sectionSelect.value;
+        if (availableKeys.includes(nextSection)) {
+          window.location.href = `admin-section.html?section=${encodeURIComponent(nextSection)}`;
+        }
+      });
+    }
 
     refreshBtn?.addEventListener("click", async () => {
       setStatus("Refreshing content editor…");
@@ -4747,25 +4981,50 @@
   }
 
   /* ─── Team photos — load from API ────────────────────────────── */
+  function renderPublicTeamMembers(teamGrid, members) {
+    if (!teamGrid || !Array.isArray(members)) return;
+
+    if (!members.length) {
+      teamGrid.innerHTML = '<p class="team-grid-status">No members are currently available.</p>';
+      return;
+    }
+
+    teamGrid.innerHTML = members
+      .map((member, index) => {
+        const photoUrl = member.photo_url || member.photoUrl || "";
+        const photo = photoUrl
+          ? `<img src="${escapeHtml(photoUrl.startsWith("/") ? `${API_ORIGIN}${photoUrl}` : photoUrl)}" alt="${escapeHtml(member.full_name || member.fullName || "Team member")}" loading="lazy" />`
+          : "";
+        return `
+          <article class="team-card visible" data-animate data-team-index="${escapeHtml(member.id)}">
+            <div class="team-photo team-photo-${(index % 6) + 1}" data-team-photo>${photo}</div>
+            <h3>${escapeHtml(member.full_name || member.fullName || "Team member")}</h3>
+            <p class="team-role">${escapeHtml(member.role || "Team member")}</p>
+            <p class="team-bio">${escapeHtml(member.bio || "")}</p>
+          </article>
+        `;
+      })
+      .join("");
+  }
+
   async function loadTeamPhotos() {
     const teamGrid = document.querySelector(".team-grid");
     if (!teamGrid) return;
 
     try {
       const result = await apiGet("/team");
-      if (!result.success) return;
+      if (!result.success) {
+        teamGrid.innerHTML = '<p class="team-grid-status">Members could not be loaded right now.</p>';
+        return;
+      }
 
-      result.data.forEach((member) => {
-        if (!member.photo_url) return;
-        const card = teamGrid.querySelector(`[data-team-index="${member.id}"]`);
-        if (!card) return;
-        const photoDiv = card.querySelector("[data-team-photo]");
-        if (photoDiv && member.photo_url) {
-          photoDiv.style.cssText = `background-image:url('${API_BASE.replace("/api", "")}${member.photo_url}');background-size:cover;background-position:center`;
-        }
-      });
+      if (!Array.isArray(result.data)) {
+        teamGrid.innerHTML = '<p class="team-grid-status">Members could not be loaded right now.</p>';
+        return;
+      }
+      renderPublicTeamMembers(teamGrid, result.data);
     } catch {
-      // Silently fail — placeholder avatars remain
+      teamGrid.innerHTML = '<p class="team-grid-status">Members could not be loaded right now.</p>';
     }
   }
 
