@@ -3342,6 +3342,73 @@ body.inner-page main {
   position: static;
 }
 
+.admin-app-page .content-admin-summary-grid-sidebar {
+  margin-top: 1.5rem;
+}
+
+.admin-app-page[data-page="admin-section"] .content-admin-shell > .content-admin-sidebar {
+  position: relative !important;
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(360px, 0.9fr);
+  align-items: start;
+  gap: 1.5rem 2.25rem;
+}
+
+.admin-app-page[data-page="admin-section"] .content-admin-sidebar-intro,
+.admin-app-page[data-page="admin-section"] .content-admin-sidebar-controls {
+  min-width: 0;
+}
+
+.admin-app-page[data-page="admin-section"] .content-admin-sidebar-controls {
+  display: grid;
+  gap: 1rem;
+  align-self: start;
+}
+
+.admin-app-page[data-page="admin-section"] .content-admin-workbench {
+  margin-top: 1.5rem;
+}
+
+.admin-app-page[data-page="admin-section"] .content-admin-shell > .content-admin-sidebar > .content-admin-sidebar-actions {
+  position: absolute !important;
+  top: 1.25rem !important;
+  right: 1.25rem !important;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.55rem;
+  order: initial !important;
+  margin: 0;
+  visibility: visible;
+  opacity: 1;
+  z-index: 3;
+}
+
+.admin-app-page[data-page="admin-section"] .admin-top-action {
+  min-height: 2.35rem;
+  padding: 0.55rem 0.9rem;
+  border-radius: 0.65rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+.admin-app-page[data-page="admin-section"] .content-admin-sidebar-controls .admin-section-switcher {
+  order: 1;
+  margin: 0;
+}
+
+.admin-app-page[data-page="admin-section"] .content-admin-summary-grid-sidebar {
+  order: 2;
+  margin: 0;
+  grid-template-columns: 1fr;
+  min-width: 0;
+}
+
+.admin-app-page[data-page="admin-section"] .content-admin-sidebar-actions .btn-block {
+  width: 100%;
+  min-width: 0;
+}
+
 .admin-section-switcher {
   display: grid;
   gap: 0.6rem;
@@ -3751,10 +3818,6 @@ body.inner-page main {
   margin-bottom: 1rem;
 }
 
-.content-admin-inline .content-admin-tabs {
-  margin-top: 1.5rem;
-}
-
 .content-admin-inline .content-admin-panel {
   width: 100%;
 }
@@ -3852,42 +3915,6 @@ body.inner-page main {
   gap: 1rem;
   justify-content: space-between;
   align-items: flex-start;
-}
-
-.content-admin-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.65rem;
-}
-
-.content-admin-tab {
-  padding: 0.75rem 1rem;
-  border-radius: 999px;
-  border: 1px solid var(--color-gray-200);
-  background: var(--color-off-white);
-  color: var(--color-navy);
-  font-weight: 700;
-  transition:
-    transform var(--transition),
-    background-color var(--transition),
-    color var(--transition),
-    border-color var(--transition),
-    box-shadow var(--transition);
-}
-
-.content-admin-tab:hover {
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-sm);
-}
-
-.content-admin-tab.is-active {
-  background: linear-gradient(
-    135deg,
-    var(--color-primary),
-    var(--color-primary-light)
-  );
-  color: var(--color-white);
-  border-color: transparent;
 }
 
 .content-admin-panels {
@@ -4249,6 +4276,77 @@ body.inner-page main {
   overflow-wrap: anywhere;
 }
 
+.content-admin-record-actions {
+  display: grid;
+  gap: 1rem;
+}
+
+.donation-approval-card {
+  display: grid;
+  gap: 1rem;
+  padding: 1.25rem;
+  border: 1px solid var(--admin-line, #d7e1f1);
+  border-radius: var(--radius-md);
+  background: var(--admin-primary-soft, #e8f0ff);
+  box-shadow: 0 10px 24px rgba(0, 26, 77, 0.08);
+}
+
+.donation-approval-card h4 {
+  margin: 0.2rem 0 0;
+  color: var(--admin-ink, #102044);
+}
+
+.donation-approval-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.donation-approval-summary div {
+  padding: 0.75rem;
+  border-radius: 0.65rem;
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.donation-approval-summary dt,
+.donation-approval-message-label {
+  color: var(--color-primary);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.donation-approval-summary dd {
+  margin: 0.25rem 0 0;
+  color: var(--admin-ink, #102044);
+  overflow-wrap: anywhere;
+}
+
+.donation-approval-card textarea {
+  width: 100%;
+  min-height: 7rem;
+  padding: 0.85rem;
+  border: 1px solid var(--admin-line, #d7e1f1);
+  border-radius: 0.7rem;
+  background: #ffffff;
+  color: var(--admin-ink, #102044);
+  resize: vertical;
+}
+
+.donation-approval-card textarea:focus {
+  outline: 3px solid rgba(0, 26, 77, 0.14);
+  border-color: var(--color-primary);
+}
+
+.donation-approval-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
 .program-gallery-card img {
   width: 100%;
   height: 100%;
@@ -4499,7 +4597,7 @@ body.inner-page main {
   color: var(--color-gray-600);
 }
 
-/* Donation Page - Minimal Paystack Style */
+/* Donation Page */
 .donate-page-minimal {
   background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
   min-height: 100vh;
@@ -6596,10 +6694,18 @@ body,
 .admin-app-page .admin-analytics-panel,
 .admin-app-page .content-admin-inline,
 .admin-app-page .content-admin-sidebar,
-.admin-app-page .content-admin-panel {
+.admin-app-page .content-admin-panel,
+.admin-app-page .admin-section-switcher,
+.admin-app-page .content-admin-summary-card {
   border: 1px solid var(--admin-line);
-  background: rgba(255, 255, 255, 0.96);
+  background: linear-gradient(160deg, #ffffff 20%, #edf3ff 100%);
   box-shadow: 0 18px 50px rgba(0, 26, 77, 0.1);
+}
+
+.admin-app-page .admin-section-switcher,
+.admin-app-page .content-admin-summary-card {
+  border-radius: 1rem;
+  padding: clamp(1.15rem, 2.5vw, 1.75rem);
 }
 
 /* Keep admin container text aligned with the site's primary color system. */
@@ -6765,7 +6871,6 @@ body,
   border-top: 1px solid var(--admin-line);
 }
 
-.admin-app-page .content-admin-tab,
 .admin-app-page .content-admin-list-item,
 .admin-app-page .admin-section-switcher select {
   border-color: var(--admin-line);
@@ -6773,7 +6878,6 @@ body,
   color: var(--admin-primary);
 }
 
-.admin-app-page .content-admin-tab.is-active,
 .admin-app-page .btn-primary {
   background: var(--admin-primary);
   border-color: var(--admin-primary);
@@ -6781,7 +6885,6 @@ body,
   box-shadow: 0 7px 16px rgba(0, 26, 77, 0.2);
 }
 
-.admin-app-page .content-admin-tab:hover,
 .admin-app-page .content-admin-list-item:hover,
 .admin-app-page .content-admin-list-item.is-active {
   border-color: #9eb8e2;
@@ -6849,6 +6952,18 @@ body,
 }
 
 @media (max-width: 980px) {
+  .admin-app-page[data-page="admin-section"] .content-admin-shell > .content-admin-sidebar {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-app-page[data-page="admin-section"] .content-admin-sidebar-controls {
+    width: 100%;
+  }
+
+  .admin-app-page[data-page="admin-section"] .content-admin-sidebar-controls .content-admin-sidebar-actions {
+    width: 100%;
+  }
+
   .admin-app-page .admin-dashboard-layout {
     grid-template-columns: 1fr;
   }
@@ -6900,8 +7015,13 @@ body,
 
   .admin-app-page .content-admin-form-grid,
   .admin-app-page .content-admin-panel-grid,
-  .admin-app-page .content-admin-record-details {
+  .admin-app-page .content-admin-record-details,
+  .donation-approval-summary {
     grid-template-columns: 1fr;
+  }
+
+  .donation-approval-actions {
+    justify-content: flex-start;
   }
 
   .admin-app-page .admin-dashboard-main {

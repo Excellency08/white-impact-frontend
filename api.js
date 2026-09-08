@@ -2250,15 +2250,6 @@
     const form = document.querySelector("[data-admin-login-form]");
     const logoutBtn = document.querySelector("[data-admin-logout]");
 
-    document.querySelectorAll("[data-admin-section]").forEach((link) => {
-      link.addEventListener("click", () => {
-        const tab = document.querySelector(
-          `[data-content-admin-tab="${link.dataset.adminSection}"]`,
-        );
-        if (tab) tab.click();
-      });
-    });
-
     if (page === "admin") {
       setAdminPanelState(Boolean(readAdminSession()?.accessToken));
       loadAdminDashboard();
@@ -2326,7 +2317,6 @@
     const page = document.body.dataset.page;
     if (page !== "content-admin" && page !== "admin" && page !== "admin-section") return;
 
-    const tabsEl = document.querySelector("[data-content-admin-tabs]");
     const panelsEl = document.querySelector("[data-content-admin-panels]");
     const summaryEl = document.querySelector("[data-content-admin-summary]");
     const statusEl = document.querySelector("[data-content-admin-status]");
@@ -2335,7 +2325,7 @@
     const refreshBtn = document.querySelector("[data-content-admin-refresh]");
     const logoutBtn = document.querySelector("[data-content-admin-logout]");
 
-    if (!tabsEl || !panelsEl) return;
+    if (!panelsEl) return;
     if (panelsEl.dataset.contentAdminInitialized === "true") return;
 
     const configs = {
@@ -3971,6 +3961,30 @@
             </div>
             <span class="content-admin-record-badge">${escapeHtml(config.itemMeta(record))}</span>
           </div>
+          ${config.label === "Donations" && record.status !== "verified" && record.paymentStatus !== "succeeded"
+            ? `<div class="content-admin-record-actions">
+                <button class="btn btn-primary" type="button" data-content-admin-open-approval data-record-id="${escapeHtml(record.id)}">Approve payment and notify donor</button>
+                <div class="donation-approval-card" data-donation-approval-card hidden>
+                  <div>
+                    <p class="section-kicker">Approval message</p>
+                    <h4>Confirm donor notification</h4>
+                    <p class="section-desc">Review the donor details and personalize the appreciation message before sending.</p>
+                  </div>
+                  <dl class="donation-approval-summary">
+                    <div><dt>Donor</dt><dd>${escapeHtml(record.fullName || "Not provided")}</dd></div>
+                    <div><dt>Email</dt><dd>${escapeHtml(record.email || "Not provided")}</dd></div>
+                    <div><dt>Amount</dt><dd>₦${Number(record.amountNaira || 0).toLocaleString()}</dd></div>
+                    <div><dt>Reference</dt><dd>${escapeHtml(record.reference || "Not provided")}</dd></div>
+                  </dl>
+                  <label class="donation-approval-message-label" for="donation-approval-message-${escapeHtml(record.id)}">Message to donor</label>
+                  <textarea id="donation-approval-message-${escapeHtml(record.id)}" data-donation-approval-message rows="5">Thank you for supporting our work and helping us create lasting impact in our communities.</textarea>
+                  <div class="donation-approval-actions">
+                    <button class="btn btn-ghost" type="button" data-content-admin-cancel-approval>Cancel</button>
+                    <button class="btn btn-primary" type="button" data-content-admin-send-approval data-record-id="${escapeHtml(record.id)}">Send approval email</button>
+                  </div>
+                </div>
+              </div>`
+            : ""}
           <dl class="content-admin-record-details">
             ${config.fields.map((field) => `
               <div>
@@ -4010,23 +4024,6 @@
       `;
     }
 
-    function renderTabs() {
-      if (!tabsEl) return;
-      tabsEl.innerHTML = keys
-        .map(
-          (key) => `
-            <button
-              type="button"
-              class="content-admin-tab${state.activeKey === key ? " is-active" : ""}"
-              data-content-admin-tab="${escapeHtml(key)}"
-            >
-              ${escapeHtml(configs[key].label)}
-            </button>
-          `,
-        )
-        .join("");
-    }
-
     function renderSummary() {
       if (!summaryEl) return;
 
@@ -4039,7 +4036,7 @@
       summaryEl.innerHTML = counts
         .map(
           (item) => `
-            <article class="admin-card content-admin-summary-card" data-animate>
+            <article class="admin-card content-admin-summary-card admin-panel content-admin-sidebar" data-animate>
               <span>${escapeHtml(item.label)}</span>
               <strong>${escapeHtml(item.value)}</strong>
               <p>${escapeHtml(item.description)}</p>
@@ -4099,7 +4096,6 @@
             if (!keys.includes(key)) return;
             state.activeKey = key;
             state.selectedIds[key] = recordId;
-            renderTabs();
             renderPanels();
             syncPanelState(key);
           });
@@ -4113,11 +4109,62 @@
             if (!key) return;
             state.activeKey = key;
             state.selectedIds[key] = null;
-            renderTabs();
             renderPanels();
             syncPanelState(key, "Ready to create a new record.");
           });
         });
+
+      panelsEl.querySelectorAll("[data-content-admin-open-approval]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const card = button.parentElement?.querySelector("[data-donation-approval-card]");
+          if (!card) return;
+          card.hidden = false;
+          button.hidden = true;
+          card.querySelector("[data-donation-approval-message]")?.focus();
+        });
+      });
+
+      panelsEl.querySelectorAll("[data-content-admin-cancel-approval]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const card = button.closest("[data-donation-approval-card]");
+          const openButton = card?.parentElement?.querySelector("[data-content-admin-open-approval]");
+          if (card) card.hidden = true;
+          if (openButton) openButton.hidden = false;
+        });
+      });
+
+      panelsEl.querySelectorAll("[data-content-admin-send-approval]").forEach((button) => {
+        button.addEventListener("click", async () => {
+          const record = getRecords("donations").find(
+            (item) => String(item.id) === String(button.dataset.recordId),
+          );
+          const card = button.closest("[data-donation-approval-card]");
+          const message = card?.querySelector("[data-donation-approval-message]")?.value.trim() || "";
+          if (!record || !message) {
+            showToast("Please add an appreciation message before sending.", "error");
+            return;
+          }
+
+          button.disabled = true;
+          syncPanelState("donations", "Approving donation and notifying donor…");
+          try {
+            const result = await authPut(`/donate/admin/${record.id}`, {
+              status: "verified",
+              paymentStatus: "succeeded",
+              confirmationMethod: "admin_approved",
+              approvalMessage: message,
+            });
+            if (!result.success) throw new Error(result.message || "Donation approval failed.");
+            await loadSection("donations", record.id);
+            showToast(result.message || "Donation approved and donor notified.");
+          } catch (error) {
+            syncPanelState("donations", error.message || "Donation approval failed.", "error");
+            showToast(error.message || "Donation approval failed.", "error");
+          } finally {
+            button.disabled = false;
+          }
+        });
+      });
 
       panelsEl.querySelectorAll("[data-content-admin-archive]").forEach((button) => {
         button.addEventListener("click", async () => {
@@ -4374,13 +4421,11 @@
           helpEl.textContent = config.description;
         }
         renderSummary();
-        renderTabs();
         renderPanels();
         syncPanelState(key, `${config.label} loaded.`);
       } catch (error) {
         state.records[key] = [];
         renderSummary();
-        renderTabs();
         renderPanels();
         syncPanelState(
           key,
@@ -4388,19 +4433,6 @@
           "error",
         );
       }
-    }
-
-    function setActiveKey(key) {
-      if (!configs[key]) return;
-      state.activeKey = key;
-      if (titleEl) {
-        titleEl.textContent = configs[key].title;
-      }
-      if (helpEl) {
-        helpEl.textContent = configs[key].description;
-      }
-      renderTabs();
-      renderPanels();
     }
 
     if (!readAdminSession()?.accessToken) {
@@ -4415,9 +4447,6 @@
       }
       if (titleEl) {
         titleEl.textContent = "Content Editor";
-      }
-      if (tabsEl) {
-        tabsEl.innerHTML = "";
       }
       if (panelsEl) {
         panelsEl.innerHTML = `
@@ -4434,14 +4463,7 @@
 
     panelsEl.dataset.contentAdminInitialized = "true";
 
-    renderTabs();
     renderPanels();
-
-    tabsEl?.addEventListener("click", (event) => {
-      const button = event.target.closest("[data-content-admin-tab]");
-      if (!button) return;
-      setActiveKey(button.dataset.contentAdminTab);
-    });
 
     const sectionSelect = document.querySelector("[data-admin-section-select]");
     if (sectionSelect) {
@@ -4870,51 +4892,6 @@
     });
   }
 
-  function initDonationOnlinePayment() {
-    const button = document.querySelector("[data-donation-online]");
-    if (!button) return;
-    const scopeForm = button.closest("form");
-
-    button.addEventListener("click", async () => {
-      const data = {
-        fullName: document.querySelector("#donor-full-name")?.value,
-        email: document.querySelector("#donor-email")?.value,
-        phone: document.querySelector("#donor-phone")?.value,
-        amount: document.querySelector("#donation-amount")?.value,
-        category: document.querySelector("#donation-category")?.value,
-        message: document.querySelector("#donor-message")?.value,
-        idempotencyKey:
-          window.crypto?.randomUUID?.() ||
-          `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
-      };
-
-      if (!data.fullName || !data.email || !data.phone || !data.amount || !data.category) {
-        showToast("Please complete the donation form first.", "error");
-        return;
-      }
-
-      if (scopeForm) setFormLoading(scopeForm, true);
-      try {
-        const result = await apiPost("/donate/payments/initialize", data);
-        if (result.success && (result.authorizationUrl || result.data?.paystackData?.authorization_url)) {
-          window.location.href =
-            result.authorizationUrl ||
-            result.data?.paystackData?.authorization_url ||
-            "donate.html";
-          return;
-        }
-        showToast(
-          result.message || "Payment could not be initialized.",
-          "error",
-        );
-      } catch {
-        showToast("Network error. Please check your connection.", "error");
-      } finally {
-        if (scopeForm) setFormLoading(scopeForm, false);
-      }
-    });
-  }
-
   async function initSearchPage() {
     const form = document.querySelector("[data-search-form]");
     const results = document.querySelector("[data-search-results]");
@@ -5108,7 +5085,6 @@
   initVolunteerForm();
   initNewsletterForm();
   initDonationForm();
-  initDonationOnlinePayment();
   initReceiptForm();
   initSearchPage();
   initNewsletterConfirmationPage();
