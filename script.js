@@ -6,7 +6,7 @@
         ["5500", "5501"].includes(window.location.port);
     const API_BASE = isLocal
         ? `http://${window.location.hostname}:3030/api`
-        : window.__WII_API_BASE__ || "/api";
+        : window.__WII_API_BASE__ || "https://white-impact-api.onrender.com/api";
 
     window.__WII_API_BASE__ = API_BASE;
 

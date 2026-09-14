@@ -12,6 +12,9 @@
 (function () {
   "use strict";
 
+  // Load the browser-safe Supabase client without changing the temporary API path.
+  window.WII_SUPABASE_READY = import("./supabase-client.js").catch(() => null);
+
   // Support localhost and LAN access to the local frontend server.
   const isLocal =
     ["localhost", "127.0.0.1"].includes(window.location.hostname) ||
@@ -19,7 +22,7 @@
   const API_BASE =
     isLocal
       ? `http://${window.location.hostname}:3030/api`
-      : window.__WII_API_BASE__ || "/api";
+      : window.__WII_API_BASE__ || "https://white-impact-api.onrender.com/api";
   const API_ORIGIN = API_BASE.replace(/\/api\/?$/, "");
 
   const ANALYTICS_SESSION_KEY = "wii.analytics.session";
@@ -122,6 +125,48 @@
 
   function getAdminRefreshToken() {
     return readAdminSession()?.refreshToken || "";
+  }
+
+  async function getSupabaseAuth() {
+    try {
+      await window.WII_SUPABASE_READY;
+    } catch {
+      return null;
+    }
+    return window.WII_SUPABASE_AUTH || null;
+  }
+
+  async function signInWithSupabase(email, password) {
+    const supabaseAuth = await getSupabaseAuth();
+    if (!supabaseAuth) return null;
+
+    const signedIn = await supabaseAuth.signIn({ email, password });
+    if (signedIn?.error || !signedIn?.data?.session?.access_token) {
+      return null;
+    }
+
+    const accessToken = signedIn.data.session.access_token;
+    const linkResponse = await fetch(`${API_BASE}/auth/supabase/link`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    const linkResult = await parseJsonResponse(linkResponse);
+    if (!linkResponse.ok || !linkResult.success) {
+      await supabaseAuth.signOut().catch(() => {});
+      throw new Error(linkResult.message || "This Supabase account is not eligible for admin access.");
+    }
+
+    const exchangeResponse = await fetch(`${API_BASE}/auth/supabase/exchange`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    const exchangeResult = await parseJsonResponse(exchangeResponse);
+    if (!exchangeResponse.ok || !exchangeResult.success) {
+      await supabaseAuth.signOut().catch(() => {});
+      throw new Error(exchangeResult.message || "Supabase sign-in could not be completed.");
+    }
+
+    return exchangeResult;
   }
 
   async function refreshAdminSession() {
@@ -2267,7 +2312,19 @@
       if (status) status.textContent = "Signing in…";
 
       try {
-        const result = await apiPost("/auth/login", { email, password });
+        let result = null;
+        try {
+          result = await signInWithSupabase(email, password);
+        } catch (supabaseError) {
+          if (status) status.textContent = supabaseError.message || "Supabase sign-in failed.";
+          throw supabaseError;
+        }
+
+        // Keep the existing Express login as a temporary compatibility path
+        // until every approved account has been linked to Supabase Auth.
+        if (!result) {
+          result = await apiPost("/auth/login", { email, password });
+        }
         if (!result.success || !result.accessToken || !result.refreshToken) {
           throw new Error(result.message || "Login failed.");
         }
@@ -2329,6 +2386,54 @@
     if (panelsEl.dataset.contentAdminInitialized === "true") return;
 
     const configs = {
+      initiatives: {
+        label: "Initiatives",
+        singular: "initiative",
+        title: "Initiatives",
+        description: "Manage programs and projects together from one content workspace.",
+        load: () => authGet("/initiatives/admin"),
+        save: (record, payload) => {
+          const type = payload.entityType || record?.entityType || "program";
+          return record?.sourceId
+            ? authPut(`/initiatives/admin/${type}/${record.sourceId}`, payload)
+            : authPost("/initiatives/admin", payload);
+        },
+        archive: (record) => authPut(`/initiatives/admin/${record.entityType}/${record.sourceId}`, {
+          entityType: record.entityType,
+          slug: record.slug,
+          title: record.title,
+          summary: record.summary,
+          description: record.description,
+          status: "Paused",
+          isActive: false,
+        }),
+        itemLabel: (record) => record.title || record.slug || "Untitled initiative",
+        itemMeta: (record) => `${record.entityType === "project" ? "Project" : "Program"} | ${record.statusLabel || record.status || "Active"}`,
+        emptyLabel: "No initiatives loaded yet.",
+        defaultRecord: { entityType: "program", status: "Draft", displayOrder: 0, isFeatured: false, isActive: true, bodyCopy: [] },
+        fields: [
+          { name: "entityType", label: "Type", type: "select", options: ["program", "project"], readOnlyOnUpdate: true },
+          { name: "slug", label: "Slug", type: "text", required: true },
+          { name: "title", label: "Title", type: "text", required: true },
+          { name: "summary", label: "Summary", type: "textarea", rows: 3, required: true },
+          { name: "description", label: "Description", type: "textarea", rows: 4, required: true },
+          { name: "programSlug", label: "Parent program slug", type: "text" },
+          { name: "location", label: "Location", type: "text" },
+          { name: "heroImageUrl", label: "Upload hero image", type: "image", accept: "image/*" },
+          { name: "heroImageAlt", label: "Hero image alt text", type: "text" },
+          { name: "cardIcon", label: "Card icon", type: "text" },
+          { name: "cardSummary", label: "Card summary", type: "textarea", rows: 3 },
+          { name: "status", label: "Status", type: "select", options: ["Active", "Draft", "Paused"] },
+          { name: "statusLabel", label: "Status label", type: "text" },
+          { name: "statusDetail", label: "Status detail", type: "textarea", rows: 3 },
+          { name: "seoTitle", label: "SEO title", type: "text" },
+          { name: "seoDescription", label: "SEO description", type: "textarea", rows: 3 },
+          { name: "displayOrder", label: "Display order", type: "number" },
+          { name: "isFeatured", label: "Featured", type: "checkbox" },
+          { name: "isActive", label: "Active", type: "checkbox" },
+          { name: "bodyCopy", label: "Body copy", type: "json", rows: 5 },
+        ],
+      },
       programs: {
         label: "Programs",
         singular: "program",
