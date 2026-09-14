@@ -30,8 +30,28 @@
         </div>
         <button class="btn btn-primary" type="submit">Sign In</button>
       </form>
+      <button class="admin-auth-link" type="button" data-admin-password-reset>
+        Set or reset your password
+      </button>
+      <form class="admin-form" data-admin-password-setup-form hidden>
+        <div class="section-head">
+          <p class="section-kicker">Secure account setup</p>
+          <h2>Set your password</h2>
+          <p class="section-desc">Choose a password for your existing administrator account.</p>
+        </div>
+        <div class="form-group">
+          <label for="admin-new-password">New password</label>
+          <input id="admin-new-password" name="password" type="password" autocomplete="new-password" minlength="8" required />
+        </div>
+        <div class="form-group">
+          <label for="admin-confirm-password">Confirm password</label>
+          <input id="admin-confirm-password" name="confirmPassword" type="password" autocomplete="new-password" minlength="8" required />
+        </div>
+        <button class="btn btn-primary" type="submit">Save password</button>
+      </form>
       <p class="form-message" data-admin-status role="status" aria-live="polite"></p>
     </main>
+    <script src="supabase-config.js"></script>
     <script src="api.js?v=20260908-admin-workspace2"></script>
   </body>
 </html>
