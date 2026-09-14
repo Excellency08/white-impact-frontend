@@ -26,29 +26,14 @@
         </div>
         <div class="form-group">
           <label for="admin-login-password">Password</label>
-          <input id="admin-login-password" name="password" type="password" autocomplete="current-password" required />
+          <div class="admin-password-field">
+            <input id="admin-login-password" name="password" type="password" autocomplete="current-password" required />
+            <button class="admin-password-toggle" type="button" data-password-toggle aria-controls="admin-login-password" aria-label="Show password">Show</button>
+          </div>
         </div>
         <button class="btn btn-primary" type="submit">Sign In</button>
       </form>
-      <button class="admin-auth-link" type="button" data-admin-password-reset>
-        Set or reset your password
-      </button>
-      <form class="admin-form" data-admin-password-setup-form hidden>
-        <div class="section-head">
-          <p class="section-kicker">Secure account setup</p>
-          <h2>Set your password</h2>
-          <p class="section-desc">Choose a password for your existing administrator account.</p>
-        </div>
-        <div class="form-group">
-          <label for="admin-new-password">New password</label>
-          <input id="admin-new-password" name="password" type="password" autocomplete="new-password" minlength="8" required />
-        </div>
-        <div class="form-group">
-          <label for="admin-confirm-password">Confirm password</label>
-          <input id="admin-confirm-password" name="confirmPassword" type="password" autocomplete="new-password" minlength="8" required />
-        </div>
-        <button class="btn btn-primary" type="submit">Save password</button>
-      </form>
+      <p class="admin-login-note">Contact an authorized administrator to reset your password.</p>
       <p class="form-message" data-admin-status role="status" aria-live="polite"></p>
     </main>
     <script src="supabase-config.js"></script>

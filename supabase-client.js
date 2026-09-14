@@ -33,8 +33,6 @@ function exposeAuthHelpers(client) {
     exchangeCodeForSession: (code) => client.auth.exchangeCodeForSession(code),
     verifyOtp: (params) => client.auth.verifyOtp(params),
     setSession: (session) => client.auth.setSession(session),
-    resetPassword: (email, options) => client.auth.resetPasswordForEmail(email, options),
-    updatePassword: (password) => client.auth.updateUser({ password }),
     onAuthStateChange: (callback) => client.auth.onAuthStateChange(callback),
   };
 }

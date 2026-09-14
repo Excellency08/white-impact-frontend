@@ -137,17 +137,6 @@
     return readAdminSession()?.refreshToken || "";
   }
 
-  function getAdminAuthRedirectUrl() {
-    return `${window.location.origin}/admin-login.html`;
-  }
-
-  function getAuthCallbackType() {
-    const queryType = new URLSearchParams(window.location.search).get("type");
-    if (queryType) return queryType;
-    const hash = window.location.hash.replace(/^#/, "");
-    return new URLSearchParams(hash).get("type") || "";
-  }
-
   function getSupabaseCallbackDetails() {
     const callbackUrl = new URL(window.location.href);
     const search = callbackUrl.searchParams;
@@ -229,7 +218,9 @@
 
   async function signInWithSupabase(email, password) {
     const supabaseAuth = await getSupabaseAuth();
-    if (!supabaseAuth) return null;
+    if (!supabaseAuth) {
+      throw new Error("Supabase authentication is unavailable.");
+    }
 
     const signedIn = await supabaseAuth.signIn({ email, password });
     authDiagnostic(`sign-in session exists: ${Boolean(signedIn?.data?.session)}`);
@@ -2417,65 +2408,18 @@
 
     const form = document.querySelector("[data-admin-login-form]");
     const logoutBtn = document.querySelector("[data-admin-logout]");
-    const passwordResetBtn = document.querySelector("[data-admin-password-reset]");
-    const passwordSetupForm = document.querySelector("[data-admin-password-setup-form]");
+    const passwordToggle = document.querySelector("[data-password-toggle]");
 
-    const showPasswordSetup = () => {
-      if (form) form.hidden = true;
-      if (passwordResetBtn) passwordResetBtn.hidden = true;
-      if (passwordSetupForm) passwordSetupForm.hidden = false;
-    };
-
-    const syncPasswordSetupSession = async () => {
-      const supabaseAuth = await getSupabaseAuth();
-      if (!supabaseAuth) return false;
-      await prepareSupabaseCallback(supabaseAuth);
-      const sessionResult = await supabaseAuth.getSession();
-      authDiagnostic(`password setup session exists: ${Boolean(sessionResult?.data?.session)}`);
-      if (!sessionResult?.data?.session) return false;
-      showPasswordSetup();
-      return true;
-    };
-
-    const registerAuthStateListener = async () => {
-      const supabaseAuth = await getSupabaseAuth();
-      if (!supabaseAuth) return;
-      supabaseAuth.onAuthStateChange((event, session) => {
-        if (event === "PASSWORD_RECOVERY") authDiagnostic("PASSWORD_RECOVERY event detected");
-        if (event === "SIGNED_IN") authDiagnostic("SIGNED_IN event detected");
-        if (
-          page === "admin-login" &&
-          session &&
-          ["PASSWORD_RECOVERY", "SIGNED_IN"].includes(event) &&
-          ["invite", "recovery"].includes(getAuthCallbackType())
-        ) {
-          showPasswordSetup();
-        }
-      });
-    };
-
-    registerAuthStateListener();
+    passwordToggle?.addEventListener("click", () => {
+      const passwordInput = form?.querySelector('[name="password"]');
+      if (!passwordInput) return;
+      const visible = passwordInput.type === "text";
+      passwordInput.type = visible ? "password" : "text";
+      passwordToggle.textContent = visible ? "Show" : "Hide";
+      passwordToggle.setAttribute("aria-label", visible ? "Show password" : "Hide password");
+    });
 
     const bootstrapAdminSession = async () => {
-      const callbackDetails = getSupabaseCallbackDetails();
-      if (
-        page === "admin-login" &&
-        (callbackDetails.kind !== "none" || ["invite", "recovery"].includes(getAuthCallbackType()))
-      ) {
-        try {
-          if (await syncPasswordSetupSession()) return;
-          const status = document.querySelector("[data-admin-status]");
-          if (status) {
-            status.textContent = "Your authentication link could not establish a session. Please request a new password setup email.";
-          }
-          return;
-        } catch (error) {
-          const status = document.querySelector("[data-admin-status]");
-          if (status) status.textContent = error.message || "The authentication link could not be completed.";
-          return;
-        }
-      }
-
       let supabaseResult = null;
       try {
         supabaseResult = await syncExistingSupabaseSession();
@@ -2508,61 +2452,6 @@
 
     bootstrapAdminSession();
 
-    passwordResetBtn?.addEventListener("click", async () => {
-      const email = form?.querySelector('[name="email"]')?.value?.trim();
-      const status = document.querySelector("[data-admin-status]");
-      if (!email) {
-        if (status) status.textContent = "Enter your administrator email first.";
-        return;
-      }
-
-      try {
-        const supabaseAuth = await getSupabaseAuth();
-        if (!supabaseAuth) throw new Error("Supabase authentication is unavailable.");
-        const redirectTo = getAdminAuthRedirectUrl();
-        const result = await supabaseAuth.resetPassword(email, { redirectTo });
-        if (result?.error) throw new Error(result.error.message || "Password reset could not be requested.");
-        if (status) status.textContent = "If the account is eligible, a password setup email has been sent.";
-      } catch (error) {
-        if (status) status.textContent = error.message || "Password reset could not be requested.";
-      }
-    });
-
-    passwordSetupForm?.addEventListener("submit", async (event) => {
-      event.preventDefault();
-      const password = passwordSetupForm.querySelector('[name="password"]')?.value || "";
-      const confirmPassword = passwordSetupForm.querySelector('[name="confirmPassword"]')?.value || "";
-      const status = document.querySelector("[data-admin-status]");
-      if (password !== confirmPassword) {
-        if (status) status.textContent = "Passwords do not match.";
-        return;
-      }
-
-      setFormLoading(passwordSetupForm, true);
-      try {
-        const supabaseAuth = await getSupabaseAuth();
-        if (!supabaseAuth) throw new Error("Supabase authentication is unavailable.");
-        const result = await supabaseAuth.updatePassword(password);
-        if (result?.error) throw new Error(result.error.message || "Password could not be updated.");
-
-        const supabaseResult = await syncExistingSupabaseSession();
-        if (!supabaseResult?.success) {
-          throw new Error("Password updated, but administrator verification could not be completed.");
-        }
-        writeAdminSession({
-          accessToken: supabaseResult.accessToken,
-          refreshToken: supabaseResult.refreshToken,
-          expiresAt: supabaseResult.expiresAt,
-        });
-        window.history.replaceState({}, document.title, window.location.pathname);
-        window.location.href = "admin.html";
-      } catch (error) {
-        if (status) status.textContent = error.message || "Password could not be updated.";
-      } finally {
-        setFormLoading(passwordSetupForm, false);
-      }
-    });
-
     form?.addEventListener("submit", async (event) => {
       event.preventDefault();
       const email = form.querySelector('[name="email"]')?.value;
@@ -2583,12 +2472,6 @@
           throw supabaseError;
         }
 
-        // Keep the existing Express login only when the browser client is
-        // unavailable. Supabase authentication errors must not fall through
-        // to a legacy login that bypasses the identity-linking flow.
-        if (!result) {
-          result = await apiPost("/auth/login", { email, password });
-        }
         if (!result.success || !result.accessToken || !result.refreshToken) {
           throw new Error(result.message || "Login failed.");
         }
