@@ -397,6 +397,39 @@
     };
   }
 
+  async function uploadTeamMemberPhotoInSupabase(memberId, file) {
+    await window.WII_SUPABASE_READY;
+    const uploadTeamMemberPhoto = window.WII_SUPABASE_DATA?.uploadTeamMemberPhoto;
+    if (!uploadTeamMemberPhoto) {
+      return { success: false, message: "Supabase team photo upload is unavailable." };
+    }
+
+    const { data, error } = await uploadTeamMemberPhoto(memberId, file);
+    if (error || !data?.publicUrl) {
+      return {
+        success: false,
+        message: error?.message || "Team photo upload failed.",
+        path: data?.path || null,
+      };
+    }
+    return { success: true, data };
+  }
+
+  async function removeTeamMemberPhotoInSupabase(path) {
+    if (!path) return;
+    try {
+      await window.WII_SUPABASE_READY;
+      const removeTeamMemberPhoto = window.WII_SUPABASE_DATA?.removeTeamMemberPhoto;
+      if (removeTeamMemberPhoto) {
+        const { error } = await removeTeamMemberPhoto(path);
+        return !error;
+      }
+    } catch {
+      return false;
+    }
+    return false;
+  }
+
   function escapeHtml(value) {
     return String(value || "")
       .replaceAll("&", "&amp;")
@@ -4501,7 +4534,14 @@
           const imageFields = config.fields.filter(
             (field) => field.type === "image" || field.type === "asset",
           );
+          const teamPhotoField = key === "team"
+            ? imageFields.find((field) => field.name === "photoUrl")
+            : null;
+          const teamPhotoFile = teamPhotoField
+            ? form.elements.namedItem(teamPhotoField.name)?.files?.[0] || null
+            : null;
           const uploadedImages = {};
+          let teamPhotoUpload = null;
           if (imageFields.length) {
             setFormLoading(form, true);
             try {
@@ -4512,6 +4552,17 @@
                   throw new Error(`${field.label} is required.`);
                 }
                 if (!file) continue;
+
+                if (key === "team" && field.name === "photoUrl") {
+                  // New members need an ID first; their photo is uploaded after INSERT.
+                  if (!current?.id) continue;
+                  syncPanelState(key, `Uploading ${field.label.toLowerCase()}…`);
+                  const result = await uploadTeamMemberPhotoInSupabase(current.id, file);
+                  if (!result.success) throw new Error(result.message);
+                  teamPhotoUpload = result.data;
+                  uploadedImages[field.name] = result.data.publicUrl;
+                  continue;
+                }
 
                 syncPanelState(key, `Uploading ${field.label.toLowerCase()}…`);
                 const assetKey = `${key}-${current?.id || current?.slug || Date.now()}-${Date.now()}`
@@ -4621,9 +4672,30 @@
           syncPanelState(key, `Saving ${config.label.toLowerCase()}…`);
 
           try {
-            const result = await config.save(current, payload);
+            let result = await config.save(current, payload);
             if (!result.success) {
               throw new Error(result.message || "Save failed.");
+            }
+
+            if (key === "team" && !current?.id && teamPhotoFile && result.data?.id) {
+              syncPanelState(key, "Uploading team photo…");
+              const upload = await uploadTeamMemberPhotoInSupabase(result.data.id, teamPhotoFile);
+              if (!upload.success) {
+                throw new Error(upload.message);
+              }
+              teamPhotoUpload = upload.data;
+              const withPhoto = await updateTeamMemberInSupabase(result.data.id, {
+                ...payload,
+                photoUrl: upload.data.publicUrl,
+              });
+              if (!withPhoto.success) {
+                const cleaned = await removeTeamMemberPhotoInSupabase(upload.data.path);
+                teamPhotoUpload = null;
+                throw new Error(
+                  `${withPhoto.message || "Team photo could not be linked."}${cleaned ? "" : " The uploaded file may remain in Storage."}`,
+                );
+              }
+              result = withPhoto;
             }
 
             const saved = result.data || null;
@@ -4632,8 +4704,14 @@
               `${config.singular || config.label.toLowerCase()} saved successfully.`,
             );
           } catch (error) {
-            syncPanelState(key, error.message || "Save failed.", "error");
-            showToast(error.message || "Save failed.", "error");
+            let cleanupWarning = "";
+            if (teamPhotoUpload?.path) {
+              const cleaned = await removeTeamMemberPhotoInSupabase(teamPhotoUpload.path);
+              if (!cleaned) cleanupWarning = " The uploaded file may remain in Storage.";
+            }
+            const message = `${error.message || "Save failed."}${cleanupWarning}`;
+            syncPanelState(key, message, "error");
+            showToast(message, "error");
           } finally {
             setFormLoading(form, false);
           }
@@ -5301,45 +5379,6 @@
     }
   }
 
-  /* ─── Team photo upload ───────────────────────────────────────── */
-  function initTeamPhotoUpload() {
-    document.querySelectorAll(".team-photo-upload").forEach((input) => {
-      input.addEventListener("change", async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        const card = input.closest(".team-card");
-        const memberId = card?.dataset.teamIndex;
-        if (!memberId) return;
-
-        const formData = new FormData();
-        formData.append("photo", file);
-        formData.append("memberId", memberId);
-
-        try {
-          const res = await fetch(`${API_BASE}/team/photo`, {
-            method: "POST",
-            body: formData,
-          });
-          const result = await parseJsonResponse(res);
-
-          if (result.success) {
-            const photoDiv = card.querySelector("[data-team-photo]");
-            if (photoDiv) {
-              const fullUrl = `${API_BASE.replace("/api", "")}${result.photo_url}`;
-              photoDiv.style.cssText = `background-image:url('${fullUrl}');background-size:cover;background-position:center`;
-            }
-            showToast("Photo updated successfully!");
-          } else {
-            showToast(result.message || "Photo upload failed.", "error");
-          }
-        } catch {
-          showToast("Upload failed. Please check your connection.", "error");
-        }
-      });
-    });
-  }
-
   /* ─── Init ────────────────────────────────────────────────────── */
   window._wiiInitContentAdmin = initContentAdmin;
   document.addEventListener("DOMContentLoaded", () => {
@@ -5351,7 +5390,6 @@
   initSearchPage();
   initNewsletterConfirmationPage();
   initNewsletterUnsubscribePage();
-    initTeamPhotoUpload();
     initAdminConsole();
     initContentAdmin();
     loadImpactData();

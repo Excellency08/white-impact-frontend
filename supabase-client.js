@@ -62,6 +62,36 @@ function exposeAuthHelpers(client) {
         })
         .select("id, full_name, role, bio, photo_url, display_order, is_active")
         .single(),
+    uploadTeamMemberPhoto: async (memberId, file) => {
+      const allowedTypes = {
+        "image/jpeg": "jpg",
+        "image/png": "png",
+        "image/webp": "webp",
+      };
+      if (!/^\d+$/.test(String(memberId))) {
+        return { data: null, error: new Error("A valid team member ID is required.") };
+      }
+      if (!file || !allowedTypes[file.type]) {
+        return { data: null, error: new Error("Only JPG, PNG, and WEBP images are allowed.") };
+      }
+      if (file.size <= 0 || file.size > 5 * 1024 * 1024) {
+        return { data: null, error: new Error("Team photos must be smaller than 5 MB.") };
+      }
+
+      const nonce = globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const path = `uploads/team/${memberId}/team-${nonce}.${allowedTypes[file.type]}`;
+      const upload = await client.storage.from("team-photos").upload(path, file, {
+        cacheControl: "3600",
+        contentType: file.type,
+        upsert: false,
+      });
+      if (upload.error) return { data: null, error: upload.error };
+
+      const publicUrl = client.storage.from("team-photos").getPublicUrl(path).data.publicUrl;
+      return { data: { path, publicUrl }, error: null };
+    },
+    removeTeamMemberPhoto: (path) =>
+      client.storage.from("team-photos").remove([path]),
     updateTeamMember: (id, values) =>
       client
         .from("team_members")
