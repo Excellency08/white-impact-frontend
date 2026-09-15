@@ -30,10 +30,19 @@ function exposeAuthHelpers(client) {
     signOut: () => client.auth.signOut(),
     getSession: () => client.auth.getSession(),
     getUser: () => client.auth.getUser(),
+    linkCurrentAuthUser: () => client.rpc("link_current_auth_user"),
     exchangeCodeForSession: (code) => client.auth.exchangeCodeForSession(code),
     verifyOtp: (params) => client.auth.verifyOtp(params),
     setSession: (session) => client.auth.setSession(session),
     onAuthStateChange: (callback) => client.auth.onAuthStateChange(callback),
+  };
+  window.WII_SUPABASE_DATA = {
+    getPublicTeamMembers: () =>
+      client
+        .from("team_members")
+        .select("id, full_name, role, bio, photo_url, display_order")
+        .eq("is_active", true)
+        .order("display_order", { ascending: true }),
   };
 }
 

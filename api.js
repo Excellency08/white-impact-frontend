@@ -110,31 +110,17 @@
     return parseJsonResponse(res);
   }
 
-  const AUTH_STORAGE_KEY = "wii.admin.session";
-
-  function readAdminSession() {
-    try {
-      const raw = window.localStorage.getItem(AUTH_STORAGE_KEY);
-      return raw ? JSON.parse(raw) : null;
-    } catch {
-      return null;
-    }
+  function clearLegacyAdminSession() {
+    // Remove transitional Express credentials left by an older login.
+    window.localStorage.removeItem("wii.admin.session");
   }
 
-  function writeAdminSession(session) {
-    window.localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
+  function clearSupabaseApplicationState() {
+    delete window.WII_APPLICATION_AUTH;
   }
 
-  function clearAdminSession() {
-    window.localStorage.removeItem(AUTH_STORAGE_KEY);
-  }
-
-  function getAdminAccessToken() {
-    return readAdminSession()?.accessToken || "";
-  }
-
-  function getAdminRefreshToken() {
-    return readAdminSession()?.refreshToken || "";
+  function getSupabaseApplicationState() {
+    return window.WII_APPLICATION_AUTH || null;
   }
 
   function getSupabaseCallbackDetails() {
@@ -227,42 +213,73 @@
     if (signedIn?.error) {
       throw new Error(signedIn.error.message || "Supabase sign-in failed.");
     }
-    if (!signedIn?.data?.session?.access_token) {
+    if (!signedIn?.data?.session) {
       throw new Error("Supabase sign-in did not establish a session.");
     }
 
-    return exchangeSupabaseSession(supabaseAuth, signedIn.data.session);
+    return authorizeSupabaseSession(supabaseAuth);
   }
 
-  async function exchangeSupabaseSession(supabaseAuth, session) {
-    const accessToken = session?.access_token || "";
-    if (!accessToken) return null;
+  function classifyMappingError(error) {
+    const code = String(error?.code || "");
+    const message = String(error?.message || "").toLowerCase();
+    if (code === "P0002" || message.includes("no eligible existing")) {
+      return "This Supabase account is not linked to an existing application account.";
+    }
+    if (code === "P0003" || code === "23505" || message.includes("one-to-one") || message.includes("different application account")) {
+      return "This Supabase account has an identity mapping conflict.";
+    }
+    if (code === "42501" || message.includes("verified") || message.includes("eligible")) {
+      return "This account is not eligible for White Impact administration.";
+    }
+    return "White Impact could not verify this application account.";
+  }
 
-    authDiagnostic("starting link request");
-    const linkResponse = await fetch(`${API_BASE}/auth/supabase/link`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
-    authDiagnostic(`link response status: ${linkResponse.status}`);
-    const linkResult = await parseJsonResponse(linkResponse);
-    if (!linkResponse.ok || !linkResult.success) {
-      await supabaseAuth.signOut().catch(() => {});
-      throw new Error(linkResult.message || "This Supabase account is not eligible for admin access.");
+  async function authorizeSupabaseSession(supabaseAuth) {
+    const sessionResult = await supabaseAuth.getSession();
+    const session = sessionResult?.data?.session;
+    authDiagnostic(`session exists: ${Boolean(session)}`);
+    if (!session) {
+      throw new Error("No active Supabase session was found.");
     }
 
-    authDiagnostic("starting exchange request");
-    const exchangeResponse = await fetch(`${API_BASE}/auth/supabase/exchange`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
-    authDiagnostic(`exchange response status: ${exchangeResponse.status}`);
-    const exchangeResult = await parseJsonResponse(exchangeResponse);
-    if (!exchangeResponse.ok || !exchangeResult.success) {
-      await supabaseAuth.signOut().catch(() => {});
-      throw new Error(exchangeResult.message || "Supabase sign-in could not be completed.");
+    const userResult = await supabaseAuth.getUser();
+    const user = userResult?.data?.user;
+    authDiagnostic(`authenticated user exists: ${Boolean(user)}`);
+    if (!user?.email) {
+      throw new Error("The authenticated Supabase user could not be verified.");
     }
 
-    return exchangeResult;
+    authDiagnostic("starting application mapping RPC");
+    const mappingResult = await supabaseAuth.linkCurrentAuthUser();
+    authDiagnostic(`application mapping RPC succeeded: ${Boolean(!mappingResult?.error)}`);
+    if (mappingResult?.error) {
+      await supabaseAuth.signOut().catch(() => {});
+      throw new Error(classifyMappingError(mappingResult.error));
+    }
+
+    const profile = Array.isArray(mappingResult.data)
+      ? mappingResult.data[0]
+      : mappingResult.data;
+    if (!profile?.application_role) {
+      await supabaseAuth.signOut().catch(() => {});
+      throw new Error("The application role could not be verified.");
+    }
+
+    window.WII_APPLICATION_AUTH = {
+      authenticated: true,
+      email: user.email,
+      role: profile.application_role,
+      mappingStatus: profile.mapping_status || "linked",
+    };
+    return {
+      success: true,
+      user: {
+        email: user.email,
+        role: profile.application_role,
+      },
+      mappingStatus: profile.mapping_status || "linked",
+    };
   }
 
   async function syncExistingSupabaseSession() {
@@ -271,74 +288,22 @@
 
     await prepareSupabaseCallback(supabaseAuth);
     authDiagnostic("getSession started");
-    const sessionResult = await supabaseAuth.getSession();
-    const session = sessionResult?.data?.session;
-    authDiagnostic(`session exists: ${Boolean(session)}`);
-    if (session) {
-      const userResult = await supabaseAuth.getUser();
-      authDiagnostic(`authenticated user exists: ${Boolean(userResult?.data?.user)}`);
-    }
-    if (!session?.access_token) return null;
-
-    return exchangeSupabaseSession(supabaseAuth, session);
-  }
-
-  async function refreshAdminSession() {
-    const refreshToken = getAdminRefreshToken();
-    if (!refreshToken) return null;
-
-    const res = await fetch(`${API_BASE}/auth/refresh`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ refreshToken }),
-    });
-    const result = await parseJsonResponse(res);
-    if (result.success && result.accessToken && result.refreshToken) {
-      writeAdminSession({
-        accessToken: result.accessToken,
-        refreshToken: result.refreshToken,
-        expiresAt: result.expiresAt,
-      });
-      return result;
-    }
-
-    clearAdminSession();
-    return null;
+    return authorizeSupabaseSession(supabaseAuth);
   }
 
   async function authRequest(endpoint, options = {}) {
+    // Transitional application requests remain Express-backed until their
+    // Supabase/RLS replacements are migrated in later phases. They no longer
+    // receive a legacy JWT from browser storage.
     const headers = {
       ...(options.headers || {}),
     };
     const requestOptions = { ...options };
     delete requestOptions.__retried;
 
-    const session = readAdminSession();
-    if (session?.accessToken) {
-      headers.Authorization = `Bearer ${session.accessToken}`;
-    }
-
-    const res = await fetch(`${API_BASE}${endpoint}`, {
-      ...requestOptions,
-      headers,
-    });
-
-    if (res.status !== 401 || requestOptions.__retried) {
-      return res;
-    }
-
-    const refreshed = await refreshAdminSession();
-    if (!refreshed?.accessToken) {
-      return res;
-    }
-
-    const retryHeaders = {
-      ...(options.headers || {}),
-      Authorization: `Bearer ${refreshed.accessToken}`,
-    };
     return fetch(`${API_BASE}${endpoint}`, {
       ...requestOptions,
-      headers: retryHeaders,
+      headers,
     });
   }
 
@@ -2289,8 +2254,8 @@
 
   async function loadAdminDashboard() {
     const status = document.querySelector("[data-admin-status]");
-    const session = readAdminSession();
-    if (!session?.accessToken && !session?.refreshToken) {
+    const applicationAuth = getSupabaseApplicationState();
+    if (!applicationAuth?.authenticated) {
       setAdminPanelState(false);
       if (document.body.dataset.page === "admin") {
         window.location.href = "admin-login.html";
@@ -2299,12 +2264,10 @@
     }
 
     try {
-      const me = await authGet("/auth/me");
-      if (!me.success || !me.data) {
-        throw new Error("Session unavailable");
-      }
-
-      updateAdminIdentity(me.data);
+      updateAdminIdentity({
+        email: applicationAuth.email,
+        role: applicationAuth.role,
+      });
       setAdminPanelState(true);
       if (typeof window._wiiInitContentAdmin === "function") {
         window._wiiInitContentAdmin();
@@ -2386,10 +2349,10 @@
       renderAdminAnalytics(analyticsData);
 
       if (status) {
-        status.textContent = `Signed in as ${me.data.full_name || me.data.fullName || "Admin"}`;
+        status.textContent = `Signed in as ${applicationAuth.email || "Admin"}`;
       }
     } catch (error) {
-      clearAdminSession();
+      clearSupabaseApplicationState();
       setAdminPanelState(false);
       if (document.body.dataset.page === "admin") {
         window.location.href = "admin-login.html";
@@ -2404,7 +2367,7 @@
 
   function initAdminConsole() {
     const page = document.body.dataset.page;
-    if (page !== "admin" && page !== "admin-login") return;
+    if (page !== "admin" && page !== "admin-login" && page !== "admin-section") return;
 
     const form = document.querySelector("[data-admin-login-form]");
     const logoutBtn = document.querySelector("[data-admin-logout]");
@@ -2421,19 +2384,13 @@
 
     const bootstrapAdminSession = async () => {
       let supabaseResult = null;
+      clearLegacyAdminSession();
       try {
         supabaseResult = await syncExistingSupabaseSession();
-        if (supabaseResult?.success) {
-          writeAdminSession({
-            accessToken: supabaseResult.accessToken,
-            refreshToken: supabaseResult.refreshToken,
-            expiresAt: supabaseResult.expiresAt,
-          });
-        }
       } catch (error) {
         const status = document.querySelector("[data-admin-status]");
         if (status) status.textContent = error.message || "Supabase session verification failed.";
-        if (page === "admin" && !readAdminSession()?.accessToken) {
+        if (page === "admin" || page === "admin-section") {
           setAdminPanelState(false);
           return;
         }
@@ -2445,12 +2402,16 @@
       }
 
       if (page === "admin") {
-        setAdminPanelState(Boolean(readAdminSession()?.accessToken));
+        setAdminPanelState(Boolean(getSupabaseApplicationState()?.authenticated));
         await loadAdminDashboard();
+      }
+
+      if (page === "admin-section" && !supabaseResult?.success) {
+        window.location.href = "admin-login.html";
       }
     };
 
-    bootstrapAdminSession();
+    window.WII_SUPABASE_APPLICATION_READY = bootstrapAdminSession();
 
     form?.addEventListener("submit", async (event) => {
       event.preventDefault();
@@ -2472,15 +2433,9 @@
           throw supabaseError;
         }
 
-        if (!result.success || !result.accessToken || !result.refreshToken) {
-          throw new Error(result.message || "Login failed.");
+        if (!result?.success) {
+          throw new Error(result?.message || "Login failed.");
         }
-
-        writeAdminSession({
-          accessToken: result.accessToken,
-          refreshToken: result.refreshToken,
-          expiresAt: result.expiresAt,
-        });
 
         form.reset();
         if (page === "admin-login") {
@@ -2500,16 +2455,10 @@
     });
 
     logoutBtn?.addEventListener("click", async () => {
-      const refreshToken = getAdminRefreshToken();
-      if (refreshToken) {
-        try {
-          await authPost("/auth/logout", { refreshToken });
-        } catch {
-          // Ignore logout network failures; local session is cleared either way.
-        }
-      }
-
-      clearAdminSession();
+      const supabaseAuth = await getSupabaseAuth();
+      await supabaseAuth?.signOut().catch(() => {});
+      clearLegacyAdminSession();
+      clearSupabaseApplicationState();
       setAdminPanelState(false);
       const status = document.querySelector("[data-admin-status]");
       if (status) status.textContent = "Signed out.";
@@ -2518,6 +2467,17 @@
   }
 
   function initContentAdmin() {
+    const applicationReady = window.WII_SUPABASE_APPLICATION_READY;
+    if (applicationReady) {
+      applicationReady
+        .catch(() => null)
+        .finally(() => initContentAdminNow());
+      return;
+    }
+    initContentAdminNow();
+  }
+
+  function initContentAdminNow() {
     const page = document.body.dataset.page;
     if (page !== "content-admin" && page !== "admin" && page !== "admin-section") return;
 
@@ -4687,7 +4647,7 @@
       }
     }
 
-    if (!readAdminSession()?.accessToken) {
+    if (!getSupabaseApplicationState()?.authenticated) {
       if (page === "admin-section") {
         window.location.href = "admin-login.html";
         return;
@@ -4737,16 +4697,10 @@
     });
 
     logoutBtn?.addEventListener("click", async () => {
-      const refreshToken = getAdminRefreshToken();
-      if (refreshToken) {
-        try {
-          await authPost("/auth/logout", { refreshToken });
-        } catch {
-          // Ignore logout failures; the local session will still be cleared.
-        }
-      }
-
-      clearAdminSession();
+      const supabaseAuth = await getSupabaseAuth();
+      await supabaseAuth?.signOut().catch(() => {});
+      clearLegacyAdminSession();
+      clearSupabaseApplicationState();
       setStatus("Signed out.");
       showToast("Signed out successfully.");
     });
@@ -5243,7 +5197,7 @@
     }
   }
 
-  /* ─── Team photos — load from API ────────────────────────────── */
+  /* ─── Public team members — direct Supabase read ─────────────── */
   function renderPublicTeamMembers(teamGrid, members) {
     if (!teamGrid || !Array.isArray(members)) return;
 
@@ -5275,17 +5229,14 @@
     if (!teamGrid) return;
 
     try {
-      const result = await apiGet("/team");
-      if (!result.success) {
-        teamGrid.innerHTML = '<p class="team-grid-status">Members could not be loaded right now.</p>';
-        return;
-      }
+      await window.WII_SUPABASE_READY;
+      const getPublicTeamMembers = window.WII_SUPABASE_DATA?.getPublicTeamMembers;
+      if (!getPublicTeamMembers) throw new Error("Supabase public team read is unavailable.");
 
-      if (!Array.isArray(result.data)) {
-        teamGrid.innerHTML = '<p class="team-grid-status">Members could not be loaded right now.</p>';
-        return;
-      }
-      renderPublicTeamMembers(teamGrid, result.data);
+      const { data, error } = await getPublicTeamMembers();
+      authDiagnostic(`public team read succeeded: ${Boolean(!error)}`);
+      if (error || !Array.isArray(data)) throw new Error("Public team records could not be loaded.");
+      renderPublicTeamMembers(teamGrid, data);
     } catch {
       teamGrid.innerHTML = '<p class="team-grid-status">Members could not be loaded right now.</p>';
     }
