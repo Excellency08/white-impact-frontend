@@ -43,6 +43,20 @@ function exposeAuthHelpers(client) {
         .select("id, full_name, role, bio, photo_url, display_order")
         .eq("is_active", true)
         .order("display_order", { ascending: true }),
+    updateTeamMember: (id, values) =>
+      client
+        .from("team_members")
+        .update({
+          full_name: values.fullName,
+          role: values.role,
+          bio: values.bio,
+          photo_url: values.photoUrl,
+          display_order: values.displayOrder,
+          is_active: values.isActive,
+        })
+        .eq("id", id)
+        .select("id, full_name, role, bio, photo_url, display_order, is_active")
+        .maybeSingle(),
   };
 }
 

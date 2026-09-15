@@ -338,6 +338,28 @@
     return parseJsonResponse(res);
   }
 
+  async function updateTeamMemberInSupabase(id, payload) {
+    await window.WII_SUPABASE_READY;
+    const updateTeamMember = window.WII_SUPABASE_DATA?.updateTeamMember;
+    if (!updateTeamMember) {
+      return { success: false, message: "Supabase team update is unavailable." };
+    }
+
+    const { data, error } = await updateTeamMember(id, payload);
+    if (error) {
+      return { success: false, message: "Team member update was not authorized." };
+    }
+    if (!data) {
+      return { success: false, message: "Team member was not found or cannot be updated." };
+    }
+
+    return {
+      success: true,
+      message: "Team member updated.",
+      data,
+    };
+  }
+
   function escapeHtml(value) {
     return String(value || "")
       .replaceAll("&", "&amp;")
@@ -3623,7 +3645,7 @@
             : [],
         save: (record, payload) =>
           record?.id
-            ? authPut(`/team/${record.id}`, payload)
+            ? updateTeamMemberInSupabase(record.id, payload)
             : authPost("/team", payload),
         itemLabel: (record) => record.fullName || "Team member",
         itemMeta: (record) => record.role || "Member",
