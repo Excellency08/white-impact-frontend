@@ -585,9 +585,9 @@ ul {
   position: absolute;
   background: linear-gradient(
     135deg,
-    var(--color-navy) 0%,
+    /* var(--color-navy) 0%,
     var(--color-navy-light) 40%,
-    var(--color-primary-dark) 100%
+    var(--color-primary-dark) 100% */
   );
   width: 100%;
   height: 100%;
@@ -596,7 +596,7 @@ ul {
 .hero-pattern {
   position: absolute;
   inset: 0;
-  opacity: 0.4;
+  opacity: 0.42;
   background-size: cover;
   background-position: center;
   background-repeat: repeat-x;
@@ -606,19 +606,19 @@ ul {
 @keyframes slideImages {
   0% {
     background-image:
-      linear-gradient(rgba(13, 110, 110, 0.3), rgba(13, 110, 110, 0.3)),
+      linear-gradient(rgba(13, 110, 110, 0.1), rgba(13, 110, 110, 0.1)),
       url(".//assets/images/hero\ image.jpeg");
   }
 
   50% {
     background-image:
-      linear-gradient(rgba(13, 110, 110, 0.3), rgba(13, 110, 110, 0.3)),
+      linear-gradient(rgba(13, 110, 110, 0.1), rgba(13, 110, 110, 0.1)),
       url("./assets/images/WhatsApp\ Image\ 2026-06-24\ at\ 12.14.50\ PM.jpeg");
   }
 
   100% {
     background-image:
-      linear-gradient(rgba(13, 110, 110, 0.3), rgba(13, 110, 110, 0.3)),
+      linear-gradient(rgba(13, 110, 110, 0.1), rgba(13, 110, 110, 0.1)),
       url(".//assets/images/WhatsApp\ Image\ 2026-06-24\ at\ 12.14.50\ PM\ \(2\).jpeg");
   }
 }
@@ -5566,7 +5566,7 @@ body::before {
 } */
 
 .hero-pattern {
-  opacity: 0.18;
+  opacity: 0.42;
 }
 
 .hero-content h1,
