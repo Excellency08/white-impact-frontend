@@ -360,6 +360,21 @@
     };
   }
 
+  async function loadAdminTeamMembersFromSupabase() {
+    await window.WII_SUPABASE_READY;
+    const getAdminTeamMembers = window.WII_SUPABASE_DATA?.getAdminTeamMembers;
+    if (!getAdminTeamMembers) {
+      return { success: false, message: "Supabase team read is unavailable." };
+    }
+
+    const { data, error } = await getAdminTeamMembers();
+    if (error) {
+      return { success: false, message: "Team members could not be loaded." };
+    }
+
+    return { success: true, data: Array.isArray(data) ? data : [] };
+  }
+
   function escapeHtml(value) {
     return String(value || "")
       .replaceAll("&", "&amp;")
@@ -3629,7 +3644,7 @@
         title: "Team",
         description:
           "Edit leadership names, roles, bios, photos, and display ordering.",
-        load: () => authGet("/team/admin"),
+        load: loadAdminTeamMembersFromSupabase,
         loadRecords: (result) =>
           Array.isArray(result?.data)
             ? result.data.map((row) => ({

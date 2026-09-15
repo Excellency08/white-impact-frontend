@@ -43,6 +43,12 @@ function exposeAuthHelpers(client) {
         .select("id, full_name, role, bio, photo_url, display_order")
         .eq("is_active", true)
         .order("display_order", { ascending: true }),
+    getAdminTeamMembers: () =>
+      client
+        .from("team_members")
+        .select("id, full_name, role, bio, photo_url, display_order, is_active")
+        .order("display_order", { ascending: true })
+        .order("id", { ascending: true }),
     updateTeamMember: (id, values) =>
       client
         .from("team_members")
