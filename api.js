@@ -2119,6 +2119,25 @@
     }
   }
 
+  async function hydrateStaticReportLinks() {
+    const links = Array.from(document.querySelectorAll("[data-report-document-slug]"));
+    if (!links.length) return;
+
+    const slugs = [...new Set(links.map((link) => link.dataset.reportDocumentSlug).filter(Boolean))];
+    const reports = await Promise.all(
+      slugs.map(async (slug) => {
+        const result = await apiGet(`/reports/${encodeURIComponent(slug)}`);
+        return result.success && result.data ? [slug, result.data] : [slug, null];
+      }),
+    );
+    const bySlug = new Map(reports);
+
+    links.forEach((link) => {
+      const report = bySlug.get(link.dataset.reportDocumentSlug);
+      if (report?.fileUrl) link.href = report.fileUrl;
+    });
+  }
+
   function getCmsPage(data, key) {
     return data?.[key] || null;
   }
@@ -5516,6 +5535,7 @@
     loadStoriesContent();
     loadNewsContent();
     loadReportsContent();
+    hydrateStaticReportLinks();
     loadTeamPhotos();
   });
 
