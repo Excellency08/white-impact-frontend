@@ -35,16 +35,6 @@
     "partner-with-us",
     "donate",
   ]);
-  const insightPages = new Set([
-    "stories",
-    "story",
-    "news",
-    "news-article",
-    "reports",
-    "report",
-    "search",
-  ]);
-  const storyPages = new Set(["stories", "story"]);
 
   const activeIf = (condition) => (condition ? " active" : "");
   const activePage = (...ids) => activeIf(ids.includes(page));
@@ -78,14 +68,6 @@
       label: "Partner With Us",
       id: "partner-with-us",
     },
-  ];
-
-  const insightLinks = [
-    { href: "stories.html", label: "Stories", id: "stories" },
-    { href: "news.html", label: "News", id: "news" },
-    { href: "reports.html", label: "Reports", id: "reports" },
-    { href: "search.html", label: "Search", id: "search" },
-    { href: "index.html#impact-report", label: "Insights", id: "home" },
   ];
 
   function renderLinks(items, baseClass = "nav-link") {
@@ -122,11 +104,6 @@
             "@type": "WebSite",
             name: "White Impact Development Initiative",
             url: window.location.origin || "",
-            potentialAction: {
-              "@type": "SearchAction",
-              target: `${window.location.origin || ""}/search.html?q={search_term_string}`,
-              "query-input": "required name=search_term_string",
-            },
           },
         ]
       : {
@@ -187,16 +164,8 @@
                         ${renderLinks(workLinks)}
                     </div>
                 </div>
-                <!-- Impact link removed from primary nav -->
-                <div class="nav-dropdown" data-dropdown>
-                    <button class="nav-link nav-btn${activeGroup(insightPages)}" type="button" data-dropdown-trigger aria-expanded="false">
-                        Insights
-                        <svg class="chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
-                    </button>
-                    <div class="dropdown-panel">
-                        ${renderLinks(insightLinks)}
-                    </div>
-                </div>
+                <a class="nav-link${activePage("news")}" href="news.html">News</a>
+                <a class="nav-link${activePage("reports")}" href="reports.html">Reports</a>
                 <a class="nav-link${activePage("projects")}" href="projects.html">Projects</a>
                 <a class="nav-link${activePage("solutions")}" href="solutions.html">All Programs</a>
                 <div class="nav-dropdown" data-dropdown>
@@ -223,19 +192,11 @@
                 <div class="mobile-nav-section">
                     <p class="mobile-nav-label">Main</p>
                     <a class="mobile-link${activePage("home")}" href="index.html">Home</a>
-                    <!-- Impact link removed from mobile nav -->
-                    <a class="mobile-link${activeGroup(storyPages)}" href="stories.html">Stories</a>
                     <a class="mobile-link mobile-link-sm" href="news.html">News</a>
                     <a class="mobile-link mobile-link-sm" href="reports.html">Reports</a>
-                    <a class="mobile-link mobile-link-sm" href="search.html">Search</a>
-                    <a class="mobile-link mobile-link-sm" href="index.html#impact-report">Insights</a>
                     <a class="mobile-link${activePage("projects")}" href="projects.html">Projects</a>
                     <a class="mobile-link${activePage("solutions")}" href="solutions.html">All Programs</a>
                     <a class="mobile-link mobile-link-sm" href="index.html#contact">Contact</a>
-                </div>
-                <div class="mobile-nav-section">
-                    <p class="mobile-nav-label">Insights</p>
-                    ${renderLinks(insightLinks, "mobile-link mobile-link-sm")}
                 </div>
                 <div class="mobile-nav-section">
                     <p class="mobile-nav-label">About</p>
@@ -271,7 +232,6 @@
                     <p class="footer-title">Explore</p>
                     <a href="index.html">Home</a>
                     <a href="index.html#impact">Impact</a>
-                    <a href="stories.html">Stories</a>
                     <a href="news.html">News</a>
                     <a href="reports.html">Reports</a>
                 </div>

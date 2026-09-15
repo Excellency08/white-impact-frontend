@@ -470,7 +470,7 @@
       bodyCopy: json("bodyCopy"), heroStats: json("heroStats"), featureItems: json("featureItems"),
       objectives: json("objectives"), activities: json("activities"), beneficiaries: json("beneficiaries"),
       locations: json("locations"), timeline: json("timeline"), gallery: json("gallery"),
-      impactMetrics: json("impactMetrics"), stories: json("stories"), reports: json("reports"), partners: json("partners"),
+      impactMetrics: json("impactMetrics"), reports: json("reports"), partners: json("partners"),
     };
   }
 
@@ -539,7 +539,7 @@
       isActive: get("isActive", String(Boolean(existing.isActive))) === "true",
       bodyCopy: json("bodyCopy"), timeline: json("timeline"), objectives: json("objectives"),
       outcomes: json("outcomes"), media: json("media"), impactMetrics: json("impactMetrics"),
-      relatedStories: json("relatedStories"), reports: json("reports"), partners: json("partners"),
+      reports: json("reports"), partners: json("partners"),
     };
   }
 
@@ -571,72 +571,6 @@
     }
     const result = await dataApi.updateProject(projectId, values);
     if (result.error) return { success: false, message: result.error.message || "Failed to save project." };
-    return { success: true, data: result.data };
-  }
-
-  async function loadStoriesFromSupabase(admin = false, slug = "") {
-    await window.WII_SUPABASE_READY;
-    const getStories = admin
-      ? window.WII_SUPABASE_DATA?.getAdminStories
-      : slug
-        ? window.WII_SUPABASE_DATA?.getStory
-        : window.WII_SUPABASE_DATA?.getStories;
-    if (!getStories) return { success: false, message: "Supabase Stories read is unavailable." };
-    const result = slug ? await getStories(slug) : await getStories();
-    if (result.error) return { success: false, message: result.error.message || "Failed to load stories." };
-    return { success: true, data: Array.isArray(result.data) ? result.data : [] };
-  }
-
-  function storyFormValues(payload, existing = {}) {
-    const get = (name, fallback = "") => {
-      const value = payload.get(name);
-      return value === null ? fallback : String(value);
-    };
-    const json = (name, fallback = []) => {
-      try { return JSON.parse(get(name, JSON.stringify(existing[name] || fallback))); } catch { return existing[name] || fallback; }
-    };
-    return {
-      slug: get("slug", existing.slug), title: get("title", existing.title), excerpt: get("excerpt", existing.excerpt),
-      heroImageUrl: existing.heroImageUrl || "", heroImageAlt: get("heroImageAlt", existing.heroImageAlt),
-      authorName: get("authorName", existing.authorName), authorRole: get("authorRole", existing.authorRole),
-      programSlug: get("programSlug", existing.programSlug), location: get("location", existing.location),
-      publicationDate: get("publicationDate", existing.publicationDate || "") || null,
-      seoTitle: get("seoTitle", existing.seoTitle), seoDescription: get("seoDescription", existing.seoDescription),
-      displayOrder: Number(get("displayOrder", existing.displayOrder || 0) || 0),
-      isFeatured: get("isFeatured", String(Boolean(existing.isFeatured))) === "true",
-      isActive: get("isActive", String(Boolean(existing.isActive))) === "true",
-      content: json("content"), images: json("images"), gallery: json("gallery"), tags: json("tags"),
-    };
-  }
-
-  async function saveStoryInSupabase(record, payload) {
-    await window.WII_SUPABASE_READY;
-    const dataApi = window.WII_SUPABASE_DATA;
-    if (!dataApi?.createStory || !dataApi?.updateStory || !dataApi?.uploadStoryImage) {
-      return { success: false, message: "Supabase Stories management is unavailable." };
-    }
-    const file = payload.get("heroImageUrl");
-    const values = storyFormValues(payload, record || {});
-    let created = null;
-    if (!record?.id) {
-      values.isActive = false;
-      const result = await dataApi.createStory(values);
-      if (result.error) return { success: false, message: result.error.message || "Failed to create story." };
-      created = result.data;
-    }
-    const storyId = record?.id || created?.id;
-    if (file instanceof File && file.size > 0) {
-      const upload = await dataApi.uploadStoryImage(storyId, file, "hero");
-      if (upload.error) {
-        if (created?.id) await dataApi.updateStory(created.id, { ...values, isActive: false });
-        return { success: false, message: upload.error.message || "Story image upload failed." };
-      }
-      values.heroImageUrl = upload.data.publicUrl;
-    } else {
-      values.heroImageUrl = record?.heroImageUrl || "";
-    }
-    const result = await dataApi.updateStory(storyId, values);
-    if (result.error) return { success: false, message: result.error.message || "Failed to save story." };
     return { success: true, data: result.data };
   }
 
@@ -914,45 +848,6 @@
       .forEach((el) => el.classList.add("visible"));
   }
 
-  function renderStoryCards(stories) {
-    const grid = document.querySelector(".stories-grid");
-    if (!grid || !stories.length) return;
-
-    const cards = stories
-      .map((story) => {
-        const tags = Array.isArray(story.tags) ? story.tags.slice(0, 3) : [];
-        const tagMarkup = tags.length
-          ? `<div class="story-tags">${tags
-              .map(
-                (tag) =>
-                  `<span>${escapeHtml(typeof tag === "string" ? tag : tag.label || tag.title || tag)}</span>`,
-              )
-              .join("")}</div>`
-          : "";
-
-        return `
-          <a class="story-card" href="${escapeHtml(story.pageUrl || `story.html?slug=${encodeURIComponent(story.slug)}`)}" data-animate>
-            <div class="story-card-image">
-              <img src="${escapeHtml(story.heroImageUrl || "./assets/images/hero image.jpeg")}" alt="${escapeHtml(story.heroImageAlt || story.title)}" loading="lazy" />
-            </div>
-            <div class="story-card-body">
-              <p class="story-meta">${escapeHtml(story.authorName || "White Impact Team")} ${story.programTitle ? `• ${escapeHtml(story.programTitle)}` : ""}</p>
-              <h3>${escapeHtml(story.title)}</h3>
-              <p>${escapeHtml(story.excerpt)}</p>
-              ${tagMarkup}
-              <span class="program-link">Read story →</span>
-            </div>
-          </a>
-        `;
-      })
-      .join("");
-
-    grid.innerHTML = cards;
-    grid
-      .querySelectorAll("[data-animate]")
-      .forEach((el) => el.classList.add("visible"));
-  }
-
   function renderNewsCards(newsPosts) {
     const grid = document.querySelector(".news-grid");
     if (!grid || !newsPosts.length) return;
@@ -1031,10 +926,10 @@
       .forEach((el) => el.classList.add("visible"));
   }
 
-  function renderStoryContentBlocks(blocks) {
+  function renderContentBlocks(blocks) {
     const items = Array.isArray(blocks) ? blocks : [];
     if (!items.length) {
-      return "<p>Story content will appear here once it is published.</p>";
+      return "<p>Content will appear here once it is published.</p>";
     }
 
     return items
@@ -1073,7 +968,7 @@
         if (type === "image") {
           return `
             <figure class="story-inline-figure">
-              <img src="${escapeHtml(block.url || block.src || "")}" alt="${escapeHtml(block.alt || block.caption || "Story image")}" loading="lazy" />
+              <img src="${escapeHtml(block.url || block.src || "")}" alt="${escapeHtml(block.alt || block.caption || "Content image")}" loading="lazy" />
               ${block.caption ? `<figcaption>${escapeHtml(block.caption)}</figcaption>` : ""}
             </figure>
           `;
@@ -1085,56 +980,7 @@
   }
 
   function renderNewsContentBlocks(blocks) {
-    return renderStoryContentBlocks(blocks);
-  }
-
-  function renderStoryGallery(gallery) {
-    const items = Array.isArray(gallery) ? gallery : [];
-    if (!items.length) return "";
-
-    return items
-      .map(
-        (item) => `
-          <figure class="story-gallery-card" data-animate>
-            <img src="${escapeHtml(item.url || item.src || "")}" alt="${escapeHtml(item.alt || item.caption || "Story gallery image")}" loading="lazy" />
-            ${item.caption ? `<figcaption>${escapeHtml(item.caption)}</figcaption>` : ""}
-          </figure>
-        `,
-      )
-      .join("");
-  }
-
-  function renderStoryDetailSections(story) {
-    const existing = document.querySelector("[data-story-detail]");
-    if (existing) {
-      existing.remove();
-    }
-
-    if (!story?.gallery?.length) return;
-
-    const wrapper = document.createElement("section");
-    wrapper.className = "section story-gallery-section";
-    wrapper.dataset.storyDetail = "true";
-    wrapper.innerHTML = `
-      <div class="container">
-        <div class="section-head" data-animate>
-          <p class="section-kicker">Gallery</p>
-          <h2>Story imagery</h2>
-          <p class="section-desc">Additional visuals attached to this story record.</p>
-        </div>
-        <div class="story-gallery-grid">
-          ${renderStoryGallery(story.gallery)}
-        </div>
-      </div>
-    `;
-
-    const main = document.querySelector("main");
-    const anchor = document.querySelector(".story-page-end");
-    if (anchor) {
-      anchor.insertAdjacentElement("beforebegin", wrapper);
-    } else if (main) {
-      main.appendChild(wrapper);
-    }
+    return renderContentBlocks(blocks);
   }
 
   function renderNewsDetailSections(post) {
@@ -1234,93 +1080,6 @@
     } else if (main) {
       main.appendChild(wrapper);
     }
-  }
-
-  function applyStoryData(story) {
-    if (!story) return;
-
-    updateMeta(
-      "title",
-      `${story.seoTitle || story.title} | White Impact Development Initiative`,
-    );
-    updateMeta("description", story.seoDescription || story.excerpt);
-
-    const pageHero = document.querySelector(".page-hero");
-    updateElementText(pageHero || document, "h1", story.title);
-    updateElementText(pageHero || document, ".page-hero-lead", story.excerpt);
-    updateElementText(pageHero || document, ".breadcrumb span", story.title);
-    updateElementText(
-      pageHero || document,
-      "[data-story-date]",
-      formatDisplayDate(story.publicationDate || ""),
-    );
-    updateElementText(
-      pageHero || document,
-      "[data-story-author]",
-      story.authorName || "White Impact Team",
-    );
-    updateElementText(
-      pageHero || document,
-      "[data-story-program]",
-      story.programTitle || "",
-    );
-    updateElementText(
-      pageHero || document,
-      "[data-story-location]",
-      story.location || "",
-    );
-
-    const storyImage = document.querySelector("[data-story-hero-image]");
-    if (storyImage && story.heroImageUrl) {
-      storyImage.src = story.heroImageUrl;
-      storyImage.alt = story.heroImageAlt || story.title;
-    }
-
-    const tags = Array.isArray(story.tags) ? story.tags : [];
-    const tagsContainer = document.querySelector("[data-story-tags]");
-    if (tagsContainer) {
-      tagsContainer.innerHTML = tags.length
-        ? tags
-            .map(
-              (tag) =>
-                `<span>${escapeHtml(typeof tag === "string" ? tag : tag.label || tag.title || tag)}</span>`,
-            )
-            .join("")
-        : "<span>Editorial</span>";
-    }
-
-    const content = document.querySelector("[data-story-content]");
-    if (content) {
-      content.innerHTML = renderStoryContentBlocks(story.content);
-    }
-
-    const lead = document.querySelector("[data-story-summary]");
-    if (lead) {
-      lead.textContent = story.excerpt || "";
-    }
-
-    const metaBlocks = document.querySelectorAll("[data-story-meta-block]");
-    metaBlocks.forEach((block) => {
-      const field = block.dataset.storyMetaBlock;
-      const value =
-        field === "author"
-          ? story.authorName || "White Impact Team"
-          : field === "program"
-            ? story.programTitle || "Program story"
-            : field === "location"
-              ? story.location || "Nigeria"
-              : formatDisplayDate(story.publicationDate || "");
-      block.textContent = value;
-    });
-
-    const heroBadge = document.querySelector(
-      ".page-hero .breadcrumb span:last-child",
-    );
-    if (heroBadge) {
-      heroBadge.textContent = story.title;
-    }
-
-    renderStoryDetailSections(story);
   }
 
   function applyNewsData(post) {
@@ -1626,7 +1385,6 @@
     if (
       program.heroStats?.length ||
       program.impactMetrics?.length ||
-      program.stories?.length ||
       program.reports?.length ||
       program.partners?.length
     ) {
@@ -1640,25 +1398,6 @@
                 <div class="program-metric-grid">
                   ${renderProgramMetricCards(program.impactMetrics?.length ? program.impactMetrics : program.heroStats)}
                 </div>
-              </div>
-              <div class="program-impact-column program-story-column" data-animate>
-                <p class="section-kicker">Stories</p>
-                <h2>Program stories</h2>
-                ${
-                  program.stories?.length
-                    ? program.stories
-                        .map((story) => {
-                          const normalized = normalizeProgramListItem(story);
-                          return `
-                      <blockquote class="program-story-card">
-                        <p>${escapeHtml(normalized.quote || normalized.summary || "")}</p>
-                        <footer>${escapeHtml(normalized.attribution || normalized.label || "")}</footer>
-                      </blockquote>
-                    `;
-                        })
-                        .join("")
-                    : "<p>No stories have been added yet.</p>"
-                }
               </div>
             </div>
             <div class="program-resource-grid">
@@ -1815,7 +1554,6 @@
 
     if (
       project.impactMetrics?.length ||
-      project.relatedStories?.length ||
       project.reports?.length ||
       project.partners?.length
     ) {
@@ -1829,25 +1567,6 @@
                 <div class="program-metric-grid">
                   ${renderProgramMetricCards(project.impactMetrics)}
                 </div>
-              </div>
-              <div class="program-impact-column program-story-column" data-animate>
-                <p class="section-kicker">Stories</p>
-                <h2>Related stories</h2>
-                ${
-                  project.relatedStories?.length
-                    ? project.relatedStories
-                        .map((story) => {
-                          const normalized = normalizeProgramListItem(story);
-                          return `
-                      <blockquote class="program-story-card">
-                        <p>${escapeHtml(normalized.quote || normalized.summary || "")}</p>
-                        <footer>${escapeHtml(normalized.attribution || normalized.label || "")}</footer>
-                      </blockquote>
-                    `;
-                        })
-                        .join("")
-                    : "<p>No related stories have been added yet.</p>"
-                }
               </div>
             </div>
             <div class="program-resource-grid">
@@ -2180,51 +1899,6 @@
     }
   }
 
-  async function loadStoriesContent() {
-    const page = document.body.dataset.page;
-    if (page !== "stories" && page !== "story") return;
-
-    try {
-      if (page === "stories") {
-        const result = await loadStoriesFromSupabase(false);
-        if (result.success && Array.isArray(result.data)) {
-          renderStoryCards(result.data);
-        }
-        return;
-      }
-
-      const params = new URLSearchParams(window.location.search);
-      const slug = params.get("slug");
-
-      if (slug) {
-        const result = await loadStoriesFromSupabase(false, slug);
-        if (result.success && result.data) {
-          applyStoryData(result.data);
-        }
-        return;
-      }
-
-      const listResult = await loadStoriesFromSupabase(false);
-      if (
-        listResult.success &&
-        Array.isArray(listResult.data) &&
-        listResult.data.length
-      ) {
-        const firstStory = listResult.data[0];
-        if (firstStory?.slug) {
-          const detailResult = await loadStoriesFromSupabase(false, firstStory.slug);
-          if (detailResult.success && detailResult.data) {
-            applyStoryData(detailResult.data);
-            return;
-          }
-        }
-        applyStoryData(firstStory);
-      }
-    } catch {
-      // Static fallback remains visible.
-    }
-  }
-
   async function loadNewsContent() {
     const page = document.body.dataset.page;
     if (page !== "news" && page !== "news-article") return;
@@ -2413,8 +2087,6 @@
       const seoPageMap = seo.pages || {};
       const seoPageKeyMap = {
         home: "home",
-        stories: "stories",
-        story: "stories",
         news: "news",
         "news-article": "news",
         reports: "reports",
@@ -2563,11 +2235,6 @@
         href: "projects.html",
       },
       {
-        label: "Stories",
-        value: summary.stories,
-        href: "stories.html",
-      },
-      {
         label: "Impact metrics",
         value: summary.impact?.summary?.totalMetrics || summary.impact?.metrics,
         href: "index.html#impact",
@@ -2699,7 +2366,6 @@
       const [
         programsRes,
         projectsRes,
-        storiesRes,
         impactRes,
         newsRes,
         reportsRes,
@@ -2713,7 +2379,6 @@
       ] = await Promise.allSettled([
         authGet("/programs/admin"),
         loadProjectsFromSupabase(true),
-        loadStoriesFromSupabase(true),
         authGet("/impact/admin"),
         authGet("/news/admin"),
         loadReportsFromSupabase(),
@@ -2730,7 +2395,6 @@
         result.status === "fulfilled" ? result.value : null;
       const programsData = settledData(programsRes);
       const projectsData = settledData(projectsRes);
-      const storiesData = settledData(storiesRes);
       const impactData = settledData(impactRes);
       const newsData = settledData(newsRes);
       const reportsData = settledData(reportsRes);
@@ -2749,7 +2413,6 @@
         projects: Array.isArray(projectsData?.data)
           ? projectsData.data.length
           : 0,
-        stories: Array.isArray(storiesData?.data) ? storiesData.data.length : 0,
         impact: impactData?.data || null,
         news: Array.isArray(newsData?.data) ? newsData.data.length : 0,
         reports: Array.isArray(reportsData?.data) ? reportsData.data.length : 0,
@@ -2999,7 +2662,6 @@
           timeline: [],
           gallery: [],
           impactMetrics: [],
-          stories: [],
           reports: [],
           partners: [],
         },
@@ -3103,7 +2765,6 @@
             type: "json",
             rows: 5,
           },
-          { name: "stories", label: "Stories", type: "json", rows: 5 },
           { name: "reports", label: "Reports", type: "json", rows: 5 },
           { name: "partners", label: "Partners", type: "json", rows: 5 },
         ],
@@ -3140,7 +2801,6 @@
           outcomes: [],
           media: [],
           impactMetrics: [],
-          relatedStories: [],
           reports: [],
           partners: [],
         },
@@ -3211,94 +2871,8 @@
             type: "json",
             rows: 5,
           },
-          {
-            name: "relatedStories",
-            label: "Related stories",
-            type: "json",
-            rows: 5,
-          },
           { name: "reports", label: "Reports", type: "json", rows: 5 },
           { name: "partners", label: "Partners", type: "json", rows: 5 },
-        ],
-      },
-      stories: {
-        label: "Stories",
-        singular: "story",
-        title: "Stories",
-        description:
-          "Edit narrative story records, author metadata, imagery, and publication settings.",
-        load: () => loadStoriesFromSupabase(true),
-        save: (record, payload) => saveStoryInSupabase(record, payload),
-        archive: async (record) => {
-          await window.WII_SUPABASE_READY;
-          const updateStory = window.WII_SUPABASE_DATA?.updateStory;
-          if (!updateStory) return { success: false, message: "Supabase Stories update is unavailable." };
-          const { data, error } = await updateStory(record.id, { ...record, isActive: false });
-          return error
-            ? { success: false, message: error.message || "Story could not be archived." }
-            : { success: true, data };
-        },
-        itemLabel: (record) => record.title || record.slug || "Untitled story",
-        itemMeta: (record) =>
-          record.authorName || record.publicationDate || "Story",
-        emptyLabel: "No stories loaded yet.",
-        defaultRecord: {
-          displayOrder: 0,
-          isFeatured: false,
-          isActive: true,
-          content: [],
-          images: [],
-          gallery: [],
-          tags: [],
-        },
-        fields: [
-          { name: "slug", label: "Slug", type: "text", required: true },
-          { name: "title", label: "Title", type: "text", required: true },
-          {
-            name: "excerpt",
-            label: "Excerpt",
-            type: "textarea",
-            rows: 3,
-            required: true,
-          },
-          {
-            name: "authorName",
-            label: "Author name",
-            type: "text",
-            required: true,
-          },
-          { name: "authorRole", label: "Author role", type: "text" },
-          { name: "programSlug", label: "Program slug", type: "text" },
-          { name: "location", label: "Location", type: "text" },
-          { name: "publicationDate", label: "Publication date", type: "date" },
-          { name: "heroImageUrl", label: "Upload hero image", type: "image", accept: "image/*" },
-          { name: "heroImageAlt", label: "Hero image alt text", type: "text" },
-          { name: "seoTitle", label: "SEO title", type: "text" },
-          {
-            name: "seoDescription",
-            label: "SEO description",
-            type: "textarea",
-            rows: 3,
-          },
-          { name: "displayOrder", label: "Display order", type: "number" },
-          { name: "isFeatured", label: "Featured", type: "checkbox" },
-          { name: "isActive", label: "Active", type: "checkbox" },
-          {
-            name: "content",
-            label: "Content blocks",
-            type: "json",
-            rows: 6,
-            required: true,
-            help: "Array of content blocks used by the story detail page.",
-          },
-          {
-            name: "images",
-            label: "Inline images",
-            type: "json",
-            rows: 5,
-          },
-          { name: "gallery", label: "Gallery", type: "json", rows: 5 },
-          { name: "tags", label: "Tags", type: "json", rows: 5 },
         ],
       },
       news: {
@@ -4352,7 +3926,6 @@
         timeline: ["year", "title", "summary"],
         gallery: ["url", "alt", "caption"],
         impactMetrics: ["label", "value", "description"],
-        stories: ["quote", "attribution"],
         reports: ["title", "url", "description"],
         partners: ["title", "description", "logoUrl"],
         images: ["url", "alt", "caption"],
@@ -4855,7 +4428,7 @@
           const config = configs[key];
           const current = getSelectedRecord(key) || getDefaultRecord(config);
           const hasFileField = config.fields.some(
-            (field) => field.type === "file" || (["programs", "projects", "stories"].includes(key) && field.type === "image"),
+            (field) => field.type === "file" || (["programs", "projects"].includes(key) && field.type === "image"),
           );
           const fileFields = config.fields.filter(
             (field) => field.type === "file",
@@ -4877,7 +4450,7 @@
             }
           }
 
-          const imageFields = ["programs", "projects", "stories"].includes(key) ? [] : config.fields.filter(
+          const imageFields = ["programs", "projects"].includes(key) ? [] : config.fields.filter(
             (field) => field.type === "image" || field.type === "asset",
           );
           const teamPhotoField = key === "team"
@@ -5024,8 +4597,6 @@
                 ? await saveProgramInSupabase(current, payload)
                 : key === "projects"
                   ? await saveProjectInSupabase(current, payload)
-                : key === "stories"
-                  ? await saveStoryInSupabase(current, payload)
               : await config.save(current, payload);
             if (!result.success) {
               throw new Error(result.message || "Save failed.");
@@ -5589,69 +5160,6 @@
     });
   }
 
-  async function initSearchPage() {
-    const form = document.querySelector("[data-search-form]");
-    const results = document.querySelector("[data-search-results]");
-    const meta = document.querySelector("[data-search-meta]");
-    if (!form || !results || !meta) return;
-
-    const params = new URLSearchParams(window.location.search);
-    const input = form.querySelector('[name="query"]');
-    const render = (items) => {
-      if (!items.length) {
-        results.innerHTML =
-          '<div class="empty-state"><h3>No results yet</h3><p>Try a different keyword or browse one of the content sections.</p></div>';
-        return;
-      }
-
-      results.innerHTML = items
-        .map(
-          (item) => `
-            <a class="search-result-card" href="${escapeHtml(item.url || "#")}">
-              <span class="pill">${escapeHtml(item.type)}</span>
-              <h3>${escapeHtml(item.title || "Untitled")}</h3>
-              <p>${escapeHtml(item.summary || "")}</p>
-            </a>
-          `,
-        )
-        .join("");
-    };
-
-    const runSearch = async (query) => {
-      const q = String(query || "").trim();
-      if (input) input.value = q;
-      if (q.length < 2) {
-        meta.textContent = "Enter at least 2 characters to search the site.";
-        results.innerHTML = "";
-        return;
-      }
-
-      meta.textContent = `Searching for “${q}”…`;
-      try {
-        const result = await apiGet(`/search?q=${encodeURIComponent(q)}`);
-        const items = Array.isArray(result.data) ? result.data : [];
-        meta.textContent = items.length
-          ? `${items.length} result${items.length === 1 ? "" : "s"} for “${q}”`
-          : `No results found for “${q}”.`;
-        render(items);
-      } catch {
-        meta.textContent = "Search failed. Please try again.";
-        results.innerHTML = "";
-      }
-    };
-
-    form.addEventListener("submit", (event) => {
-      event.preventDefault();
-      runSearch(input?.value || "");
-    });
-
-    if (params.get("q")) {
-      await runSearch(params.get("q"));
-    } else {
-      meta.textContent = "Search across programs, projects, stories, news, and reports.";
-    }
-  }
-
   async function initNewsletterConfirmationPage() {
     const status = document.querySelector("[data-newsletter-confirmation-status]");
     if (!status) return;
@@ -5741,7 +5249,6 @@
   initNewsletterForm();
   initDonationForm();
   initReceiptForm();
-  initSearchPage();
   initNewsletterConfirmationPage();
   initNewsletterUnsubscribePage();
     initAdminConsole();
@@ -5750,7 +5257,6 @@
     loadCmsContent();
     loadProgramsContent();
     loadProjectsContent();
-    loadStoriesContent();
     loadNewsContent();
     loadReportsContent();
     hydrateStaticReportLinks();

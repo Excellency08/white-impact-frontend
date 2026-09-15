@@ -30,7 +30,7 @@ function exposeAuthHelpers(client) {
     "page_url", "cta_label", "cta_url", "status", "status_label",
     "status_detail", "hero_stats", "feature_items", "objectives",
     "activities", "beneficiaries", "locations", "timeline", "gallery",
-    "impact_metrics", "stories", "reports", "partners", "seo_title",
+    "impact_metrics", "reports", "partners", "seo_title",
     "seo_description", "display_order", "is_featured", "is_active",
     "updated_at", "created_at",
   ].join(", ");
@@ -73,7 +73,6 @@ function exposeAuthHelpers(client) {
       timeline: row.timeline || [],
       gallery: row.gallery || [],
       impactMetrics: row.impact_metrics || [],
-      stories: row.stories || [],
       reports: row.reports || [],
       partners: row.partners || [],
     };
@@ -84,28 +83,19 @@ function exposeAuthHelpers(client) {
     if (!admin) query = query.eq("is_active", true);
     const base = await query;
     if (base.error) return base;
-    const [beneficiaries, locations, timeline, gallery, metrics, stories, reports, links, partners] = await Promise.all([
+    const [beneficiaries, locations, timeline, gallery, metrics, reports, links, partners] = await Promise.all([
       client.from("program_beneficiaries").select("program_id, title, description, image_url, display_order, id").order("display_order").order("id"),
       client.from("program_locations").select("program_id, name, description, country, state, city, display_order, id").order("display_order").order("id"),
       client.from("program_timeline").select("program_id, milestone_date, title, description, display_order, id").order("display_order").order("id"),
       client.from("program_gallery").select("program_id, image_url, alt_text, caption, display_order, id").order("display_order").order("id"),
       client.from("program_impact_metrics").select("program_id, label, value, description, icon, category, display_order, id").order("display_order").order("id"),
-      client.from("program_stories").select("program_id, story_id, display_order, id").order("display_order").order("id"),
       client.from("program_reports").select("program_id, title, description, file_url, display_order, id").order("display_order").order("id"),
       client.from("program_partners").select("program_id, partner_id, display_order, id").order("display_order").order("id"),
       client.from("partners").select("id, name, description, logo_url"),
     ]);
-    const childError = [beneficiaries, locations, timeline, gallery, metrics, stories, reports, links, partners].find((result) => result.error);
+    const childError = [beneficiaries, locations, timeline, gallery, metrics, reports, links, partners].find((result) => result.error);
     if (childError) return { data: null, error: childError.error };
 
-    const storyIds = [...new Set((stories.data || []).map((row) => row.story_id).filter(Boolean))];
-    let storyRows = [];
-    if (storyIds.length) {
-      const storyQuery = await client.from("stories").select("id, slug, title, excerpt").in("id", storyIds);
-      if (storyQuery.error) return storyQuery;
-      storyRows = storyQuery.data || [];
-    }
-    const storyById = new Map(storyRows.map((row) => [row.id, row]));
     const partnerById = new Map((partners.data || []).map((row) => [row.id, row]));
     const byProgram = (rows, id) => (rows || []).filter((row) => row.program_id === id);
 
@@ -116,7 +106,6 @@ function exposeAuthHelpers(client) {
       const childTimeline = byProgram(timeline.data, row.id);
       const childGallery = byProgram(gallery.data, row.id);
       const childMetrics = byProgram(metrics.data, row.id);
-      const childStories = byProgram(stories.data, row.id);
       const childReports = byProgram(reports.data, row.id);
       const childPartners = byProgram(links.data, row.id);
       if (childBeneficiaries.length) item.beneficiaries = childBeneficiaries.map((v) => ({ title: v.title, summary: v.description, imageUrl: v.image_url }));
@@ -124,7 +113,6 @@ function exposeAuthHelpers(client) {
       if (childTimeline.length) item.timeline = childTimeline.map((v) => ({ year: v.milestone_date, title: v.title, summary: v.description }));
       if (childGallery.length) item.gallery = childGallery.map((v) => ({ url: v.image_url, alt: v.alt_text, caption: v.caption }));
       if (childMetrics.length) item.impact_metrics = childMetrics.map((v) => ({ label: v.label, value: v.value, description: v.description, icon: v.icon, category: v.category }));
-      if (childStories.length) item.stories = childStories.map((v) => storyById.get(v.story_id)).filter(Boolean).map((v) => ({ title: v.title, slug: v.slug, excerpt: v.excerpt }));
       if (childReports.length) item.reports = childReports.map((v) => ({ title: v.title, url: v.file_url, description: v.description }));
       if (childPartners.length) item.partners = childPartners.map((v) => partnerById.get(v.partner_id)).filter(Boolean).map((v) => ({ title: v.name, description: v.description, logoUrl: v.logo_url }));
       return formatProgram(item, !admin && !full);
@@ -157,7 +145,6 @@ function exposeAuthHelpers(client) {
     timeline: values.timeline || [],
     gallery: values.gallery || [],
     impact_metrics: values.impactMetrics || [],
-    stories: values.stories || [],
     reports: values.reports || [],
     partners: values.partners || [],
     seo_title: values.seoTitle || "",
@@ -171,7 +158,7 @@ function exposeAuthHelpers(client) {
     "id", "slug", "title", "summary", "description", "program_slug",
     "location", "status", "status_label", "status_detail", "card_summary",
     "card_icon", "hero_image_url", "hero_image_alt", "body_copy", "timeline",
-    "objectives", "outcomes", "media", "impact_metrics", "related_stories",
+    "objectives", "outcomes", "media", "impact_metrics",
     "reports", "partners", "seo_title", "seo_description", "display_order",
     "is_featured", "is_active", "updated_at", "created_at",
   ].join(", ");
@@ -211,7 +198,6 @@ function exposeAuthHelpers(client) {
       outcomes: row.outcomes || [],
       media: row.media || [],
       impactMetrics: row.impact_metrics || [],
-      relatedStories: row.related_stories || [],
       reports: row.reports || [],
       partners: row.partners || [],
     };
@@ -254,87 +240,8 @@ function exposeAuthHelpers(client) {
     outcomes: values.outcomes || [],
     media: values.media || [],
     impact_metrics: values.impactMetrics || [],
-    related_stories: values.relatedStories || [],
     reports: values.reports || [],
     partners: values.partners || [],
-    seo_title: values.seoTitle || "",
-    seo_description: values.seoDescription || "",
-    display_order: Number(values.displayOrder || 0),
-    is_featured: Boolean(values.isFeatured),
-    is_active: Boolean(values.isActive),
-  });
-
-  const storyColumns = [
-    "id", "slug", "title", "excerpt", "content", "hero_image_url", "hero_image_alt",
-    "images", "gallery", "author_name", "author_role", "program_slug", "location",
-    "tags", "publication_date", "seo_title", "seo_description", "display_order",
-    "is_featured", "is_active", "updated_at", "created_at",
-  ].join(", ");
-
-  const formatStory = (row, programBySlug, listView = false) => {
-    const base = {
-      id: row.id,
-      slug: row.slug,
-      title: row.title,
-      excerpt: row.excerpt,
-      heroImageUrl: row.hero_image_url || "",
-      heroImageAlt: row.hero_image_alt || "",
-      authorName: row.author_name || "White Impact Team",
-      authorRole: row.author_role || "",
-      programSlug: row.program_slug || "",
-      programTitle: programBySlug.get(row.program_slug)?.title || "",
-      location: row.location || "",
-      tags: Array.isArray(row.tags) ? row.tags : [],
-      publicationDate: row.publication_date || null,
-      seoTitle: row.seo_title || row.title,
-      seoDescription: row.seo_description || row.excerpt,
-      displayOrder: Number(row.display_order || 0),
-      isFeatured: Boolean(row.is_featured),
-      isActive: Boolean(row.is_active),
-      updatedAt: row.updated_at,
-      createdAt: row.created_at,
-    };
-    if (listView) return base;
-    return {
-      ...base,
-      content: Array.isArray(row.content) ? row.content : [],
-      images: Array.isArray(row.images) ? row.images : [],
-      gallery: Array.isArray(row.gallery) ? row.gallery : [],
-    };
-  };
-
-  const getStories = async (admin = false, slug = "") => {
-    let query = client.from("stories").select(storyColumns).order("display_order").order("publication_date", { ascending: false, nullsFirst: false }).order("title");
-    if (!admin) query = query.eq("is_active", true);
-    if (slug) query = query.eq("slug", slug);
-    const stories = await query;
-    if (stories.error) return stories;
-    const slugs = [...new Set((stories.data || []).map((row) => row.program_slug).filter(Boolean))];
-    let programs = { data: [], error: null };
-    if (slugs.length) programs = await client.from("programs").select("id, slug, title").in("slug", slugs);
-    if (programs.error) return programs;
-    const programBySlug = new Map((programs.data || []).map((row) => [row.slug, row]));
-    return {
-      data: (stories.data || []).map((row) => formatStory(row, programBySlug, !admin && !slug)),
-      error: null,
-    };
-  };
-
-  const storyPayload = (values) => ({
-    slug: values.slug,
-    title: values.title,
-    excerpt: values.excerpt,
-    content: values.content || [],
-    hero_image_url: values.heroImageUrl || "",
-    hero_image_alt: values.heroImageAlt || "",
-    images: values.images || [],
-    gallery: values.gallery || [],
-    author_name: values.authorName,
-    author_role: values.authorRole || "",
-    program_slug: values.programSlug || null,
-    location: values.location || "",
-    tags: values.tags || [],
-    publication_date: values.publicationDate || null,
     seo_title: values.seoTitle || "",
     seo_description: values.seoDescription || "",
     display_order: Number(values.displayOrder || 0),
@@ -390,24 +297,6 @@ function exposeAuthHelpers(client) {
       const folder = variant === "media" ? "media" : "hero";
       const nonce = globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
       const path = `projects/${projectId}/${folder}/project-${nonce}.${allowedTypes[file.type]}`;
-      const upload = await client.storage.from("content-images").upload(path, file, { cacheControl: "3600", contentType: file.type, upsert: false });
-      if (upload.error) return { data: null, error: upload.error };
-      const publicUrl = client.storage.from("content-images").getPublicUrl(path).data.publicUrl;
-      return { data: { path, publicUrl }, error: null };
-    },
-    getStories: () => getStories(false),
-    getStory: (slug) => getStories(false, slug),
-    getAdminStories: () => getStories(true),
-    createStory: (values) => client.from("stories").insert(storyPayload(values)).select(storyColumns).single(),
-    updateStory: (id, values) => client.from("stories").update(storyPayload(values)).eq("id", id).select(storyColumns).single(),
-    uploadStoryImage: async (storyId, file, variant = "hero") => {
-      const allowedTypes = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/gif": "gif" };
-      if (!/^\d+$/.test(String(storyId))) return { data: null, error: new Error("A valid story ID is required.") };
-      if (!file || !allowedTypes[file.type]) return { data: null, error: new Error("Only JPG, PNG, WEBP, and GIF images are allowed.") };
-      if (file.size <= 0 || file.size > 10 * 1024 * 1024) return { data: null, error: new Error("Story images must be smaller than 10 MB.") };
-      const folder = variant === "media" ? "media" : "hero";
-      const nonce = globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-      const path = `stories/${storyId}/${folder}/story-${nonce}.${allowedTypes[file.type]}`;
       const upload = await client.storage.from("content-images").upload(path, file, { cacheControl: "3600", contentType: file.type, upsert: false });
       if (upload.error) return { data: null, error: upload.error };
       const publicUrl = client.storage.from("content-images").getPublicUrl(path).data.publicUrl;
