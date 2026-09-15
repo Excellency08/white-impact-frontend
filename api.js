@@ -437,6 +437,74 @@
     return { success: true, data: Array.isArray(data) ? data.map(formatSupabaseReport) : [] };
   }
 
+  async function loadProgramsFromSupabase(admin = false) {
+    await window.WII_SUPABASE_READY;
+    const getPrograms = admin
+      ? window.WII_SUPABASE_DATA?.getAdminPrograms
+      : window.WII_SUPABASE_DATA?.getPrograms;
+    if (!getPrograms) return { success: false, message: "Supabase Programs read is unavailable." };
+    const { data, error } = await getPrograms();
+    if (error) return { success: false, message: error.message || "Failed to load programs." };
+    return { success: true, data: Array.isArray(data) ? data : [] };
+  }
+
+  function programFormValues(payload, existing = {}) {
+    const get = (name, fallback = "") => {
+      const value = payload.get(name);
+      return value === null ? fallback : String(value);
+    };
+    const json = (name, fallback = []) => {
+      try { return JSON.parse(get(name, JSON.stringify(existing[name] || fallback))); } catch { return existing[name] || fallback; }
+    };
+    return {
+      slug: get("slug", existing.slug), title: get("title", existing.title),
+      summary: get("summary", existing.summary), description: get("description", existing.description),
+      heroImageUrl: existing.heroImageUrl || "", heroImageAlt: get("heroImageAlt", existing.heroImageAlt),
+      cardIcon: get("cardIcon", existing.cardIcon), cardSummary: get("cardSummary", existing.cardSummary),
+      pageUrl: get("pageUrl", existing.pageUrl), ctaLabel: get("ctaLabel", existing.ctaLabel), ctaUrl: get("ctaUrl", existing.ctaUrl),
+      status: get("status", existing.status || "Draft"), statusLabel: get("statusLabel", existing.statusLabel), statusDetail: get("statusDetail", existing.statusDetail),
+      seoTitle: get("seoTitle", existing.seoTitle), seoDescription: get("seoDescription", existing.seoDescription),
+      displayOrder: Number(get("displayOrder", existing.displayOrder || 0) || 0),
+      isFeatured: get("isFeatured", String(Boolean(existing.isFeatured))) === "true",
+      isActive: get("isActive", String(Boolean(existing.isActive))) === "true",
+      bodyCopy: json("bodyCopy"), heroStats: json("heroStats"), featureItems: json("featureItems"),
+      objectives: json("objectives"), activities: json("activities"), beneficiaries: json("beneficiaries"),
+      locations: json("locations"), timeline: json("timeline"), gallery: json("gallery"),
+      impactMetrics: json("impactMetrics"), stories: json("stories"), reports: json("reports"), partners: json("partners"),
+    };
+  }
+
+  async function saveProgramInSupabase(record, payload) {
+    await window.WII_SUPABASE_READY;
+    const dataApi = window.WII_SUPABASE_DATA;
+    if (!dataApi?.createProgram || !dataApi?.updateProgram || !dataApi?.uploadProgramImage) {
+      return { success: false, message: "Supabase Programs management is unavailable." };
+    }
+    const file = payload.get("heroImageUrl");
+    const values = programFormValues(payload, record || {});
+    let created = null;
+    if (!record?.id) {
+      values.isActive = false;
+      const result = await dataApi.createProgram(values);
+      if (result.error) return { success: false, message: result.error.message || "Failed to create program." };
+      created = result.data;
+    }
+    const programId = record?.id || created?.id;
+    if (file instanceof File && file.size > 0) {
+      const upload = await dataApi.uploadProgramImage(programId, file, "hero");
+      if (upload.error) {
+        if (created?.id) await dataApi.updateProgram(created.id, { ...values, isActive: false });
+        return { success: false, message: upload.error.message || "Program image upload failed." };
+      }
+      values.heroImageUrl = upload.data.publicUrl;
+    } else {
+      values.heroImageUrl = record?.heroImageUrl || "";
+    }
+    const result = await dataApi.updateProgram(programId, values);
+    if (result.error) return { success: false, message: result.error.message || "Failed to save program." };
+    return { success: true, data: result.data };
+  }
+
   function reportFormValues(payload, existing = {}) {
     const get = (name, fallback = "") => {
       const value = payload.get(name);
@@ -1910,7 +1978,7 @@
 
     if (page === "solutions" || page === "home") {
       try {
-        const result = await apiGet("/programs");
+        const result = await loadProgramsFromSupabase(false);
         if (result.success && Array.isArray(result.data)) {
           renderProgramCards(result.data);
         } else {
@@ -1933,8 +2001,10 @@
     if (!programPages.has(page)) return;
 
     try {
-      const result = await apiGet(`/programs/${page}`);
-      if (result.success && result.data) {
+      await window.WII_SUPABASE_READY;
+      const getProgram = window.WII_SUPABASE_DATA?.getProgram;
+      const result = getProgram ? await getProgram(page) : { data: null, error: new Error("Supabase Programs read is unavailable.") };
+      if (!result.error && result.data) {
         applyProgramData(result.data);
       }
     } catch {
@@ -2769,13 +2839,17 @@
         title: "Programs",
         description:
           "Edit the public program pages, hero content, and supporting JSON sections.",
-        load: () => authGet("/programs/admin"),
-        save: (record, payload) =>
-          record?.id
-            ? authPut(`/programs/admin/${record.id}`, payload)
-            : authPost("/programs/admin", payload),
-        archive: (record) =>
-          authPut(`/programs/admin/${record.id}`, { isActive: false, status: "Paused" }),
+        load: () => loadProgramsFromSupabase(true),
+        save: (record, payload) => saveProgramInSupabase(record, payload),
+        archive: async (record) => {
+          await window.WII_SUPABASE_READY;
+          const updateProgram = window.WII_SUPABASE_DATA?.updateProgram;
+          if (!updateProgram) return { success: false, message: "Supabase Programs update is unavailable." };
+          const { data, error } = await updateProgram(record.id, { ...record, isActive: false, status: "Paused" });
+          return error
+            ? { success: false, message: error.message || "Program could not be archived." }
+            : { success: true, data };
+        },
         itemLabel: (record) =>
           record.title || record.slug || "Untitled program",
         itemMeta: (record) => record.statusLabel || record.status || "Active",
@@ -4643,7 +4717,7 @@
           const config = configs[key];
           const current = getSelectedRecord(key) || getDefaultRecord(config);
           const hasFileField = config.fields.some(
-            (field) => field.type === "file",
+            (field) => field.type === "file" || (key === "programs" && field.type === "image"),
           );
           const fileFields = config.fields.filter(
             (field) => field.type === "file",
@@ -4665,7 +4739,7 @@
             }
           }
 
-          const imageFields = config.fields.filter(
+          const imageFields = key === "programs" ? [] : config.fields.filter(
             (field) => field.type === "image" || field.type === "asset",
           );
           const teamPhotoField = key === "team"
@@ -4808,6 +4882,8 @@
           try {
             let result = key === "reports"
               ? await saveReportInSupabase(current, payload)
+              : key === "programs"
+                ? await saveProgramInSupabase(current, payload)
               : await config.save(current, payload);
             if (!result.success) {
               throw new Error(result.message || "Save failed.");
