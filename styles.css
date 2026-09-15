@@ -613,13 +613,13 @@ ul {
   50% {
     background-image:
       linear-gradient(rgba(13, 110, 110, 0.1), rgba(13, 110, 110, 0.1)),
-      url("./assets/images/WhatsApp\ Image\ 2026-06-24\ at\ 12.14.50\ PM.jpeg");
+      url("./assets/images/hero\ imag\ 2");
   }
 
   100% {
     background-image:
       linear-gradient(rgba(13, 110, 110, 0.1), rgba(13, 110, 110, 0.1)),
-      url(".//assets/images/WhatsApp\ Image\ 2026-06-24\ at\ 12.14.50\ PM\ \(2\).jpeg");
+      url(".//assets/images/hero\ image\ 3");
   }
 }
 
