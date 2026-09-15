@@ -505,6 +505,75 @@
     return { success: true, data: result.data };
   }
 
+  async function loadProjectsFromSupabase(admin = false, slug = "") {
+    await window.WII_SUPABASE_READY;
+    const getProjects = admin
+      ? window.WII_SUPABASE_DATA?.getAdminProjects
+      : slug
+        ? window.WII_SUPABASE_DATA?.getProject
+        : window.WII_SUPABASE_DATA?.getProjects;
+    if (!getProjects) return { success: false, message: "Supabase Projects read is unavailable." };
+    const result = slug ? await getProjects(slug) : await getProjects();
+    if (result.error) return { success: false, message: result.error.message || "Failed to load projects." };
+    return { success: true, data: Array.isArray(result.data) ? result.data : [] };
+  }
+
+  function projectFormValues(payload, existing = {}) {
+    const get = (name, fallback = "") => {
+      const value = payload.get(name);
+      return value === null ? fallback : String(value);
+    };
+    const json = (name, fallback = []) => {
+      try { return JSON.parse(get(name, JSON.stringify(existing[name] || fallback))); } catch { return existing[name] || fallback; }
+    };
+    return {
+      slug: get("slug", existing.slug), title: get("title", existing.title),
+      summary: get("summary", existing.summary), description: get("description", existing.description),
+      programSlug: get("programSlug", existing.programSlug), location: get("location", existing.location),
+      heroImageUrl: existing.heroImageUrl || "", heroImageAlt: get("heroImageAlt", existing.heroImageAlt),
+      cardIcon: get("cardIcon", existing.cardIcon), cardSummary: get("cardSummary", existing.cardSummary),
+      status: get("status", existing.status || "Draft"), statusLabel: get("statusLabel", existing.statusLabel), statusDetail: get("statusDetail", existing.statusDetail),
+      seoTitle: get("seoTitle", existing.seoTitle), seoDescription: get("seoDescription", existing.seoDescription),
+      displayOrder: Number(get("displayOrder", existing.displayOrder || 0) || 0),
+      isFeatured: get("isFeatured", String(Boolean(existing.isFeatured))) === "true",
+      isActive: get("isActive", String(Boolean(existing.isActive))) === "true",
+      bodyCopy: json("bodyCopy"), timeline: json("timeline"), objectives: json("objectives"),
+      outcomes: json("outcomes"), media: json("media"), impactMetrics: json("impactMetrics"),
+      relatedStories: json("relatedStories"), reports: json("reports"), partners: json("partners"),
+    };
+  }
+
+  async function saveProjectInSupabase(record, payload) {
+    await window.WII_SUPABASE_READY;
+    const dataApi = window.WII_SUPABASE_DATA;
+    if (!dataApi?.createProject || !dataApi?.updateProject || !dataApi?.uploadProjectImage) {
+      return { success: false, message: "Supabase Projects management is unavailable." };
+    }
+    const file = payload.get("heroImageUrl");
+    const values = projectFormValues(payload, record || {});
+    let created = null;
+    if (!record?.id) {
+      values.isActive = false;
+      const result = await dataApi.createProject(values);
+      if (result.error) return { success: false, message: result.error.message || "Failed to create project." };
+      created = result.data;
+    }
+    const projectId = record?.id || created?.id;
+    if (file instanceof File && file.size > 0) {
+      const upload = await dataApi.uploadProjectImage(projectId, file, "hero");
+      if (upload.error) {
+        if (created?.id) await dataApi.updateProject(created.id, { ...values, isActive: false });
+        return { success: false, message: upload.error.message || "Project image upload failed." };
+      }
+      values.heroImageUrl = upload.data.publicUrl;
+    } else {
+      values.heroImageUrl = record?.heroImageUrl || "";
+    }
+    const result = await dataApi.updateProject(projectId, values);
+    if (result.error) return { success: false, message: result.error.message || "Failed to save project." };
+    return { success: true, data: result.data };
+  }
+
   function reportFormValues(payload, existing = {}) {
     const get = (name, fallback = "") => {
       const value = payload.get(name);
@@ -2018,7 +2087,7 @@
 
     try {
       if (page === "projects") {
-        const result = await apiGet("/projects");
+        const result = await loadProjectsFromSupabase(false);
         if (result.success && Array.isArray(result.data)) {
           renderProjectCards(result.data);
         } else {
@@ -2029,10 +2098,7 @@
 
       const params = new URLSearchParams(window.location.search);
       const slug = params.get("slug");
-      const endpoint = slug
-        ? `/projects/${encodeURIComponent(slug)}`
-        : "/projects";
-      const result = await apiGet(endpoint);
+      const result = await loadProjectsFromSupabase(false, slug || "");
 
       if (result.success && result.data) {
         if (Array.isArray(result.data)) {
@@ -2582,7 +2648,7 @@
         analyticsRes,
       ] = await Promise.allSettled([
         authGet("/programs/admin"),
-        authGet("/projects/admin"),
+        loadProjectsFromSupabase(true),
         authGet("/stories/admin"),
         authGet("/impact/admin"),
         authGet("/news/admin"),
@@ -2984,13 +3050,17 @@
         title: "Projects",
         description:
           "Edit project records, linked program slugs, outcome blocks, and media assets.",
-        load: () => authGet("/projects/admin"),
-        save: (record, payload) =>
-          record?.id
-            ? authPut(`/projects/admin/${record.id}`, payload)
-            : authPost("/projects/admin", payload),
-        archive: (record) =>
-          authPut(`/projects/admin/${record.id}`, { isActive: false, status: "Paused" }),
+        load: () => loadProjectsFromSupabase(true),
+        save: (record, payload) => saveProjectInSupabase(record, payload),
+        archive: async (record) => {
+          await window.WII_SUPABASE_READY;
+          const updateProject = window.WII_SUPABASE_DATA?.updateProject;
+          if (!updateProject) return { success: false, message: "Supabase Projects update is unavailable." };
+          const { data, error } = await updateProject(record.id, { ...record, isActive: false, status: "Paused" });
+          return error
+            ? { success: false, message: error.message || "Project could not be archived." }
+            : { success: true, data };
+        },
         itemLabel: (record) =>
           record.title || record.slug || "Untitled project",
         itemMeta: (record) => record.statusLabel || record.status || "Active",
@@ -4717,7 +4787,7 @@
           const config = configs[key];
           const current = getSelectedRecord(key) || getDefaultRecord(config);
           const hasFileField = config.fields.some(
-            (field) => field.type === "file" || (key === "programs" && field.type === "image"),
+            (field) => field.type === "file" || ((key === "programs" || key === "projects") && field.type === "image"),
           );
           const fileFields = config.fields.filter(
             (field) => field.type === "file",
@@ -4739,7 +4809,7 @@
             }
           }
 
-          const imageFields = key === "programs" ? [] : config.fields.filter(
+          const imageFields = key === "programs" || key === "projects" ? [] : config.fields.filter(
             (field) => field.type === "image" || field.type === "asset",
           );
           const teamPhotoField = key === "team"
@@ -4884,6 +4954,8 @@
               ? await saveReportInSupabase(current, payload)
               : key === "programs"
                 ? await saveProgramInSupabase(current, payload)
+                : key === "projects"
+                  ? await saveProjectInSupabase(current, payload)
               : await config.save(current, payload);
             if (!result.success) {
               throw new Error(result.message || "Save failed.");

@@ -167,6 +167,103 @@ function exposeAuthHelpers(client) {
     is_active: Boolean(values.isActive),
   });
 
+  const projectColumns = [
+    "id", "slug", "title", "summary", "description", "program_slug",
+    "location", "status", "status_label", "status_detail", "card_summary",
+    "card_icon", "hero_image_url", "hero_image_alt", "body_copy", "timeline",
+    "objectives", "outcomes", "media", "impact_metrics", "related_stories",
+    "reports", "partners", "seo_title", "seo_description", "display_order",
+    "is_featured", "is_active", "updated_at", "created_at",
+  ].join(", ");
+
+  const formatProject = (row, programBySlug, listView = false) => {
+    const base = {
+      id: row.id,
+      slug: row.slug,
+      title: row.title,
+      summary: row.summary,
+      description: row.description,
+      programSlug: row.program_slug || "",
+      programTitle: programBySlug.get(row.program_slug)?.title || "",
+      location: row.location || "",
+      status: row.status || "Active",
+      statusLabel: row.status_label || row.status || "Active",
+      statusDetail: row.status_detail || "",
+      cardSummary: row.card_summary || row.summary,
+      cardIcon: row.card_icon || "●",
+      heroImageUrl: row.hero_image_url || "",
+      heroImageAlt: row.hero_image_alt || "",
+      seoTitle: row.seo_title || row.title,
+      seoDescription: row.seo_description || row.summary,
+      pageUrl: `project.html?slug=${encodeURIComponent(row.slug)}`,
+      displayOrder: Number(row.display_order || 0),
+      isFeatured: Boolean(row.is_featured),
+      isActive: Boolean(row.is_active),
+      updatedAt: row.updated_at,
+      createdAt: row.created_at,
+    };
+    if (listView) return base;
+    return {
+      ...base,
+      bodyCopy: row.body_copy || [],
+      timeline: row.timeline || [],
+      objectives: row.objectives || [],
+      outcomes: row.outcomes || [],
+      media: row.media || [],
+      impactMetrics: row.impact_metrics || [],
+      relatedStories: row.related_stories || [],
+      reports: row.reports || [],
+      partners: row.partners || [],
+    };
+  };
+
+  const getProjects = async (admin = false, slug = "") => {
+    let query = client.from("projects").select(projectColumns).order("display_order").order("title");
+    if (!admin) query = query.eq("is_active", true);
+    if (slug) query = query.eq("slug", slug);
+    const projects = await query;
+    if (projects.error) return projects;
+    const slugs = [...new Set((projects.data || []).map((row) => row.program_slug).filter(Boolean))];
+    let programs = { data: [], error: null };
+    if (slugs.length) programs = await client.from("programs").select("id, slug, title").in("slug", slugs);
+    if (programs.error) return programs;
+    const programBySlug = new Map((programs.data || []).map((row) => [row.slug, row]));
+    return {
+      data: (projects.data || []).map((row) => formatProject(row, programBySlug, !admin && !slug)),
+      error: null,
+    };
+  };
+
+  const projectPayload = (values) => ({
+    slug: values.slug,
+    title: values.title,
+    summary: values.summary,
+    description: values.description,
+    program_slug: values.programSlug || null,
+    location: values.location || "",
+    status: values.status || "Draft",
+    status_label: values.statusLabel || "",
+    status_detail: values.statusDetail || "",
+    card_summary: values.cardSummary || "",
+    card_icon: values.cardIcon || "●",
+    hero_image_url: values.heroImageUrl || "",
+    hero_image_alt: values.heroImageAlt || "",
+    body_copy: values.bodyCopy || [],
+    timeline: values.timeline || [],
+    objectives: values.objectives || [],
+    outcomes: values.outcomes || [],
+    media: values.media || [],
+    impact_metrics: values.impactMetrics || [],
+    related_stories: values.relatedStories || [],
+    reports: values.reports || [],
+    partners: values.partners || [],
+    seo_title: values.seoTitle || "",
+    seo_description: values.seoDescription || "",
+    display_order: Number(values.displayOrder || 0),
+    is_featured: Boolean(values.isFeatured),
+    is_active: Boolean(values.isActive),
+  });
+
   window.WII_SUPABASE_AUTH = {
     signUp: (credentials, options) => client.auth.signUp({ ...credentials, options }),
     signIn: (credentials) => client.auth.signInWithPassword(credentials),
@@ -197,6 +294,24 @@ function exposeAuthHelpers(client) {
       const folder = variant === "gallery" ? "gallery" : "hero";
       const nonce = globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
       const path = `programs/${programId}/${folder}/program-${nonce}.${allowedTypes[file.type]}`;
+      const upload = await client.storage.from("content-images").upload(path, file, { cacheControl: "3600", contentType: file.type, upsert: false });
+      if (upload.error) return { data: null, error: upload.error };
+      const publicUrl = client.storage.from("content-images").getPublicUrl(path).data.publicUrl;
+      return { data: { path, publicUrl }, error: null };
+    },
+    getProjects: () => getProjects(false),
+    getProject: (slug) => getProjects(false, slug),
+    getAdminProjects: () => getProjects(true),
+    createProject: (values) => client.from("projects").insert(projectPayload(values)).select(projectColumns).single(),
+    updateProject: (id, values) => client.from("projects").update(projectPayload(values)).eq("id", id).select(projectColumns).single(),
+    uploadProjectImage: async (projectId, file, variant = "hero") => {
+      const allowedTypes = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/gif": "gif" };
+      if (!/^\d+$/.test(String(projectId))) return { data: null, error: new Error("A valid project ID is required.") };
+      if (!file || !allowedTypes[file.type]) return { data: null, error: new Error("Only JPG, PNG, WEBP, and GIF images are allowed.") };
+      if (file.size <= 0 || file.size > 10 * 1024 * 1024) return { data: null, error: new Error("Project images must be smaller than 10 MB.") };
+      const folder = variant === "media" ? "media" : "hero";
+      const nonce = globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const path = `projects/${projectId}/${folder}/project-${nonce}.${allowedTypes[file.type]}`;
       const upload = await client.storage.from("content-images").upload(path, file, { cacheControl: "3600", contentType: file.type, upsert: false });
       if (upload.error) return { data: null, error: upload.error };
       const publicUrl = client.storage.from("content-images").getPublicUrl(path).data.publicUrl;
