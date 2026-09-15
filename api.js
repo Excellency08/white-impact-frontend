@@ -574,6 +574,72 @@
     return { success: true, data: result.data };
   }
 
+  async function loadStoriesFromSupabase(admin = false, slug = "") {
+    await window.WII_SUPABASE_READY;
+    const getStories = admin
+      ? window.WII_SUPABASE_DATA?.getAdminStories
+      : slug
+        ? window.WII_SUPABASE_DATA?.getStory
+        : window.WII_SUPABASE_DATA?.getStories;
+    if (!getStories) return { success: false, message: "Supabase Stories read is unavailable." };
+    const result = slug ? await getStories(slug) : await getStories();
+    if (result.error) return { success: false, message: result.error.message || "Failed to load stories." };
+    return { success: true, data: Array.isArray(result.data) ? result.data : [] };
+  }
+
+  function storyFormValues(payload, existing = {}) {
+    const get = (name, fallback = "") => {
+      const value = payload.get(name);
+      return value === null ? fallback : String(value);
+    };
+    const json = (name, fallback = []) => {
+      try { return JSON.parse(get(name, JSON.stringify(existing[name] || fallback))); } catch { return existing[name] || fallback; }
+    };
+    return {
+      slug: get("slug", existing.slug), title: get("title", existing.title), excerpt: get("excerpt", existing.excerpt),
+      heroImageUrl: existing.heroImageUrl || "", heroImageAlt: get("heroImageAlt", existing.heroImageAlt),
+      authorName: get("authorName", existing.authorName), authorRole: get("authorRole", existing.authorRole),
+      programSlug: get("programSlug", existing.programSlug), location: get("location", existing.location),
+      publicationDate: get("publicationDate", existing.publicationDate || "") || null,
+      seoTitle: get("seoTitle", existing.seoTitle), seoDescription: get("seoDescription", existing.seoDescription),
+      displayOrder: Number(get("displayOrder", existing.displayOrder || 0) || 0),
+      isFeatured: get("isFeatured", String(Boolean(existing.isFeatured))) === "true",
+      isActive: get("isActive", String(Boolean(existing.isActive))) === "true",
+      content: json("content"), images: json("images"), gallery: json("gallery"), tags: json("tags"),
+    };
+  }
+
+  async function saveStoryInSupabase(record, payload) {
+    await window.WII_SUPABASE_READY;
+    const dataApi = window.WII_SUPABASE_DATA;
+    if (!dataApi?.createStory || !dataApi?.updateStory || !dataApi?.uploadStoryImage) {
+      return { success: false, message: "Supabase Stories management is unavailable." };
+    }
+    const file = payload.get("heroImageUrl");
+    const values = storyFormValues(payload, record || {});
+    let created = null;
+    if (!record?.id) {
+      values.isActive = false;
+      const result = await dataApi.createStory(values);
+      if (result.error) return { success: false, message: result.error.message || "Failed to create story." };
+      created = result.data;
+    }
+    const storyId = record?.id || created?.id;
+    if (file instanceof File && file.size > 0) {
+      const upload = await dataApi.uploadStoryImage(storyId, file, "hero");
+      if (upload.error) {
+        if (created?.id) await dataApi.updateStory(created.id, { ...values, isActive: false });
+        return { success: false, message: upload.error.message || "Story image upload failed." };
+      }
+      values.heroImageUrl = upload.data.publicUrl;
+    } else {
+      values.heroImageUrl = record?.heroImageUrl || "";
+    }
+    const result = await dataApi.updateStory(storyId, values);
+    if (result.error) return { success: false, message: result.error.message || "Failed to save story." };
+    return { success: true, data: result.data };
+  }
+
   function reportFormValues(payload, existing = {}) {
     const get = (name, fallback = "") => {
       const value = payload.get(name);
@@ -2120,7 +2186,7 @@
 
     try {
       if (page === "stories") {
-        const result = await apiGet("/stories");
+        const result = await loadStoriesFromSupabase(false);
         if (result.success && Array.isArray(result.data)) {
           renderStoryCards(result.data);
         }
@@ -2131,14 +2197,14 @@
       const slug = params.get("slug");
 
       if (slug) {
-        const result = await apiGet(`/stories/${encodeURIComponent(slug)}`);
+        const result = await loadStoriesFromSupabase(false, slug);
         if (result.success && result.data) {
           applyStoryData(result.data);
         }
         return;
       }
 
-      const listResult = await apiGet("/stories");
+      const listResult = await loadStoriesFromSupabase(false);
       if (
         listResult.success &&
         Array.isArray(listResult.data) &&
@@ -2146,9 +2212,7 @@
       ) {
         const firstStory = listResult.data[0];
         if (firstStory?.slug) {
-          const detailResult = await apiGet(
-            `/stories/${encodeURIComponent(firstStory.slug)}`,
-          );
+          const detailResult = await loadStoriesFromSupabase(false, firstStory.slug);
           if (detailResult.success && detailResult.data) {
             applyStoryData(detailResult.data);
             return;
@@ -2649,7 +2713,7 @@
       ] = await Promise.allSettled([
         authGet("/programs/admin"),
         loadProjectsFromSupabase(true),
-        authGet("/stories/admin"),
+        loadStoriesFromSupabase(true),
         authGet("/impact/admin"),
         authGet("/news/admin"),
         loadReportsFromSupabase(),
@@ -3163,13 +3227,17 @@
         title: "Stories",
         description:
           "Edit narrative story records, author metadata, imagery, and publication settings.",
-        load: () => authGet("/stories/admin"),
-        save: (record, payload) =>
-          record?.id
-            ? authPut(`/stories/admin/${record.id}`, payload)
-            : authPost("/stories/admin", payload),
-        archive: (record) =>
-          authPut(`/stories/admin/${record.id}`, { isActive: false, status: "Archived" }),
+        load: () => loadStoriesFromSupabase(true),
+        save: (record, payload) => saveStoryInSupabase(record, payload),
+        archive: async (record) => {
+          await window.WII_SUPABASE_READY;
+          const updateStory = window.WII_SUPABASE_DATA?.updateStory;
+          if (!updateStory) return { success: false, message: "Supabase Stories update is unavailable." };
+          const { data, error } = await updateStory(record.id, { ...record, isActive: false });
+          return error
+            ? { success: false, message: error.message || "Story could not be archived." }
+            : { success: true, data };
+        },
         itemLabel: (record) => record.title || record.slug || "Untitled story",
         itemMeta: (record) =>
           record.authorName || record.publicationDate || "Story",
@@ -4787,7 +4855,7 @@
           const config = configs[key];
           const current = getSelectedRecord(key) || getDefaultRecord(config);
           const hasFileField = config.fields.some(
-            (field) => field.type === "file" || ((key === "programs" || key === "projects") && field.type === "image"),
+            (field) => field.type === "file" || (["programs", "projects", "stories"].includes(key) && field.type === "image"),
           );
           const fileFields = config.fields.filter(
             (field) => field.type === "file",
@@ -4809,7 +4877,7 @@
             }
           }
 
-          const imageFields = key === "programs" || key === "projects" ? [] : config.fields.filter(
+          const imageFields = ["programs", "projects", "stories"].includes(key) ? [] : config.fields.filter(
             (field) => field.type === "image" || field.type === "asset",
           );
           const teamPhotoField = key === "team"
@@ -4956,6 +5024,8 @@
                 ? await saveProgramInSupabase(current, payload)
                 : key === "projects"
                   ? await saveProjectInSupabase(current, payload)
+                : key === "stories"
+                  ? await saveStoryInSupabase(current, payload)
               : await config.save(current, payload);
             if (!result.success) {
               throw new Error(result.message || "Save failed.");
