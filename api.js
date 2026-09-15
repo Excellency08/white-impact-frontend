@@ -397,6 +397,117 @@
     };
   }
 
+  function formatSupabaseReport(row) {
+    return {
+      id: row.id,
+      slug: row.slug,
+      title: row.title,
+      summary: row.summary,
+      description: row.description || "",
+      category: row.category || "Publication",
+      tags: Array.isArray(row.tags) ? row.tags : [],
+      fileUrl: row.file_url,
+      previewUrl: row.preview_url || row.file_url,
+      fileType: row.file_type || "",
+      publicationDate: row.publication_date || null,
+      downloadCount: Number(row.download_count || 0),
+      status: row.status || "Draft",
+      seoTitle: row.seo_title || row.title,
+      seoDescription: row.seo_description || row.summary,
+      ogImageUrl: row.og_image_url || "",
+      displayOrder: Number(row.display_order || 0),
+      isFeatured: Boolean(row.is_featured),
+      isActive: Boolean(row.is_active),
+      storageProvider: row.storage_provider || "",
+      storagePath: row.storage_path || "",
+      originalFilename: row.original_filename || "",
+      fileSize: Number(row.file_size || 0),
+      mimeType: row.mime_type || "",
+      updatedAt: row.updated_at,
+      createdAt: row.created_at,
+    };
+  }
+
+  async function loadReportsFromSupabase() {
+    await window.WII_SUPABASE_READY;
+    const getReports = window.WII_SUPABASE_DATA?.getReports;
+    if (!getReports) return { success: false, message: "Supabase Reports read is unavailable." };
+    const { data, error } = await getReports();
+    if (error) return { success: false, message: error.message || "Failed to load reports." };
+    return { success: true, data: Array.isArray(data) ? data.map(formatSupabaseReport) : [] };
+  }
+
+  function reportFormValues(payload, existing = {}) {
+    const get = (name, fallback = "") => {
+      const value = payload.get(name);
+      return value === null ? fallback : String(value);
+    };
+    let tags = existing.tags || [];
+    try { tags = JSON.parse(get("tags", JSON.stringify(tags))); } catch { /* keep existing tags */ }
+    return {
+      slug: get("slug", existing.slug),
+      title: get("title", existing.title),
+      summary: get("summary", existing.summary),
+      description: get("description", existing.description),
+      category: get("category", existing.category || "Publication"),
+      tags,
+      fileUrl: existing.fileUrl || "about:blank",
+      previewUrl: existing.previewUrl || existing.fileUrl || "about:blank",
+      fileType: existing.fileType || "application/pdf",
+      publicationDate: get("publicationDate", existing.publicationDate || "") || null,
+      status: get("status", existing.status || "Draft"),
+      seoTitle: get("seoTitle", existing.seoTitle),
+      seoDescription: get("seoDescription", existing.seoDescription),
+      ogImageUrl: get("ogImageUrl", existing.ogImageUrl),
+      displayOrder: Number(get("displayOrder", existing.displayOrder || 0) || 0),
+      isFeatured: get("isFeatured", String(Boolean(existing.isFeatured))) === "true",
+      isActive: get("isActive", String(Boolean(existing.isActive))) === "true",
+      storageProvider: existing.storageProvider || null,
+      storagePath: existing.storagePath || null,
+      originalFilename: existing.originalFilename || null,
+      fileSize: existing.fileSize || null,
+      mimeType: existing.mimeType || null,
+    };
+  }
+
+  async function saveReportInSupabase(record, payload) {
+    const dataApi = window.WII_SUPABASE_DATA;
+    if (!dataApi?.createReport || !dataApi?.updateReport || !dataApi?.uploadReportDocument) {
+      return { success: false, message: "Supabase Reports management is unavailable." };
+    }
+    const file = payload.get("file");
+    const values = reportFormValues(payload, record || {});
+    if (!(file instanceof File) || file.size === 0) {
+      if (!record?.id) return { success: false, message: "A PDF report file is required." };
+    }
+    let created = null;
+    if (!record?.id) {
+      values.isActive = false;
+      const result = await dataApi.createReport(values);
+      if (result.error) return { success: false, message: result.error.message || "Failed to create report." };
+      created = result.data;
+    }
+    const reportId = record?.id || created?.id;
+    if (file instanceof File && file.size > 0) {
+      const upload = await dataApi.uploadReportDocument(reportId, file);
+      if (upload.error) {
+        if (created?.id) await dataApi.updateReport(created.id, { ...values, isActive: false });
+        return { success: false, message: upload.error.message || "Report upload failed." };
+      }
+      values.fileUrl = upload.data.publicUrl;
+      values.previewUrl = upload.data.publicUrl;
+      values.fileType = "application/pdf";
+      values.storageProvider = "supabase";
+      values.storagePath = upload.data.path;
+      values.originalFilename = file.name;
+      values.fileSize = file.size;
+      values.mimeType = file.type;
+    }
+    const result = await dataApi.updateReport(reportId, values);
+    if (result.error) return { success: false, message: result.error.message || "Failed to save report." };
+    return { success: true, data: formatSupabaseReport(result.data) };
+  }
+
   async function uploadTeamMemberPhotoInSupabase(memberId, file) {
     await window.WII_SUPABASE_READY;
     const uploadTeamMemberPhoto = window.WII_SUPABASE_DATA?.uploadTeamMemberPhoto;
@@ -2386,7 +2497,7 @@
         authGet("/stories/admin"),
         authGet("/impact/admin"),
         authGet("/news/admin"),
-        authGet("/reports/admin"),
+        loadReportsFromSupabase(),
         authGet("/contact"),
         authGet("/donate/list"),
         apiGet("/team"),
@@ -3012,13 +3123,17 @@
         title: "Reports and publications",
         description:
           "Upload and manage research reports, download links, publication status, and SEO metadata.",
-        load: () => authGet("/reports/admin"),
-        save: (record, payload) =>
-          record?.id
-            ? authPut(`/reports/admin/${record.id}`, payload)
-            : authPost("/reports/admin", payload),
-        archive: (record) =>
-          authPut(`/reports/admin/${record.id}`, { isActive: false, status: "Archived" }),
+        load: loadReportsFromSupabase,
+        save: saveReportInSupabase,
+        archive: async (record) => {
+          const result = await loadReportsFromSupabase();
+          if (!result.success) return result;
+          const current = result.data.find((item) => String(item.id) === String(record.id));
+          if (!current) return { success: false, message: "Report not found." };
+          const values = { ...current, isActive: false, status: "Archived" };
+          const update = await window.WII_SUPABASE_DATA.updateReport(record.id, values);
+          return update.error ? { success: false, message: update.error.message } : { success: true, data: formatSupabaseReport(update.data) };
+        },
         itemLabel: (record) => record.title || record.slug || "Untitled report",
         itemMeta: (record) => record.status || record.publicationDate || "Draft",
         emptyLabel: "No reports loaded yet.",
@@ -3036,7 +3151,7 @@
           { name: "summary", label: "Summary", type: "textarea", rows: 3, required: true },
           { name: "description", label: "Description", type: "textarea", rows: 4 },
           { name: "category", label: "Category", type: "text" },
-          { name: "fileUrl", label: "Upload report file", type: "asset", required: true, accept: ".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document", assetCategory: "document" },
+          { name: "file", label: "Upload report PDF", type: "file", required: true, accept: "application/pdf,.pdf" },
           { name: "fileType", label: "File type", type: "text" },
           { name: "publicationDate", label: "Publication date", type: "date" },
           { name: "status", label: "Status", type: "select", options: ["Draft", "Review", "Published", "Archived"] },
@@ -4672,7 +4787,9 @@
           syncPanelState(key, `Saving ${config.label.toLowerCase()}…`);
 
           try {
-            let result = await config.save(current, payload);
+            let result = key === "reports"
+              ? await saveReportInSupabase(current, payload)
+              : await config.save(current, payload);
             if (!result.success) {
               throw new Error(result.message || "Save failed.");
             }

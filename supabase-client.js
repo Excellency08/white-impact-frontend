@@ -106,6 +106,92 @@ function exposeAuthHelpers(client) {
         .eq("id", id)
         .select("id, full_name, role, bio, photo_url, display_order, is_active")
         .maybeSingle(),
+    getReports: () =>
+      client
+        .from("reports")
+        .select("id, slug, title, summary, description, category, tags, file_url, preview_url, file_type, publication_date, download_count, status, seo_title, seo_description, og_image_url, display_order, is_featured, is_active, storage_provider, storage_path, original_filename, file_size, mime_type, updated_at, created_at")
+        .order("display_order", { ascending: true })
+        .order("publication_date", { ascending: false }),
+    createReport: (values) =>
+      client
+        .from("reports")
+        .insert({
+          slug: values.slug,
+          title: values.title,
+          summary: values.summary,
+          description: values.description || null,
+          category: values.category || "Publication",
+          tags: values.tags || [],
+          file_url: values.fileUrl,
+          preview_url: values.previewUrl || values.fileUrl,
+          file_type: values.fileType || "application/pdf",
+          publication_date: values.publicationDate || null,
+          status: values.status || "Draft",
+          seo_title: values.seoTitle || null,
+          seo_description: values.seoDescription || null,
+          og_image_url: values.ogImageUrl || null,
+          display_order: values.displayOrder || 0,
+          is_featured: Boolean(values.isFeatured),
+          is_active: Boolean(values.isActive),
+          storage_provider: values.storageProvider || null,
+          storage_path: values.storagePath || null,
+          original_filename: values.originalFilename || null,
+          file_size: values.fileSize || null,
+          mime_type: values.mimeType || null,
+        })
+        .select("id, slug, title, summary, description, category, tags, file_url, preview_url, file_type, publication_date, download_count, status, seo_title, seo_description, og_image_url, display_order, is_featured, is_active, storage_provider, storage_path, original_filename, file_size, mime_type, updated_at, created_at")
+        .single(),
+    updateReport: (id, values) =>
+      client
+        .from("reports")
+        .update({
+          slug: values.slug,
+          title: values.title,
+          summary: values.summary,
+          description: values.description || null,
+          category: values.category || "Publication",
+          tags: values.tags || [],
+          file_url: values.fileUrl,
+          preview_url: values.previewUrl || values.fileUrl,
+          file_type: values.fileType || "application/pdf",
+          publication_date: values.publicationDate || null,
+          status: values.status || "Draft",
+          seo_title: values.seoTitle || null,
+          seo_description: values.seoDescription || null,
+          og_image_url: values.ogImageUrl || null,
+          display_order: values.displayOrder || 0,
+          is_featured: Boolean(values.isFeatured),
+          is_active: Boolean(values.isActive),
+          storage_provider: values.storageProvider || null,
+          storage_path: values.storagePath || null,
+          original_filename: values.originalFilename || null,
+          file_size: values.fileSize || null,
+          mime_type: values.mimeType || null,
+        })
+        .eq("id", id)
+        .select("id, slug, title, summary, description, category, tags, file_url, preview_url, file_type, publication_date, download_count, status, seo_title, seo_description, og_image_url, display_order, is_featured, is_active, storage_provider, storage_path, original_filename, file_size, mime_type, updated_at, created_at")
+        .single(),
+    uploadReportDocument: async (reportId, file) => {
+      if (!/^\d+$/.test(String(reportId))) {
+        return { data: null, error: new Error("A valid report ID is required.") };
+      }
+      if (!file || file.type !== "application/pdf") {
+        return { data: null, error: new Error("Reports must be PDF files.") };
+      }
+      if (file.size <= 0 || file.size > 25 * 1024 * 1024) {
+        return { data: null, error: new Error("Report PDFs must be smaller than 25 MB.") };
+      }
+      const nonce = globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const path = `reports/${reportId}/report-${nonce}.pdf`;
+      const upload = await client.storage.from("reports").upload(path, file, {
+        cacheControl: "3600",
+        contentType: "application/pdf",
+        upsert: false,
+      });
+      if (upload.error) return { data: null, error: upload.error };
+      const publicUrl = client.storage.from("reports").getPublicUrl(path).data.publicUrl;
+      return { data: { path, publicUrl }, error: null };
+    },
   };
 }
 
