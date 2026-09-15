@@ -375,6 +375,28 @@
     return { success: true, data: Array.isArray(data) ? data : [] };
   }
 
+  async function createTeamMemberInSupabase(payload) {
+    await window.WII_SUPABASE_READY;
+    const createTeamMember = window.WII_SUPABASE_DATA?.createTeamMember;
+    if (!createTeamMember) {
+      return { success: false, message: "Supabase team creation is unavailable." };
+    }
+
+    const { data, error } = await createTeamMember(payload);
+    if (error) {
+      return { success: false, message: "Team member could not be created." };
+    }
+    if (!data) {
+      return { success: false, message: "Team member could not be created." };
+    }
+
+    return {
+      success: true,
+      message: "Team member created.",
+      data,
+    };
+  }
+
   function escapeHtml(value) {
     return String(value || "")
       .replaceAll("&", "&amp;")
@@ -3661,7 +3683,7 @@
         save: (record, payload) =>
           record?.id
             ? updateTeamMemberInSupabase(record.id, payload)
-            : authPost("/team", payload),
+            : createTeamMemberInSupabase(payload),
         itemLabel: (record) => record.fullName || "Team member",
         itemMeta: (record) => record.role || "Member",
         emptyLabel: "No team members loaded yet.",

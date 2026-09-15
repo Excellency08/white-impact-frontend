@@ -49,6 +49,19 @@ function exposeAuthHelpers(client) {
         .select("id, full_name, role, bio, photo_url, display_order, is_active")
         .order("display_order", { ascending: true })
         .order("id", { ascending: true }),
+    createTeamMember: (values) =>
+      client
+        .from("team_members")
+        .insert({
+          full_name: values.fullName,
+          role: values.role,
+          bio: values.bio || null,
+          photo_url: values.photoUrl || null,
+          display_order: values.displayOrder,
+          is_active: values.isActive,
+        })
+        .select("id, full_name, role, bio, photo_url, display_order, is_active")
+        .single(),
     updateTeamMember: (id, values) =>
       client
         .from("team_members")
