@@ -479,7 +479,7 @@
   function newsFormValues(payload, existing = {}) {
     const get = (name, fallback = "") => {
       const value = payload.get(name);
-      return value === null ? fallback : String(value);
+      return value === null || value === undefined ? fallback : String(value);
     };
     const json = (name, fallback = []) => {
       try {
@@ -542,6 +542,106 @@
     const result = await dataApi.updateNews(newsId, values);
     if (result.error) return { success: false, message: result.error.message || "Failed to save news article." };
     return { success: true, data: formatSupabaseNews(result.data) };
+  }
+
+  function formatSupabaseCmsPage(row) {
+    if (!row) return null;
+    return {
+      id: row.id,
+      pageKey: row.page_key || row.pageKey,
+      pageType: row.page_type || row.pageType,
+      title: row.title,
+      summary: row.summary || "",
+      body: row.body && typeof row.body === "object" ? row.body : {},
+      settings: row.settings && typeof row.settings === "object" ? row.settings : {},
+      heroImageUrl: row.hero_image_url || row.heroImageUrl || "",
+      heroImageAlt: row.hero_image_alt || row.heroImageAlt || "",
+      seoTitle: row.seo_title || row.seoTitle || "",
+      seoDescription: row.seo_description || row.seoDescription || "",
+      status: row.status || "Draft",
+      displayOrder: Number(row.display_order ?? row.displayOrder ?? 0),
+      isActive: Boolean(row.is_active ?? row.isActive),
+      updatedBy: row.updated_by || row.updatedBy || null,
+      updatedAt: row.updated_at || row.updatedAt,
+      createdAt: row.created_at || row.createdAt,
+    };
+  }
+
+  async function loadCmsFromSupabase(admin = false) {
+    await window.WII_SUPABASE_READY;
+    const getCms = admin
+      ? window.WII_SUPABASE_DATA?.getAdminCms
+      : window.WII_SUPABASE_DATA?.getCms;
+    if (!getCms) return { success: false, message: "Supabase CMS read is unavailable." };
+    const result = await getCms();
+    if (result.error) return { success: false, message: result.error.message || "Failed to load CMS content." };
+    if (!admin) return { success: true, data: result.data || {} };
+    return {
+      success: true,
+      data: Array.isArray(result.data) ? result.data.map(formatSupabaseCmsPage) : [],
+    };
+  }
+
+  function cmsFormValues(payload, existing = {}) {
+    const get = (name, fallback = "") => {
+      const value = typeof payload.get === "function" ? payload.get(name) : payload[name];
+      return value === null || value === undefined ? fallback : String(value);
+    };
+    const json = (name, fallback = {}) => {
+      try {
+        return JSON.parse(get(name, JSON.stringify(existing[name] || fallback)));
+      } catch {
+        return existing[name] || fallback;
+      }
+    };
+    return {
+      pageKey: get("pageKey", existing.pageKey),
+      pageType: get("pageType", existing.pageType || "page"),
+      title: get("title", existing.title),
+      summary: get("summary", existing.summary),
+      body: json("body"),
+      settings: json("settings"),
+      heroImageUrl: existing.heroImageUrl || "",
+      heroImageAlt: get("heroImageAlt", existing.heroImageAlt),
+      seoTitle: get("seoTitle", existing.seoTitle),
+      seoDescription: get("seoDescription", existing.seoDescription),
+      status: get("status", existing.status || "Draft"),
+      displayOrder: Number(get("displayOrder", existing.displayOrder || 0) || 0),
+      isActive: get("isActive", String(Boolean(existing.isActive))) === "true",
+    };
+  }
+
+  async function saveCmsInSupabase(record, payload) {
+    await window.WII_SUPABASE_READY;
+    const dataApi = window.WII_SUPABASE_DATA;
+    if (!dataApi?.createCms || !dataApi?.updateCms || !dataApi?.uploadCmsImage) {
+      return { success: false, message: "Supabase CMS management is unavailable." };
+    }
+    const file = typeof payload.get === "function" ? payload.get("heroImageUrl") : null;
+    const values = cmsFormValues(payload, record || {});
+    const requestedIsActive = values.isActive;
+    let created = null;
+    if (!record?.id) {
+      values.isActive = false;
+      const result = await dataApi.createCms(values);
+      if (result.error) return { success: false, message: result.error.message || "Failed to create CMS page." };
+      created = result.data;
+    }
+    const cmsId = record?.id || created?.id;
+    if (file instanceof File && file.size > 0) {
+      const upload = await dataApi.uploadCmsImage(cmsId, file, "hero");
+      if (upload.error) {
+        if (created?.id) await dataApi.updateCms(created.id, { ...values, isActive: false });
+        return { success: false, message: upload.error.message || "CMS image upload failed." };
+      }
+      values.heroImageUrl = upload.data.publicUrl;
+    } else {
+      values.heroImageUrl = record?.heroImageUrl || "";
+    }
+    values.isActive = requestedIsActive;
+    const result = await dataApi.updateCms(cmsId, values);
+    if (result.error) return { success: false, message: result.error.message || "Failed to save CMS page." };
+    return { success: true, data: formatSupabaseCmsPage(result.data) };
   }
 
   async function loadReportsFromSupabase() {
@@ -2147,7 +2247,7 @@
     const page = document.body.dataset.page;
 
     try {
-      const result = await apiGet("/cms");
+      const result = await loadCmsFromSupabase(false);
       if (!result.success || !result.data) return;
 
       const siteSettings = getCmsBody(getCmsPage(result.data, "siteSettings"));
@@ -3148,15 +3248,12 @@
         title: "Site Settings",
         description:
           "Edit shared contact details, social links, and global brand settings.",
-        load: () => authGet("/cms/admin"),
+        load: () => loadCmsFromSupabase(true),
         loadRecords: (result) =>
           Array.isArray(result?.data)
             ? result.data.filter((page) => page.pageKey === "site-settings")
             : [],
-        save: (record, payload) =>
-          record?.id
-            ? authPut(`/cms/admin/${record.id}`, payload)
-            : authPost("/cms/admin", payload),
+        save: (record, payload) => saveCmsInSupabase(record, payload),
         itemLabel: (record) => record.title || "Site settings",
         itemMeta: (record) => record.pageType || "global",
         emptyLabel: "No site settings record loaded yet.",
@@ -3223,15 +3320,12 @@
         title: "Homepage",
         description:
           "Edit the homepage narrative, section order, and supporting copy.",
-        load: () => authGet("/cms/admin"),
+        load: () => loadCmsFromSupabase(true),
         loadRecords: (result) =>
           Array.isArray(result?.data)
             ? result.data.filter((page) => page.pageKey === "homepage")
             : [],
-        save: (record, payload) =>
-          record?.id
-            ? authPut(`/cms/admin/${record.id}`, payload)
-            : authPost("/cms/admin", payload),
+        save: (record, payload) => saveCmsInSupabase(record, payload),
         itemLabel: (record) => record.title || "Homepage",
         itemMeta: (record) => record.status || "Draft",
         emptyLabel: "No homepage record loaded yet.",
@@ -3295,15 +3389,12 @@
         title: "Hero",
         description:
           "Edit the homepage hero copy, calls to action, and featured response.",
-        load: () => authGet("/cms/admin"),
+        load: () => loadCmsFromSupabase(true),
         loadRecords: (result) =>
           Array.isArray(result?.data)
             ? result.data.filter((page) => page.pageKey === "hero")
             : [],
-        save: (record, payload) =>
-          record?.id
-            ? authPut(`/cms/admin/${record.id}`, payload)
-            : authPost("/cms/admin", payload),
+        save: (record, payload) => saveCmsInSupabase(record, payload),
         itemLabel: (record) => record.title || "Hero",
         itemMeta: (record) => record.status || "Draft",
         emptyLabel: "No hero record loaded yet.",
@@ -3369,15 +3460,12 @@
         title: "Footer",
         description:
           "Edit shared footer copy, connector labels, and site-wide links.",
-        load: () => authGet("/cms/admin"),
+        load: () => loadCmsFromSupabase(true),
         loadRecords: (result) =>
           Array.isArray(result?.data)
             ? result.data.filter((page) => page.pageKey === "footer")
             : [],
-        save: (record, payload) =>
-          record?.id
-            ? authPut(`/cms/admin/${record.id}`, payload)
-            : authPost("/cms/admin", payload),
+        save: (record, payload) => saveCmsInSupabase(record, payload),
         itemLabel: (record) => record.title || "Footer",
         itemMeta: (record) => record.status || "Draft",
         emptyLabel: "No footer record loaded yet.",
@@ -3441,15 +3529,12 @@
         title: "SEO",
         description:
           "Edit default page titles, meta descriptions, and SEO copy.",
-        load: () => authGet("/cms/admin"),
+        load: () => loadCmsFromSupabase(true),
         loadRecords: (result) =>
           Array.isArray(result?.data)
             ? result.data.filter((page) => page.pageKey === "seo")
             : [],
-        save: (record, payload) =>
-          record?.id
-            ? authPut(`/cms/admin/${record.id}`, payload)
-            : authPost("/cms/admin", payload),
+        save: (record, payload) => saveCmsInSupabase(record, payload),
         itemLabel: (record) => record.title || "SEO defaults",
         itemMeta: (record) => record.status || "Draft",
         emptyLabel: "No SEO record loaded yet.",
@@ -3513,15 +3598,12 @@
         title: "Partners",
         description:
           "Edit the partner logos and collaboration references shown on public pages.",
-        load: () => authGet("/cms/admin"),
+        load: () => loadCmsFromSupabase(true),
         loadRecords: (result) =>
           Array.isArray(result?.data)
             ? result.data.filter((page) => page.pageKey === "partners")
             : [],
-        save: (record, payload) =>
-          record?.id
-            ? authPut(`/cms/admin/${record.id}`, payload)
-            : authPost("/cms/admin", payload),
+        save: (record, payload) => saveCmsInSupabase(record, payload),
         itemLabel: (record) => record.title || "Partners",
         itemMeta: (record) => record.status || "Draft",
         emptyLabel: "No partner record loaded yet.",
@@ -3585,15 +3667,12 @@
         title: "Events",
         description:
           "Edit upcoming event highlights, calls to action, and event metadata.",
-        load: () => authGet("/cms/admin"),
+        load: () => loadCmsFromSupabase(true),
         loadRecords: (result) =>
           Array.isArray(result?.data)
             ? result.data.filter((page) => page.pageKey === "events")
             : [],
-        save: (record, payload) =>
-          record?.id
-            ? authPut(`/cms/admin/${record.id}`, payload)
-            : authPost("/cms/admin", payload),
+        save: (record, payload) => saveCmsInSupabase(record, payload),
         itemLabel: (record) => record.title || "Events",
         itemMeta: (record) => record.status || "Draft",
         emptyLabel: "No event record loaded yet.",
@@ -4547,8 +4626,11 @@
 
           const config = configs[key];
           const current = getSelectedRecord(key) || getDefaultRecord(config);
+          const isCmsKey = ["site-settings", "homepage", "hero", "footer", "seo", "partners", "events"].includes(
+            current?.pageKey || key,
+          );
           const hasFileField = config.fields.some(
-            (field) => field.type === "file" || (["programs", "projects", "news"].includes(key) && field.type === "image"),
+            (field) => field.type === "file" || ((["programs", "projects", "news"].includes(key) || isCmsKey) && field.type === "image"),
           );
           const fileFields = config.fields.filter(
             (field) => field.type === "file",
@@ -4570,7 +4652,7 @@
             }
           }
 
-          const imageFields = ["programs", "projects", "news"].includes(key) ? [] : config.fields.filter(
+          const imageFields = ["programs", "projects", "news"].includes(key) || isCmsKey ? [] : config.fields.filter(
             (field) => field.type === "image" || field.type === "asset",
           );
           const teamPhotoField = key === "team"
@@ -4641,7 +4723,7 @@
 
             if (field.type === "image" || field.type === "asset") {
               const file = input.files?.[0];
-              if (hasFileField && key === "news" && field.name === "heroImageUrl") {
+              if (hasFileField && (key === "news" || isCmsKey) && field.name === "heroImageUrl") {
                 if (file) payload.append(field.name, file);
                 else payload.append(field.name, current?.[field.name] || "");
                 continue;
@@ -4725,6 +4807,8 @@
                   ? await saveProjectInSupabase(current, payload)
                   : key === "news"
                     ? await saveNewsInSupabase(current, payload)
+                    : isCmsKey
+                      ? await saveCmsInSupabase(current, payload)
               : await config.save(current, payload);
             if (!result.success) {
               throw new Error(result.message || "Save failed.");

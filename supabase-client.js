@@ -171,6 +171,76 @@ function exposeAuthHelpers(client) {
     "is_active", "updated_by", "updated_at", "created_at",
   ].join(", ");
 
+  const cmsColumns = [
+    "id", "page_key", "page_type", "title", "summary", "body", "settings",
+    "hero_image_url", "hero_image_alt", "seo_title", "seo_description", "status",
+    "display_order", "is_active", "updated_by", "updated_at", "created_at",
+  ].join(", ");
+
+  const formatCmsPage = (row) => ({
+    id: row.id,
+    pageKey: row.page_key,
+    pageType: row.page_type,
+    title: row.title,
+    summary: row.summary || "",
+    body: row.body && typeof row.body === "object" ? row.body : {},
+    settings: row.settings && typeof row.settings === "object" ? row.settings : {},
+    heroImageUrl: row.hero_image_url || "",
+    heroImageAlt: row.hero_image_alt || "",
+    seoTitle: row.seo_title || "",
+    seoDescription: row.seo_description || "",
+    status: row.status || "Draft",
+    displayOrder: Number(row.display_order || 0),
+    isActive: Boolean(row.is_active),
+    updatedBy: row.updated_by || null,
+    updatedAt: row.updated_at,
+    createdAt: row.created_at,
+  });
+
+  const getCms = async (admin = false) => {
+    let query = client
+      .from("cms_pages")
+      .select(cmsColumns)
+      .order("display_order", { ascending: true })
+      .order("title", { ascending: true });
+    if (!admin) {
+      query = query.eq("is_active", true).eq("status", "Published");
+    }
+    const result = await query;
+    if (result.error) return result;
+    const rows = (result.data || []).map(formatCmsPage);
+    if (admin) return { data: rows, error: null };
+    const byKey = new Map(rows.map((row) => [row.pageKey, row]));
+    return {
+      data: {
+        siteSettings: byKey.get("site-settings") || null,
+        homepage: byKey.get("homepage") || null,
+        hero: byKey.get("hero") || null,
+        footer: byKey.get("footer") || null,
+        seo: byKey.get("seo") || null,
+        partners: byKey.get("partners") || null,
+        events: byKey.get("events") || null,
+      },
+      error: null,
+    };
+  };
+
+  const cmsPayload = (values) => ({
+    page_key: values.pageKey,
+    page_type: values.pageType || "page",
+    title: values.title,
+    summary: values.summary || null,
+    body: values.body && typeof values.body === "object" ? values.body : {},
+    settings: values.settings && typeof values.settings === "object" ? values.settings : {},
+    hero_image_url: values.heroImageUrl || null,
+    hero_image_alt: values.heroImageAlt || null,
+    seo_title: values.seoTitle || null,
+    seo_description: values.seoDescription || null,
+    status: values.status || "Draft",
+    display_order: Number(values.displayOrder || 0),
+    is_active: Boolean(values.isActive),
+  });
+
   const formatNews = (row) => ({
     id: row.id,
     slug: row.slug,
@@ -393,6 +463,34 @@ function exposeAuthHelpers(client) {
       const folder = variant === "media" ? "media" : "hero";
       const nonce = globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
       const path = `news/${newsId}/${folder}/news-${nonce}.${allowedTypes[file.type]}`;
+      const upload = await client.storage.from("content-images").upload(path, file, {
+        cacheControl: "3600",
+        contentType: file.type,
+        upsert: false,
+      });
+      if (upload.error) return { data: null, error: upload.error };
+      const publicUrl = client.storage.from("content-images").getPublicUrl(path).data.publicUrl;
+      return { data: { path, publicUrl }, error: null };
+    },
+    getCms: () => getCms(false),
+    getAdminCms: () => getCms(true),
+    createCms: (values) =>
+      client.from("cms_pages").insert(cmsPayload(values)).select(cmsColumns).single(),
+    updateCms: (id, values) =>
+      client.from("cms_pages").update(cmsPayload(values)).eq("id", id).select(cmsColumns).single(),
+    uploadCmsImage: async (cmsId, file, variant = "hero") => {
+      const allowedTypes = {
+        "image/jpeg": "jpg",
+        "image/png": "png",
+        "image/webp": "webp",
+        "image/gif": "gif",
+      };
+      if (!/^\d+$/.test(String(cmsId))) return { data: null, error: new Error("A valid CMS page ID is required.") };
+      if (!file || !allowedTypes[file.type]) return { data: null, error: new Error("Only JPG, PNG, WEBP, and GIF images are allowed.") };
+      if (file.size <= 0 || file.size > 10 * 1024 * 1024) return { data: null, error: new Error("CMS images must be smaller than 10 MB.") };
+      const folder = variant === "media" ? "media" : "hero";
+      const nonce = globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const path = `cms/${cmsId}/${folder}/cms-${nonce}.${allowedTypes[file.type]}`;
       const upload = await client.storage.from("content-images").upload(path, file, {
         cacheControl: "3600",
         contentType: file.type,
