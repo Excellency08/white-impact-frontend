@@ -321,14 +321,6 @@
     return parseJsonResponse(res);
   }
 
-  async function authUpload(endpoint, formData, method = "POST") {
-    const res = await authRequest(endpoint, {
-      method,
-      body: formData,
-    });
-    return parseJsonResponse(res);
-  }
-
   async function authPut(endpoint, data) {
     const res = await authRequest(endpoint, {
       method: "PUT",
@@ -2488,11 +2480,6 @@
         value: summary.newsletter,
         href: "index.html#support",
       },
-      {
-        label: "Media assets",
-        value: summary.media,
-        href: "content-admin.html",
-      },
     ];
 
     grid.innerHTML = cards
@@ -2588,7 +2575,6 @@
         teamRes,
         volunteersRes,
         newsletterRes,
-        mediaRes,
         analyticsRes,
       ] = await Promise.allSettled([
         authGet("/programs/admin"),
@@ -2601,7 +2587,6 @@
         apiGet("/team"),
         authGet("/volunteers/admin"),
         authGet("/newsletter/admin"),
-        authGet("/media/admin"),
         authGet("/analytics/summary?days=30"),
       ]);
 
@@ -2617,7 +2602,6 @@
       const teamData = settledData(teamRes);
       const volunteersData = settledData(volunteersRes);
       const newsletterData = settledData(newsletterRes);
-      const mediaData = settledData(mediaRes);
       const analyticsData = settledData(analyticsRes);
 
       renderAdminSummaryCards({
@@ -2643,7 +2627,6 @@
         newsletter: Array.isArray(newsletterData?.data)
           ? newsletterData.data.length
           : 0,
-        media: Array.isArray(mediaData?.data) ? mediaData.data.length : 0,
       });
       renderAdminAnalytics(analyticsData);
 
@@ -3730,88 +3713,6 @@
           },
         ],
       },
-      media: {
-        label: "Media",
-        singular: "media asset",
-        title: "Media library",
-        description:
-          "Upload shared images, PDFs, documents, videos, and logos for public pages and downloads.",
-        load: () => authGet("/media/admin"),
-        save: (record, payload) =>
-          record?.id
-            ? authUpload(`/media/admin/${record.id}`, payload, "PUT")
-            : authUpload("/media/admin", payload),
-        itemLabel: (record) => record.title || record.assetKey || "Media asset",
-        itemMeta: (record) =>
-          [record.category || "image", record.status || "Draft"]
-            .filter(Boolean)
-            .join(" · "),
-        emptyLabel: "No media assets loaded yet.",
-        defaultRecord: {
-          category: "image",
-          usageType: "general",
-          status: "Draft",
-          displayOrder: 0,
-          isFeatured: false,
-          isActive: true,
-          tags: [],
-        },
-        fields: [
-          {
-            name: "assetKey",
-            label: "Asset key",
-            type: "text",
-            required: true,
-            readOnlyOnUpdate: true,
-          },
-          { name: "title", label: "Title", type: "text", required: true },
-          {
-            name: "description",
-            label: "Description",
-            type: "textarea",
-            rows: 3,
-          },
-          {
-            name: "category",
-            label: "Category",
-            type: "select",
-            options: ["image", "pdf", "document", "video", "logo"],
-          },
-          { name: "usageType", label: "Usage type", type: "text" },
-          { name: "altText", label: "Alt text", type: "text" },
-          {
-            name: "caption",
-            label: "Caption",
-            type: "textarea",
-            rows: 3,
-          },
-          {
-            name: "tags",
-            label: "Tags",
-            type: "json",
-            rows: 4,
-            defaultValue: [],
-            help: "Array of tag strings or objects.",
-          },
-          {
-            name: "file",
-            label: "Upload file",
-            type: "file",
-            accept:
-              "image/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,video/*",
-            help: "Upload a new file to create the asset or replace an existing file.",
-          },
-          {
-            name: "status",
-            label: "Status",
-            type: "select",
-            options: ["Draft", "Review", "Published", "Archived"],
-          },
-          { name: "displayOrder", label: "Display order", type: "number" },
-          { name: "isFeatured", label: "Featured", type: "checkbox" },
-          { name: "isActive", label: "Active", type: "checkbox" },
-        ],
-      },
       team: {
         label: "Team",
         singular: "team member",
@@ -4032,7 +3933,6 @@
       "homepage",
       "footer",
       "impact",
-      "media",
       "hero",
       "seo",
     ]);
@@ -4652,9 +4552,9 @@
             }
           }
 
-          const imageFields = ["programs", "projects", "news"].includes(key) || isCmsKey ? [] : config.fields.filter(
-            (field) => field.type === "image" || field.type === "asset",
-          );
+          const imageFields = key === "team"
+            ? config.fields.filter((field) => field.type === "image" || field.type === "asset")
+            : [];
           const teamPhotoField = key === "team"
             ? imageFields.find((field) => field.name === "photoUrl")
             : null;
@@ -4685,29 +4585,6 @@
                   continue;
                 }
 
-                syncPanelState(key, `Uploading ${field.label.toLowerCase()}…`);
-                const assetKey = `${key}-${current?.id || current?.slug || Date.now()}-${Date.now()}`
-                  .toLowerCase()
-                  .replace(/[^a-z0-9]+/g, "-")
-                  .replace(/^-+|-+$/g, "");
-                const imageData = new FormData();
-                imageData.append("file", file);
-                imageData.append("assetKey", assetKey);
-                imageData.append(
-                  "title",
-                  current?.title || current?.fullName || `${config.label} image`,
-                );
-                imageData.append("category", field.assetCategory || "image");
-                imageData.append("usageType", `${key}-image`);
-                imageData.append("status", "Published");
-
-                const result = await authUpload("/media/admin", imageData);
-                if (!result.success || !result.data?.fileUrl) {
-                  throw new Error(result.message || `Failed to upload ${field.label.toLowerCase()}.`);
-                }
-                const fileUrl = result.data.fileUrl;
-                // Store the backend path so the record remains portable across environments.
-                uploadedImages[field.name] = fileUrl;
               }
             } catch (error) {
               syncPanelState(key, error.message || "Image upload failed.", "error");
