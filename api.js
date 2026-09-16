@@ -428,6 +428,122 @@
     };
   }
 
+  function formatSupabaseNews(row) {
+    if (!row) return null;
+    return {
+      id: row.id,
+      slug: row.slug,
+      title: row.title,
+      excerpt: row.excerpt,
+      content: Array.isArray(row.content) ? row.content : [],
+      heroImageUrl: row.hero_image_url || row.heroImageUrl || "",
+      heroImageAlt: row.hero_image_alt || row.heroImageAlt || "",
+      authorName: row.author_name || row.authorName || "White Impact Team",
+      authorRole: row.author_role || row.authorRole || "",
+      category: row.category || "News",
+      tags: Array.isArray(row.tags) ? row.tags : [],
+      relatedArticles: Array.isArray(row.related_articles)
+        ? row.related_articles
+        : row.relatedArticles || [],
+      status: row.status || "Draft",
+      publicationDate: row.publication_date || row.publicationDate || null,
+      seoTitle: row.seo_title || row.seoTitle || row.title,
+      seoDescription: row.seo_description || row.seoDescription || row.excerpt,
+      ogImageUrl: row.og_image_url || row.ogImageUrl || row.hero_image_url || row.heroImageUrl || "",
+      displayOrder: Number(row.display_order ?? row.displayOrder ?? 0),
+      isFeatured: Boolean(row.is_featured ?? row.isFeatured),
+      isActive: Boolean(row.is_active ?? row.isActive),
+      updatedBy: row.updated_by || row.updatedBy || null,
+      updatedAt: row.updated_at || row.updatedAt,
+      createdAt: row.created_at || row.createdAt,
+      pageUrl: `news-article.html?slug=${encodeURIComponent(row.slug || "")}`,
+    };
+  }
+
+  async function loadNewsFromSupabase(admin = false, slug = "") {
+    await window.WII_SUPABASE_READY;
+    const getNews = slug
+      ? window.WII_SUPABASE_DATA?.getNewsPost
+      : admin
+        ? window.WII_SUPABASE_DATA?.getAdminNews
+        : window.WII_SUPABASE_DATA?.getNews;
+    if (!getNews) return { success: false, message: "Supabase News read is unavailable." };
+    const result = slug ? await getNews(slug) : await getNews();
+    if (result.error) return { success: false, message: result.error.message || "Failed to load news." };
+    return {
+      success: true,
+      data: Array.isArray(result.data) ? result.data.map(formatSupabaseNews) : [],
+    };
+  }
+
+  function newsFormValues(payload, existing = {}) {
+    const get = (name, fallback = "") => {
+      const value = payload.get(name);
+      return value === null ? fallback : String(value);
+    };
+    const json = (name, fallback = []) => {
+      try {
+        return JSON.parse(get(name, JSON.stringify(existing[name] || fallback)));
+      } catch {
+        return existing[name] || fallback;
+      }
+    };
+    return {
+      slug: get("slug", existing.slug),
+      title: get("title", existing.title),
+      excerpt: get("excerpt", existing.excerpt),
+      content: json("content"),
+      heroImageUrl: existing.heroImageUrl || "",
+      heroImageAlt: get("heroImageAlt", existing.heroImageAlt),
+      authorName: get("authorName", existing.authorName || "White Impact Team"),
+      authorRole: get("authorRole", existing.authorRole),
+      category: get("category", existing.category || "News"),
+      tags: json("tags"),
+      relatedArticles: json("relatedArticles"),
+      status: get("status", existing.status || "Draft"),
+      publicationDate: get("publicationDate", existing.publicationDate || "") || null,
+      seoTitle: get("seoTitle", existing.seoTitle),
+      seoDescription: get("seoDescription", existing.seoDescription),
+      ogImageUrl: get("ogImageUrl", existing.ogImageUrl),
+      displayOrder: Number(get("displayOrder", existing.displayOrder || 0) || 0),
+      isFeatured: get("isFeatured", String(Boolean(existing.isFeatured))) === "true",
+      isActive: get("isActive", String(Boolean(existing.isActive))) === "true",
+    };
+  }
+
+  async function saveNewsInSupabase(record, payload) {
+    await window.WII_SUPABASE_READY;
+    const dataApi = window.WII_SUPABASE_DATA;
+    if (!dataApi?.createNews || !dataApi?.updateNews || !dataApi?.uploadNewsImage) {
+      return { success: false, message: "Supabase News management is unavailable." };
+    }
+    const file = payload.get("heroImageUrl");
+    const values = newsFormValues(payload, record || {});
+    const requestedIsActive = values.isActive;
+    let created = null;
+    if (!record?.id) {
+      values.isActive = false;
+      const result = await dataApi.createNews(values);
+      if (result.error) return { success: false, message: result.error.message || "Failed to create news article." };
+      created = result.data;
+    }
+    const newsId = record?.id || created?.id;
+    if (file instanceof File && file.size > 0) {
+      const upload = await dataApi.uploadNewsImage(newsId, file, "hero");
+      if (upload.error) {
+        if (created?.id) await dataApi.updateNews(created.id, { ...values, isActive: false });
+        return { success: false, message: upload.error.message || "News image upload failed." };
+      }
+      values.heroImageUrl = upload.data.publicUrl;
+    } else {
+      values.heroImageUrl = record?.heroImageUrl || "";
+    }
+    values.isActive = requestedIsActive;
+    const result = await dataApi.updateNews(newsId, values);
+    if (result.error) return { success: false, message: result.error.message || "Failed to save news article." };
+    return { success: true, data: formatSupabaseNews(result.data) };
+  }
+
   async function loadReportsFromSupabase() {
     await window.WII_SUPABASE_READY;
     const getReports = window.WII_SUPABASE_DATA?.getReports;
@@ -1905,7 +2021,7 @@
 
     try {
       if (page === "news") {
-        const result = await apiGet("/news");
+        const result = await loadNewsFromSupabase(false);
         if (result.success && Array.isArray(result.data)) {
           renderNewsCards(result.data);
         }
@@ -1916,14 +2032,14 @@
       const slug = params.get("slug");
 
       if (slug) {
-        const result = await apiGet(`/news/${encodeURIComponent(slug)}`);
+        const result = await loadNewsFromSupabase(false, slug);
         if (result.success && result.data) {
-          applyNewsData(result.data);
+          applyNewsData(result.data[0]);
         }
         return;
       }
 
-      const listResult = await apiGet("/news");
+      const listResult = await loadNewsFromSupabase(false);
       if (
         listResult.success &&
         Array.isArray(listResult.data) &&
@@ -1931,11 +2047,9 @@
       ) {
         const firstPost = listResult.data[0];
         if (firstPost?.slug) {
-          const detailResult = await apiGet(
-            `/news/${encodeURIComponent(firstPost.slug)}`,
-          );
+          const detailResult = await loadNewsFromSupabase(false, firstPost.slug);
           if (detailResult.success && detailResult.data) {
-            applyNewsData(detailResult.data);
+            applyNewsData(detailResult.data[0]);
             return;
           }
         }
@@ -2380,7 +2494,7 @@
         authGet("/programs/admin"),
         loadProjectsFromSupabase(true),
         authGet("/impact/admin"),
-        authGet("/news/admin"),
+        loadNewsFromSupabase(true),
         loadReportsFromSupabase(),
         authGet("/contact"),
         authGet("/donate/list"),
@@ -2881,13 +2995,19 @@
         title: "News articles",
         description:
           "Create and update newsroom articles, publication status, imagery, and SEO metadata.",
-        load: () => authGet("/news/admin"),
-        save: (record, payload) =>
-          record?.id
-            ? authPut(`/news/admin/${record.id}`, payload)
-            : authPost("/news/admin", payload),
-        archive: (record) =>
-          authPut(`/news/admin/${record.id}`, { isActive: false, status: "Archived" }),
+        load: () => loadNewsFromSupabase(true),
+        save: (record, payload) => saveNewsInSupabase(record, payload),
+        archive: async (record) => {
+          const result = await loadNewsFromSupabase(true);
+          if (!result.success) return result;
+          const current = result.data.find((item) => String(item.id) === String(record.id));
+          if (!current) return { success: false, message: "News article not found." };
+          const values = { ...current, isActive: false, status: "Archived" };
+          const update = await window.WII_SUPABASE_DATA.updateNews(record.id, values);
+          return update.error
+            ? { success: false, message: update.error.message }
+            : { success: true, data: formatSupabaseNews(update.data) };
+        },
         itemLabel: (record) => record.title || record.slug || "Untitled article",
         itemMeta: (record) => record.status || record.publicationDate || "Draft",
         emptyLabel: "No news articles loaded yet.",
@@ -4428,7 +4548,7 @@
           const config = configs[key];
           const current = getSelectedRecord(key) || getDefaultRecord(config);
           const hasFileField = config.fields.some(
-            (field) => field.type === "file" || (["programs", "projects"].includes(key) && field.type === "image"),
+            (field) => field.type === "file" || (["programs", "projects", "news"].includes(key) && field.type === "image"),
           );
           const fileFields = config.fields.filter(
             (field) => field.type === "file",
@@ -4450,7 +4570,7 @@
             }
           }
 
-          const imageFields = ["programs", "projects"].includes(key) ? [] : config.fields.filter(
+          const imageFields = ["programs", "projects", "news"].includes(key) ? [] : config.fields.filter(
             (field) => field.type === "image" || field.type === "asset",
           );
           const teamPhotoField = key === "team"
@@ -4520,6 +4640,12 @@
             if (!input) continue;
 
             if (field.type === "image" || field.type === "asset") {
+              const file = input.files?.[0];
+              if (hasFileField && key === "news" && field.name === "heroImageUrl") {
+                if (file) payload.append(field.name, file);
+                else payload.append(field.name, current?.[field.name] || "");
+                continue;
+              }
               const value = uploadedImages[field.name] || current?.[field.name] || "";
               if (hasFileField) {
                 payload.append(field.name, value);
@@ -4597,6 +4723,8 @@
                 ? await saveProgramInSupabase(current, payload)
                 : key === "projects"
                   ? await saveProjectInSupabase(current, payload)
+                  : key === "news"
+                    ? await saveNewsInSupabase(current, payload)
               : await config.save(current, payload);
             if (!result.success) {
               throw new Error(result.message || "Save failed.");

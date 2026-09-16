@@ -163,6 +163,77 @@ function exposeAuthHelpers(client) {
     "is_featured", "is_active", "updated_at", "created_at",
   ].join(", ");
 
+  const newsColumns = [
+    "id", "slug", "title", "excerpt", "content", "hero_image_url",
+    "hero_image_alt", "author_name", "author_role", "category", "tags",
+    "related_articles", "status", "publication_date", "seo_title",
+    "seo_description", "og_image_url", "display_order", "is_featured",
+    "is_active", "updated_by", "updated_at", "created_at",
+  ].join(", ");
+
+  const formatNews = (row) => ({
+    id: row.id,
+    slug: row.slug,
+    title: row.title,
+    excerpt: row.excerpt,
+    content: Array.isArray(row.content) ? row.content : [],
+    heroImageUrl: row.hero_image_url || "",
+    heroImageAlt: row.hero_image_alt || "",
+    authorName: row.author_name || "White Impact Team",
+    authorRole: row.author_role || "",
+    category: row.category || "News",
+    tags: Array.isArray(row.tags) ? row.tags : [],
+    relatedArticles: Array.isArray(row.related_articles) ? row.related_articles : [],
+    status: row.status || "Draft",
+    publicationDate: row.publication_date || null,
+    seoTitle: row.seo_title || row.title,
+    seoDescription: row.seo_description || row.excerpt,
+    ogImageUrl: row.og_image_url || row.hero_image_url || "",
+    displayOrder: Number(row.display_order || 0),
+    isFeatured: Boolean(row.is_featured),
+    isActive: Boolean(row.is_active),
+    updatedBy: row.updated_by || null,
+    updatedAt: row.updated_at,
+    createdAt: row.created_at,
+    pageUrl: `news-article.html?slug=${encodeURIComponent(row.slug)}`,
+  });
+
+  const getNews = async (admin = false, slug = "") => {
+    let query = client
+      .from("news_posts")
+      .select(newsColumns)
+      .order("display_order", { ascending: true })
+      .order("publication_date", { ascending: false, nullsFirst: false })
+      .order("title", { ascending: true });
+    if (!admin) query = query.eq("is_active", true);
+    if (slug) query = query.eq("slug", slug);
+    const result = await query;
+    if (result.error) return result;
+    return { data: (result.data || []).map(formatNews), error: null };
+  };
+
+  const newsPayload = (values) => ({
+    slug: values.slug,
+    title: values.title,
+    excerpt: values.excerpt,
+    content: values.content || [],
+    hero_image_url: values.heroImageUrl || null,
+    hero_image_alt: values.heroImageAlt || null,
+    author_name: values.authorName || "White Impact Team",
+    author_role: values.authorRole || null,
+    category: values.category || "News",
+    tags: values.tags || [],
+    related_articles: values.relatedArticles || [],
+    status: values.status || "Draft",
+    publication_date: values.publicationDate || null,
+    seo_title: values.seoTitle || null,
+    seo_description: values.seoDescription || null,
+    og_image_url: values.ogImageUrl || null,
+    display_order: Number(values.displayOrder || 0),
+    is_featured: Boolean(values.isFeatured),
+    is_active: Boolean(values.isActive),
+  });
+
   const formatProject = (row, programBySlug, listView = false) => {
     const base = {
       id: row.id,
@@ -298,6 +369,35 @@ function exposeAuthHelpers(client) {
       const nonce = globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
       const path = `projects/${projectId}/${folder}/project-${nonce}.${allowedTypes[file.type]}`;
       const upload = await client.storage.from("content-images").upload(path, file, { cacheControl: "3600", contentType: file.type, upsert: false });
+      if (upload.error) return { data: null, error: upload.error };
+      const publicUrl = client.storage.from("content-images").getPublicUrl(path).data.publicUrl;
+      return { data: { path, publicUrl }, error: null };
+    },
+    getNews: () => getNews(false),
+    getNewsPost: (slug) => getNews(false, slug),
+    getAdminNews: () => getNews(true),
+    createNews: (values) =>
+      client.from("news_posts").insert(newsPayload(values)).select(newsColumns).single(),
+    updateNews: (id, values) =>
+      client.from("news_posts").update(newsPayload(values)).eq("id", id).select(newsColumns).single(),
+    uploadNewsImage: async (newsId, file, variant = "hero") => {
+      const allowedTypes = {
+        "image/jpeg": "jpg",
+        "image/png": "png",
+        "image/webp": "webp",
+        "image/gif": "gif",
+      };
+      if (!/^\d+$/.test(String(newsId))) return { data: null, error: new Error("A valid news ID is required.") };
+      if (!file || !allowedTypes[file.type]) return { data: null, error: new Error("Only JPG, PNG, WEBP, and GIF images are allowed.") };
+      if (file.size <= 0 || file.size > 10 * 1024 * 1024) return { data: null, error: new Error("News images must be smaller than 10 MB.") };
+      const folder = variant === "media" ? "media" : "hero";
+      const nonce = globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const path = `news/${newsId}/${folder}/news-${nonce}.${allowedTypes[file.type]}`;
+      const upload = await client.storage.from("content-images").upload(path, file, {
+        cacheControl: "3600",
+        contentType: file.type,
+        upsert: false,
+      });
       if (upload.error) return { data: null, error: upload.error };
       const publicUrl = client.storage.from("content-images").getPublicUrl(path).data.publicUrl;
       return { data: { path, publicUrl }, error: null };
