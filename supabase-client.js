@@ -622,6 +622,75 @@ function exposeAuthHelpers(client) {
         .eq("id", id)
         .select("id, metric_key, label, value, display_prefix, display_suffix, description, category, sort_order, is_active, updated_by, created_at, updated_at")
         .single(),
+    getAdminContacts: () =>
+      client
+        .from("contact_submissions")
+        .select("id, full_name, email, subject, message, category, source_page, status, notes, created_at, updated_at")
+        .order("created_at", { ascending: false })
+        .limit(200),
+    updateContact: (id, values) =>
+      client
+        .from("contact_submissions")
+        .update({
+          full_name: values.fullName,
+          email: values.email,
+          subject: values.subject || null,
+          message: values.message || null,
+          category: values.category || "general",
+          source_page: values.sourcePage || "work-with-us",
+          status: values.status || "pending",
+          notes: values.notes || null,
+        })
+        .eq("id", id)
+        .select("id, full_name, email, subject, message, category, source_page, status, notes, created_at, updated_at")
+        .single(),
+    getAdminVolunteers: () =>
+      client
+        .from("volunteer_applications")
+        .select("id, full_name, email, phone, location, availability, experience_level, skills, interests, motivation, portfolio_url, source_page, status, notes, reviewed_by, reviewed_at, created_at, updated_at")
+        .order("created_at", { ascending: false }),
+    updateVolunteer: (id, values) =>
+      client
+        .from("volunteer_applications")
+        .update({
+          full_name: values.fullName,
+          email: values.email,
+          phone: values.phone || null,
+          location: values.location || null,
+          availability: values.availability || null,
+          experience_level: values.experienceLevel || null,
+          skills: values.skills || [],
+          interests: values.interests || [],
+          motivation: values.motivation || null,
+          portfolio_url: values.portfolioUrl || null,
+          source_page: values.sourcePage || "work-with-us",
+          status: values.status || "pending",
+          notes: values.notes || null,
+        })
+        .eq("id", id)
+        .select("id, full_name, email, phone, location, availability, experience_level, skills, interests, motivation, portfolio_url, source_page, status, notes, reviewed_by, reviewed_at, created_at, updated_at")
+        .single(),
+    getAdminNewsletterSubscribers: () =>
+      client
+        .from("newsletter_subs")
+        .select("id, full_name, email, source_page, status, is_active, subscribed_at, confirmation_sent_at, confirmed_at, unsubscribed_at, created_at, updated_at")
+        .order("subscribed_at", { ascending: false }),
+    updateNewsletterSubscriber: (id, values) => {
+      const status = values.status || "pending";
+      const isActive = status === "confirmed" || status === "active";
+      return client
+        .from("newsletter_subs")
+        .update({
+          full_name: values.fullName || null,
+          email: values.email,
+          source_page: values.sourcePage || "website",
+          status,
+          is_active: isActive,
+        })
+        .eq("id", id)
+        .select("id, full_name, email, source_page, status, is_active, subscribed_at, confirmation_sent_at, confirmed_at, unsubscribed_at, created_at, updated_at")
+        .single();
+    },
     getReports: () =>
       client
         .from("reports")

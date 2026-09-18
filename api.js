@@ -768,6 +768,67 @@
       : { success: true, data: formatSupabaseImpactDataset({ metrics: [result.data] }).metrics[0] };
   }
 
+  function formatSupabaseContact(row) {
+    return {
+      id: row.id, fullName: row.full_name, email: row.email, subject: row.subject || "",
+      message: row.message || "", category: row.category || "general", sourcePage: row.source_page || "work-with-us",
+      status: row.status || "pending", notes: row.notes || "", createdAt: row.created_at, updatedAt: row.updated_at,
+    };
+  }
+
+  function formatSupabaseVolunteer(row) {
+    return {
+      id: row.id, fullName: row.full_name, email: row.email, phone: row.phone || "", location: row.location || "",
+      availability: row.availability || "", experienceLevel: row.experience_level || "", skills: row.skills || [],
+      interests: row.interests || [], motivation: row.motivation || "", portfolioUrl: row.portfolio_url || "",
+      sourcePage: row.source_page || "work-with-us", status: row.status || "pending", notes: row.notes || "",
+      reviewedBy: row.reviewed_by || null, reviewedAt: row.reviewed_at || null, createdAt: row.created_at, updatedAt: row.updated_at,
+    };
+  }
+
+  function formatSupabaseNewsletterSubscriber(row) {
+    return {
+      id: row.id, fullName: row.full_name || "", email: row.email, sourcePage: row.source_page || "website",
+      status: row.status || (row.is_active ? "confirmed" : "unsubscribed"), isActive: Boolean(row.is_active),
+      subscribedAt: row.subscribed_at, confirmationSentAt: row.confirmation_sent_at || null,
+      confirmedAt: row.confirmed_at || null, unsubscribedAt: row.unsubscribed_at || null,
+      createdAt: row.created_at, updatedAt: row.updated_at,
+    };
+  }
+
+  async function loadAdminSubmissionsFromSupabase(kind) {
+    await window.WII_SUPABASE_READY;
+    const dataApi = window.WII_SUPABASE_DATA;
+    const definitions = {
+      contacts: [dataApi?.getAdminContacts, formatSupabaseContact],
+      volunteers: [dataApi?.getAdminVolunteers, formatSupabaseVolunteer],
+      newsletter: [dataApi?.getAdminNewsletterSubscribers, formatSupabaseNewsletterSubscriber],
+    };
+    const [load, format] = definitions[kind] || [];
+    if (!load) return { success: false, message: "Supabase submission management is unavailable." };
+    const { data, error } = await load();
+    return error
+      ? { success: false, message: error.message || "Failed to load records." }
+      : { success: true, data: (data || []).map(format) };
+  }
+
+  async function saveAdminSubmissionInSupabase(kind, record, payload) {
+    await window.WII_SUPABASE_READY;
+    if (!record?.id) return { success: false, message: "Existing submissions can only be updated." };
+    const dataApi = window.WII_SUPABASE_DATA;
+    const definitions = {
+      contacts: [dataApi?.updateContact, formatSupabaseContact],
+      volunteers: [dataApi?.updateVolunteer, formatSupabaseVolunteer],
+      newsletter: [dataApi?.updateNewsletterSubscriber, formatSupabaseNewsletterSubscriber],
+    };
+    const [save, format] = definitions[kind] || [];
+    if (!save) return { success: false, message: "Supabase submission management is unavailable." };
+    const { data, error } = await save(record.id, { ...record, ...payload });
+    return error
+      ? { success: false, message: error.message || "Failed to update record." }
+      : { success: true, data: format(data) };
+  }
+
   async function loadProgramsFromSupabase(admin = false) {
     await window.WII_SUPABASE_READY;
     const getPrograms = admin
@@ -2700,11 +2761,11 @@
         loadImpactFromSupabase(true),
         loadNewsFromSupabase(true),
         loadReportsFromSupabase(true),
-        authGet("/contact"),
+        loadAdminSubmissionsFromSupabase("contacts"),
         authGet("/donate/list"),
         apiGet("/team"),
-        authGet("/volunteers/admin"),
-        authGet("/newsletter/admin"),
+        loadAdminSubmissionsFromSupabase("volunteers"),
+        loadAdminSubmissionsFromSupabase("newsletter"),
         authGet("/analytics/summary?days=30"),
       ]);
 
@@ -3885,11 +3946,8 @@
         title: "Volunteer applications",
         description:
           "Review volunteer applicants, update review status, and capture internal notes.",
-        load: () => authGet("/volunteers/admin"),
-        save: (record, payload) =>
-          record?.id
-            ? authPut(`/volunteers/admin/${record.id}`, payload)
-            : authPost("/volunteers/admin", payload),
+        load: () => loadAdminSubmissionsFromSupabase("volunteers"),
+        save: (record, payload) => saveAdminSubmissionInSupabase("volunteers", record, payload),
         itemLabel: (record) => record.fullName || "Volunteer application",
         itemMeta: (record) => `${record.status || "pending"} · ${record.availability || "No availability"}`,
         emptyLabel: "No volunteer applications loaded yet.",
@@ -3936,9 +3994,8 @@
         title: "Contact submissions",
         description:
           "Review and manage contact messages, partnership requests, and work-with-us inquiries.",
-        load: () => authGet("/contact/admin"),
-        save: (record, payload) =>
-          authPut(`/contact/admin/${record.id}`, payload),
+        load: () => loadAdminSubmissionsFromSupabase("contacts"),
+        save: (record, payload) => saveAdminSubmissionInSupabase("contacts", record, payload),
         itemLabel: (record) => record.fullName || record.email || "Contact submission",
         itemMeta: (record) => `${record.status || "pending"} · ${record.subject || "No subject"}`,
         emptyLabel: "No contact submissions loaded yet.",
@@ -3975,9 +4032,8 @@
         title: "Newsletter subscriptions",
         description:
           "Manage newsletter subscribers, confirmation state, and unsubscribe status.",
-        load: () => authGet("/newsletter/admin"),
-        save: (record, payload) =>
-          authPut(`/newsletter/admin/${record.id}`, payload),
+        load: () => loadAdminSubmissionsFromSupabase("newsletter"),
+        save: (record, payload) => saveAdminSubmissionInSupabase("newsletter", record, payload),
         itemLabel: (record) => record.email || "Subscriber",
         itemMeta: (record) => `${record.status || "pending"} · ${record.sourcePage || "website"}`,
         emptyLabel: "No newsletter subscribers loaded yet.",
