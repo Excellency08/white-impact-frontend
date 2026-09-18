@@ -569,12 +569,81 @@ function exposeAuthHelpers(client) {
         .eq("id", id)
         .select("id, full_name, role, bio, photo_url, display_order, is_active")
         .maybeSingle(),
+    getImpactDataset: async (admin = false) => {
+      const visible = (query) => admin ? query : query.eq("is_active", true);
+      const [metrics, history, programOutcomes, geographies, stories] = await Promise.all([
+        visible(client.from("impact_metrics").select("id, metric_key, label, value, display_prefix, display_suffix, description, category, sort_order, is_active, updated_by, created_at, updated_at").order("category").order("sort_order").order("label")),
+        client.from("impact_metric_history").select("id, metric_id, value, recorded_on, note, created_at").order("recorded_on", { ascending: false }).order("created_at", { ascending: false }).limit(100),
+        visible(client.from("impact_program_outcomes").select("id, slug, title, summary, metric_label, metric_value, metric_suffix, sort_order, is_active, updated_at, created_at").order("sort_order").order("title")),
+        visible(client.from("impact_geographies").select("id, slug, location_name, region, summary, beneficiary_label, beneficiary_value, beneficiary_suffix, sort_order, is_active, updated_at, created_at").order("sort_order").order("location_name")),
+        visible(client.from("impact_stories").select("id, slug, headline, summary, source_label, related_program_slug, related_metric_key, sort_order, is_active, updated_at, created_at").order("sort_order").order("headline")),
+      ]);
+      const error = [metrics, history, programOutcomes, geographies, stories].find((result) => result.error)?.error || null;
+      return {
+        data: error ? null : {
+          metrics: metrics.data || [],
+          history: history.data || [],
+          programOutcomes: programOutcomes.data || [],
+          geographies: geographies.data || [],
+          stories: stories.data || [],
+        },
+        error,
+      };
+    },
+    upsertImpactMetric: (values) =>
+      client
+        .from("impact_metrics")
+        .upsert({
+          metric_key: values.metricKey,
+          label: values.label,
+          value: values.value,
+          display_prefix: values.displayPrefix || "",
+          display_suffix: values.displaySuffix || "",
+          description: values.description || null,
+          category: values.category || "overview",
+          sort_order: values.sortOrder || 0,
+          is_active: Boolean(values.isActive),
+        }, { onConflict: "metric_key" })
+        .select("id, metric_key, label, value, display_prefix, display_suffix, description, category, sort_order, is_active, updated_by, created_at, updated_at")
+        .single(),
+    updateImpactMetric: (id, values) =>
+      client
+        .from("impact_metrics")
+        .update({
+          label: values.label,
+          value: values.value,
+          display_prefix: values.displayPrefix || "",
+          display_suffix: values.displaySuffix || "",
+          description: values.description || null,
+          category: values.category || "overview",
+          sort_order: values.sortOrder || 0,
+          is_active: Boolean(values.isActive),
+        })
+        .eq("id", id)
+        .select("id, metric_key, label, value, display_prefix, display_suffix, description, category, sort_order, is_active, updated_by, created_at, updated_at")
+        .single(),
     getReports: () =>
       client
         .from("reports")
         .select("id, slug, title, summary, description, category, tags, file_url, preview_url, file_type, publication_date, download_count, status, seo_title, seo_description, og_image_url, display_order, is_featured, is_active, storage_provider, storage_path, original_filename, file_size, mime_type, updated_at, created_at")
         .order("display_order", { ascending: true })
         .order("publication_date", { ascending: false }),
+    getPublicReports: () =>
+      client
+        .from("reports")
+        .select("id, slug, title, summary, description, category, tags, file_url, preview_url, file_type, publication_date, download_count, status, seo_title, seo_description, og_image_url, display_order, is_featured, is_active, updated_at, created_at")
+        .eq("is_active", true)
+        .order("display_order", { ascending: true })
+        .order("publication_date", { ascending: false }),
+    getPublicReport: (slug) =>
+      client
+        .from("reports")
+        .select("id, slug, title, summary, description, category, tags, file_url, preview_url, file_type, publication_date, download_count, status, seo_title, seo_description, og_image_url, display_order, is_featured, is_active, updated_at, created_at")
+        .eq("slug", slug)
+        .eq("is_active", true)
+        .maybeSingle(),
+    recordPublicReportDownload: (slug) =>
+      client.rpc("record_public_report_download", { p_slug: slug }),
     createReport: (values) =>
       client
         .from("reports")

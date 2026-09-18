@@ -636,13 +636,136 @@
     return { success: true, data: formatSupabaseCmsPage(result.data) };
   }
 
-  async function loadReportsFromSupabase() {
+  async function loadReportsFromSupabase(admin = false, slug = "") {
     await window.WII_SUPABASE_READY;
-    const getReports = window.WII_SUPABASE_DATA?.getReports;
+    const dataApi = window.WII_SUPABASE_DATA;
+    const getReports = slug
+      ? dataApi?.getPublicReport
+      : admin
+        ? dataApi?.getReports
+        : dataApi?.getPublicReports;
     if (!getReports) return { success: false, message: "Supabase Reports read is unavailable." };
-    const { data, error } = await getReports();
+    const { data, error } = slug ? await getReports(slug) : await getReports();
     if (error) return { success: false, message: error.message || "Failed to load reports." };
+    if (slug) {
+      return { success: true, data: data ? [formatSupabaseReport(data)] : [] };
+    }
     return { success: true, data: Array.isArray(data) ? data.map(formatSupabaseReport) : [] };
+  }
+
+  function formatSupabaseImpactDataset(data) {
+    const metrics = (data?.metrics || []).map((row) => {
+      const value = Number(row.value || 0);
+      const displayPrefix = row.display_prefix || "";
+      const displaySuffix = row.display_suffix || "";
+      return {
+        id: row.id,
+        metricKey: row.metric_key,
+        label: row.label,
+        value,
+        displayPrefix,
+        displaySuffix,
+        displayValue: `${displayPrefix}${Math.round(value).toLocaleString()}${displaySuffix}`,
+        description: row.description || "",
+        category: row.category || "overview",
+        sortOrder: Number(row.sort_order || 0),
+        isActive: Boolean(row.is_active),
+        updatedAt: row.updated_at,
+        createdAt: row.created_at,
+        createdBy: row.updated_by || null,
+      };
+    });
+    const chartSource = metrics.length ? Math.max(...metrics.map((metric) => metric.value)) : 0;
+    const withBars = metrics.map((metric) => ({
+      ...metric,
+      chartPercent: chartSource > 0 ? Math.max(8, Math.round((metric.value / chartSource) * 100)) : 0,
+    }));
+    const metricById = new Map(withBars.map((metric) => [metric.id, metric]));
+    const history = (data?.history || []).map((row) => {
+      const metric = metricById.get(row.metric_id);
+      return {
+        id: row.id,
+        metricId: row.metric_id,
+        metricKey: metric?.metricKey || "",
+        metricLabel: metric?.label || "",
+        value: Number(row.value || 0),
+        recordedOn: row.recorded_on,
+        note: row.note || "",
+        createdAt: row.created_at,
+      };
+    });
+    const programOutcomes = (data?.programOutcomes || []).map((row) => ({
+      id: row.id, slug: row.slug, title: row.title, summary: row.summary,
+      metricLabel: row.metric_label || "", metricValue: row.metric_value === null ? null : Number(row.metric_value),
+      metricSuffix: row.metric_suffix || "", sortOrder: Number(row.sort_order || 0), isActive: Boolean(row.is_active), updatedAt: row.updated_at, createdAt: row.created_at,
+    }));
+    const geographies = (data?.geographies || []).map((row) => ({
+      id: row.id, slug: row.slug, locationName: row.location_name, region: row.region || "", summary: row.summary,
+      beneficiaryLabel: row.beneficiary_label || "", beneficiaryValue: row.beneficiary_value === null ? null : Number(row.beneficiary_value),
+      beneficiarySuffix: row.beneficiary_suffix || "", sortOrder: Number(row.sort_order || 0), isActive: Boolean(row.is_active), updatedAt: row.updated_at, createdAt: row.created_at,
+    }));
+    const stories = (data?.stories || []).map((row) => ({
+      id: row.id, slug: row.slug, headline: row.headline, summary: row.summary, sourceLabel: row.source_label || "",
+      relatedProgramSlug: row.related_program_slug || "", relatedMetricKey: row.related_metric_key || "", sortOrder: Number(row.sort_order || 0), isActive: Boolean(row.is_active), updatedAt: row.updated_at, createdAt: row.created_at,
+    }));
+    return {
+      metrics: withBars,
+      overviewMetrics: withBars.filter((metric) => metric.category === "overview"),
+      chartMetrics: withBars.filter((metric) => metric.category === "chart"),
+      history,
+      programOutcomes,
+      geographies,
+      stories,
+      summary: {
+        totalMetrics: withBars.length,
+        activePrograms: programOutcomes.length,
+        activeGeographies: geographies.length,
+        activeStories: stories.length,
+        latestRecordedOn: history[0]?.recordedOn || null,
+        updatedAt: withBars[0]?.updatedAt || programOutcomes[0]?.updatedAt || geographies[0]?.updatedAt || stories[0]?.updatedAt || null,
+      },
+    };
+  }
+
+  async function loadImpactFromSupabase(admin = false) {
+    await window.WII_SUPABASE_READY;
+    const getImpactDataset = window.WII_SUPABASE_DATA?.getImpactDataset;
+    if (!getImpactDataset) return { success: false, message: "Supabase Impact read is unavailable." };
+    const { data, error } = await getImpactDataset(admin);
+    if (error) return { success: false, message: error.message || "Failed to load impact data." };
+    return { success: true, data: formatSupabaseImpactDataset(data) };
+  }
+
+  function normalizeImpactMetricKey(value) {
+    return String(value || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+  }
+
+  async function saveImpactMetricInSupabase(record, payload) {
+    await window.WII_SUPABASE_READY;
+    const dataApi = window.WII_SUPABASE_DATA;
+    if (!dataApi?.upsertImpactMetric || !dataApi?.updateImpactMetric) {
+      return { success: false, message: "Supabase Impact management is unavailable." };
+    }
+    const values = {
+      metricKey: normalizeImpactMetricKey(payload.metricKey || record?.metricKey),
+      label: String(payload.label || "").trim(),
+      value: Number(payload.value),
+      displayPrefix: String(payload.displayPrefix || "").trim(),
+      displaySuffix: String(payload.displaySuffix || "").trim(),
+      description: String(payload.description || "").trim(),
+      category: String(payload.category || "overview").trim().toLowerCase() || "overview",
+      sortOrder: Number(payload.sortOrder || 0),
+      isActive: Boolean(payload.isActive),
+    };
+    if (!values.metricKey || !values.label || !Number.isFinite(values.value)) {
+      return { success: false, message: "Metric key, label, and a numeric value are required." };
+    }
+    const result = record?.id
+      ? await dataApi.updateImpactMetric(record.id, values)
+      : await dataApi.upsertImpactMetric(values);
+    return result.error
+      ? { success: false, message: result.error.message || "Failed to save metric." }
+      : { success: true, data: formatSupabaseImpactDataset({ metrics: [result.data] }).metrics[0] };
   }
 
   async function loadProgramsFromSupabase(admin = false) {
@@ -1429,12 +1552,9 @@
       }
       downloadBtn.addEventListener("click", () => {
         trackAnalyticsEvent("report_download", { report: report.slug });
-        fetch(`${API_BASE}/reports/${encodeURIComponent(report.slug)}/download`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: "{}",
-          keepalive: true,
-        }).catch(() => {});
+        window.WII_SUPABASE_READY
+          .then(() => window.WII_SUPABASE_DATA?.recordPublicReportDownload?.(report.slug))
+          .catch(() => {});
       });
     }
 
@@ -2158,7 +2278,7 @@
 
     try {
       if (page === "reports") {
-        const result = await apiGet("/reports");
+        const result = await loadReportsFromSupabase();
         if (result.success && Array.isArray(result.data)) {
           renderReportCards(result.data);
         }
@@ -2169,14 +2289,14 @@
       const slug = params.get("slug");
 
       if (slug) {
-        const result = await apiGet(`/reports/${encodeURIComponent(slug)}`);
-        if (result.success && result.data) {
-          applyReportData(result.data);
+        const result = await loadReportsFromSupabase(false, slug);
+        if (result.success && result.data?.[0]) {
+          applyReportData(result.data[0]);
         }
         return;
       }
 
-      const listResult = await apiGet("/reports");
+      const listResult = await loadReportsFromSupabase();
       if (
         listResult.success &&
         Array.isArray(listResult.data) &&
@@ -2184,11 +2304,9 @@
       ) {
         const firstReport = listResult.data[0];
         if (firstReport?.slug) {
-          const detailResult = await apiGet(
-            `/reports/${encodeURIComponent(firstReport.slug)}`,
-          );
-          if (detailResult.success && detailResult.data) {
-            applyReportData(detailResult.data);
+          const detailResult = await loadReportsFromSupabase(false, firstReport.slug);
+          if (detailResult.success && detailResult.data?.[0]) {
+            applyReportData(detailResult.data[0]);
             return;
           }
         }
@@ -2206,8 +2324,8 @@
     const slugs = [...new Set(links.map((link) => link.dataset.reportDocumentSlug).filter(Boolean))];
     const reports = await Promise.all(
       slugs.map(async (slug) => {
-        const result = await apiGet(`/reports/${encodeURIComponent(slug)}`);
-        return result.success && result.data ? [slug, result.data] : [slug, null];
+        const result = await loadReportsFromSupabase(false, slug);
+        return result.success && result.data?.[0] ? [slug, result.data[0]] : [slug, null];
       }),
     );
     const bySlug = new Map(reports);
@@ -2579,9 +2697,9 @@
       ] = await Promise.allSettled([
         authGet("/programs/admin"),
         loadProjectsFromSupabase(true),
-        authGet("/impact/admin"),
+        loadImpactFromSupabase(true),
         loadNewsFromSupabase(true),
-        loadReportsFromSupabase(),
+        loadReportsFromSupabase(true),
         authGet("/contact"),
         authGet("/donate/list"),
         apiGet("/team"),
@@ -3131,10 +3249,10 @@
         title: "Reports and publications",
         description:
           "Upload and manage research reports, download links, publication status, and SEO metadata.",
-        load: loadReportsFromSupabase,
+        load: () => loadReportsFromSupabase(true),
         save: saveReportInSupabase,
         archive: async (record) => {
-          const result = await loadReportsFromSupabase();
+          const result = await loadReportsFromSupabase(true);
           if (!result.success) return result;
           const current = result.data.find((item) => String(item.id) === String(record.id));
           if (!current) return { success: false, message: "Report not found." };
@@ -3178,13 +3296,10 @@
         title: "Impact metrics",
         description:
           "Edit the homepage impact metrics that power the animated counters and bars.",
-        load: () => authGet("/impact/admin"),
+        load: () => loadImpactFromSupabase(true),
         loadRecords: (result) =>
           Array.isArray(result?.data?.metrics) ? result.data.metrics : [],
-        save: (record, payload) =>
-          record?.id
-            ? authPut(`/impact/admin/metrics/${record.id}`, payload)
-            : authPost("/impact/admin/metrics", payload),
+        save: (record, payload) => saveImpactMetricInSupabase(record, payload),
         itemLabel: (record) => record.label || record.metricKey || "Metric",
         itemMeta: (record) =>
           record.displayValue || record.category || "Overview",
@@ -4868,7 +4983,7 @@
     if (!statNodes.length && !barNodes.length) return;
 
     try {
-      const result = await apiGet("/impact");
+      const result = await loadImpactFromSupabase();
       if (!result.success || !result.data) return;
 
       const metrics = Array.isArray(result.data.metrics)
