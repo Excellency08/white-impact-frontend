@@ -379,9 +379,11 @@ ul {
 
 .nav {
   display: flex;
-  align-items: right;
-  gap: 0.3rem;
-  justify-self: right;
+  align-items: center;
+  gap: 0.2rem;
+  justify-self: end;
+  margin-left: auto;
+  margin-right: 0.5rem;
 }
 
 .nav-link,

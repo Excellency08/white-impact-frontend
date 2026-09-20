@@ -148,7 +148,7 @@
                 <a class="nav-link${activePage("home")}" href="index.html">Home</a>
                 <div class="nav-dropdown" data-dropdown>
                     <button class="nav-link nav-btn${activeGroup(aboutPages)}" type="button" data-dropdown-trigger aria-expanded="false">
-                        About
+                        About Us
                         <svg class="chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
                     </button>
                     <div class="dropdown-panel">
@@ -164,10 +164,9 @@
                         ${renderLinks(workLinks)}
                     </div>
                 </div>
-                <a class="nav-link${activePage("news")}" href="news.html">News</a>
-                <a class="nav-link${activePage("reports")}" href="reports.html">Reports</a>
+                <a class="nav-link${activePage("solutions")}" href="solutions.html">Programmes</a>
                 <a class="nav-link${activePage("projects")}" href="projects.html">Projects</a>
-                <a class="nav-link${activePage("solutions")}" href="solutions.html">All Programs</a>
+                <a class="nav-link${activePage("news")}" href="news.html">Insights</a>
                 <div class="nav-dropdown" data-dropdown>
                     <button class="nav-link nav-btn${activeGroup(involvementPages)}" type="button" data-dropdown-trigger aria-expanded="false">
                         Get Involved
@@ -192,10 +191,9 @@
                 <div class="mobile-nav-section">
                     <p class="mobile-nav-label">Main</p>
                     <a class="mobile-link${activePage("home")}" href="index.html">Home</a>
-                    <a class="mobile-link mobile-link-sm" href="news.html">News</a>
-                    <a class="mobile-link mobile-link-sm" href="reports.html">Reports</a>
+                    <a class="mobile-link${activePage("solutions")}" href="solutions.html">Programmes</a>
                     <a class="mobile-link${activePage("projects")}" href="projects.html">Projects</a>
-                    <a class="mobile-link${activePage("solutions")}" href="solutions.html">All Programs</a>
+                    <a class="mobile-link mobile-link-sm" href="news.html">Insights</a>
                     <a class="mobile-link mobile-link-sm" href="index.html#contact">Contact</a>
                 </div>
                 <div class="mobile-nav-section">
@@ -231,16 +229,19 @@
                 <div class="footer-col">
                     <p class="footer-title">Explore</p>
                     <a href="index.html">Home</a>
-                    <a href="index.html#impact">Impact</a>
-                    <a href="news.html">News</a>
-                    <a href="reports.html">Reports</a>
+                    <a href="our-story.html">About Us</a>
+                    <a href="solutions.html">Our Work</a>
+                    <a href="projects.html">Projects</a>
+                    <a href="news.html">Insights</a>
+                    <a href="work-with-us.html">Get Involved</a>
+                    <a href="donate.html">Donate</a>
                 </div>
                 <div class="footer-col">
                   <p class="footer-title">Our Work</p>
-                  <a href="solutions.html">All Programs</a>
+                  <a href="solutions.html">Programmes</a>
                   <a href="projects.html">Projects</a>
                   <a href="work-with-us.html">Get Involved</a>
-                  <a href="donate.html">Support Us</a>
+                  <a href="donate.html">Donate</a>
                 </div>
                 <div class="footer-col">
                     <p class="footer-title">Connect</p>
