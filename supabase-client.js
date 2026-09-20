@@ -691,6 +691,8 @@ function exposeAuthHelpers(client) {
         .select("id, full_name, email, source_page, status, is_active, subscribed_at, confirmation_sent_at, confirmed_at, unsubscribed_at, created_at, updated_at")
         .single();
     },
+    getAnalyticsSummary: (days = 30) =>
+      client.rpc("get_analytics_summary", { p_days: days }),
     getReports: () =>
       client
         .from("reports")

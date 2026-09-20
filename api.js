@@ -829,6 +829,17 @@
       : { success: true, data: format(data) };
   }
 
+  async function loadAnalyticsSummaryFromSupabase(days = 30) {
+    await window.WII_SUPABASE_READY;
+    const getAnalyticsSummary = window.WII_SUPABASE_DATA?.getAnalyticsSummary;
+    if (!getAnalyticsSummary) return { success: false, message: "Supabase Analytics summary is unavailable." };
+    const safeDays = Math.min(Math.max(Number(days) || 30, 1), 90);
+    const { data, error } = await getAnalyticsSummary(safeDays);
+    return error
+      ? { success: false, message: error.message || "Failed to load analytics summary." }
+      : { success: true, data: { days: safeDays, events: Array.isArray(data) ? data : [] } };
+  }
+
   async function loadProgramsFromSupabase(admin = false) {
     await window.WII_SUPABASE_READY;
     const getPrograms = admin
@@ -2766,7 +2777,7 @@
         apiGet("/team"),
         loadAdminSubmissionsFromSupabase("volunteers"),
         loadAdminSubmissionsFromSupabase("newsletter"),
-        authGet("/analytics/summary?days=30"),
+        loadAnalyticsSummaryFromSupabase(30),
       ]);
 
       const settledData = (result) =>
