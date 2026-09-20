@@ -659,10 +659,10 @@ ul {
   margin-bottom: 1rem;
 }
 
-.hero-content h3 {
+.hero-content h6 {
   font-family: var(--font-display);
   font-size: 2rem;
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1.25;
   color: var(--color-white);
   margin-bottom: 1.25rem;
@@ -684,8 +684,10 @@ ul {
 .hero-lead {
   font-size: 1.125rem;
   color: rgba(255, 255, 255, 0.82);
-  max-width: 520px;
+  max-width: 320px;
   margin-bottom: 2rem;
+  justify-items: auto;
+  text-align: justify;
 }
 
 .hero-actions {
