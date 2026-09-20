@@ -57,16 +57,15 @@
   ];
 
   const aboutLinks = [
-    { href: "our-story.html", label: "Our Story", id: "our-story" },
-    { href: "advisory-board.html", label: "Our Members", id: "advisory-board" },
+    { href: "our-story.html", label: "About Us", id: "our-story" },
+    { href: "advisory-board.html", label: "Our Team", id: "advisory-board" },
   ];
 
   const involvementLinks = [
-    { href: "work-with-us.html", label: "Work With Us", id: "work-with-us" },
+    { href: "work-with-us.html", label: "Get Involved", id: "work-with-us" },
     {
       href: "partner-with-us.html",
-      label: "Partner With Us",
-      id: "partner-with-us",
+      label: "Partnerships",
     },
   ];
 
