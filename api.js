@@ -2520,18 +2520,6 @@
             siteSettings.tagline ||
             "Youth led · Community centered · Impact driven",
         );
-        updateElementText(
-          document,
-          "[data-home-hero-title]",
-          hero.title ||
-            "Changing systems by backing the people already building them.",
-        );
-        updateElementText(
-          document,
-          "[data-home-hero-lead]",
-          hero.lead ||
-            "White Impact Development Initiative works with young people, women, and crisis-affected communities to expand education, digital opportunity, protection, and civic participation across Nigeria.",
-        );
 
         const primary = document.querySelector("[data-home-primary-cta]");
         if (primary) {
