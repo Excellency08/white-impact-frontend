@@ -901,6 +901,17 @@ ul {
   font-size: 1.0625rem;
 }
 
+.core-values-display {
+  margin-top: 1rem;
+  font-size: 0.82rem;
+  line-height: 1.7;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--color-primary);
+  text-align: center;
+}
+
 /* About */
 .about {
   background: var(--color-off-white);
@@ -957,9 +968,10 @@ ul {
   line-height: 1.25;
 }
 
+.about-content.prose,
 .about-content p {
   color: var(--color-gray-600);
-  margin-bottom: 1rem;
+  text-align: justify;
 }
 
 .about-content .btn {
@@ -2384,6 +2396,10 @@ body.inner-page main {
   max-width: 800px;
 }
 
+.prose {
+  max-width: 620px;
+}
+
 .prose h2 {
   font-family: var(--font-display);
   font-size: 1.75rem;
@@ -2398,7 +2414,55 @@ body.inner-page main {
 .prose p,
 .prose li {
   color: var(--color-gray-600);
-  margin-bottom: 1rem;
+  margin-bottom: 0.9rem;
+  line-height: 1.7;
+  text-align: justify;
+}
+
+.mission-vision {
+  padding-top: 0;
+}
+
+.mission-vision-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2rem;
+  align-items: stretch;
+}
+
+.mission-vision-card {
+  background: var(--color-off-white);
+  border: 1px solid rgba(17, 24, 39, 0.08);
+  border-radius: var(--radius-xl);
+  padding: 2rem;
+  box-shadow: var(--shadow-sm);
+  height: 100%;
+}
+
+.mission-vision-card .section-kicker {
+  margin-bottom: 0.75rem;
+}
+
+.mission-vision-card h2 {
+  font-family: var(--font-display);
+  color: var(--color-navy);
+  font-size: clamp(1.5rem, 2vw, 2rem);
+  margin: 0 0 1rem;
+  line-height: 1.25;
+}
+
+.mission-vision-card p {
+  color: var(--color-primary);
+  text-align: justify;
+}
+
+.mission-vision-card p:last-child {
+  margin-bottom: 0;
+}
+
+.mission-vision-card .section-kicker {
+  color: var(--color-primary);
+  font-weight: 700;
 }
 
 .prose ul {
@@ -5247,7 +5311,7 @@ body::before {
 .kicker {
   font-size: 0.75rem;
   font-weight: 700;
-  color: var(--color-accent-dark);
+  color: var(--color-primary);
 }
 
 .section-head h2,
@@ -6204,7 +6268,7 @@ body,
   font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--color-accent-dark);
+  color: var(--color-primary);
 }
 
 .challenge-card h3 {
