@@ -1937,6 +1937,28 @@ ul {
   line-height: 1.7;
 }
 
+.footer-positioning {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.footer-positioning-label {
+  margin: 0 0 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+}
+
+.footer-positioning p {
+  margin: 0 0 0.75rem;
+  font-size: 0.8125rem;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.86);
+}
+
 .footer-links {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
