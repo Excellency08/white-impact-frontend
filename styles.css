@@ -982,6 +982,48 @@ ul {
   position: relative;
 }
 
+.about-image-overlay {
+  position: absolute;
+  left: 1rem;
+  bottom: 1rem;
+  z-index: 2;
+  max-width: min(78%, 360px);
+  padding: 1rem 1.15rem 0.9rem;
+  background: rgba(0, 26, 77, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-left: 4px solid var(--color-primary);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.about-image-overlay-label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.about-image-overlay strong {
+  display: block;
+  font-family: var(--font-display);
+  font-size: clamp(1.2rem, 2vw, 1.8rem);
+  line-height: 1.2;
+  color: var(--color-white);
+  margin-bottom: 0.35rem;
+}
+
+.about-image-overlay p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 0.8rem;
+  line-height: 1.6;
+}
+
 /* Stats */
 .stats-band {
   background: #e6f0ff;
