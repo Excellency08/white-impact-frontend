@@ -1779,16 +1779,12 @@ ul {
   color: rgba(0, 26, 77, 0.8);
 }
 
-/* Get involved card mirrors the donation card while keeping its own content hierarchy. */
+/* Get involved card: uses the same visual surface as the donation card. */
 .newsletter-donated-grid {
   padding-top: 0 !important;
 }
 
-.get-involved-card {
-  width: 100%;
-  min-height: 0;
-}
-
+.get-involved-card,
 .get-involved-card .donate-content {
   width: 100%;
 }
@@ -1801,7 +1797,7 @@ ul {
 
 .get-involved-options {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1px;
   margin: 1.5rem 0 2rem;
   overflow: hidden;
@@ -1811,8 +1807,11 @@ ul {
 }
 
 .get-involved-option {
-  min-height: 150px;
-  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-height: 210px;
+  padding: 1.35rem;
   background: rgba(255, 255, 255, 0.58);
 }
 
@@ -1820,23 +1819,24 @@ ul {
   margin-bottom: 0.45rem;
   color: var(--color-navy);
   font-family: var(--font-display);
-  font-size: 1.2rem;
+  font-size: 1.3rem;
   letter-spacing: -0.02em;
 }
 
 .get-involved-option p {
+  margin-bottom: 1.25rem;
   color: var(--color-gray-600);
-  font-size: 0.9rem;
+  font-size: 0.92rem;
   line-height: 1.55;
 }
 
-@media (max-width: 900px) {
-  .get-involved-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.get-involved-option .btn {
+  margin-top: auto;
 }
 
-@media (max-width: 560px) {
+@media (max-width: 760px) {
   .get-involved-options { grid-template-columns: 1fr; }
-  .get-involved-option { min-height: auto; }
+  .get-involved-option { min-height: 0; }
 }
 
 .donate-options {
