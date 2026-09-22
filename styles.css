@@ -1779,6 +1779,66 @@ ul {
   color: rgba(0, 26, 77, 0.8);
 }
 
+/* Get involved card mirrors the donation card while keeping its own content hierarchy. */
+.newsletter-donated-grid {
+  padding-top: 0 !important;
+}
+
+.get-involved-card {
+  width: 100%;
+  min-height: 0;
+}
+
+.get-involved-card .donate-content {
+  width: 100%;
+}
+
+.get-involved-intro {
+  max-width: 50rem;
+  margin-bottom: 1.5rem;
+  font-size: 1.05rem;
+}
+
+.get-involved-options {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  margin: 1.5rem 0 2rem;
+  overflow: hidden;
+  border: 1px solid rgba(0, 26, 77, 0.14);
+  border-radius: var(--radius-lg);
+  background: rgba(0, 26, 77, 0.14);
+}
+
+.get-involved-option {
+  min-height: 150px;
+  padding: 1.25rem;
+  background: rgba(255, 255, 255, 0.58);
+}
+
+.get-involved-option h3 {
+  margin-bottom: 0.45rem;
+  color: var(--color-navy);
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  letter-spacing: -0.02em;
+}
+
+.get-involved-option p {
+  color: var(--color-gray-600);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+@media (max-width: 900px) {
+  .get-involved-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 560px) {
+  .get-involved-options { grid-template-columns: 1fr; }
+  .get-involved-option { min-height: auto; }
+}
+
 .donate-options {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
