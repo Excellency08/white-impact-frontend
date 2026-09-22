@@ -224,9 +224,9 @@
                   Community-led education, digital inclusion, advocacy, and humanitarian support across Nigeria.
                 </p>
                 <div class="footer-positioning">
-                    <p class="footer-positioning-label">One important positioning decision</p>
-                    <p>Why we exist → What we believe → What we do → How we work → What we have achieved → How people can join us.</p>
-                    <p>This gives WIDI a clear institutional identity and tells a consistent story: WIDI exists because development gaps continue to limit opportunities. We believe communities are active partners in solving those challenges. We use education, technology, innovation, research, partnerships, and community action to create opportunities and lasting impact.</p>
+                    <p class="footer-positioning-label">Empowering Communities • Unlocking Potentials • Driving Sustainable Growth.</p>
+                    <p>A youth- and community-driven non-profit organisation working across education, technology, 
+                    innovation, youth development, health, environmental sustainability, and community development.</p>
                 </div>
             </div>
             <div class="footer-links">
