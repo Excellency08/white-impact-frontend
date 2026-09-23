@@ -18,7 +18,7 @@
   --color-navy: #001a4d;
   --color-navy-light: #1a3347;
   --color-white: #ffffff;
-  --color-off-white: #f2f7ff;
+  --color-off-white: #e6f0ff;
   --color-gray-100: #e6f0ff;
   --color-gray-200: #b3d9ff;
   --color-gray-400: #ffffff;
@@ -1119,7 +1119,7 @@ ul {
 
 .value-card {
   padding: 2rem;
-  background: var(--color-surface);
+  background: var(--color-off-white);
   border: 1px solid var(--color-gray-200);
   border-radius: var(--radius-lg);
   transition: all var(--transition);
@@ -2557,10 +2557,10 @@ body.inner-page main {
 
 .mission-vision-card {
   background: var(--color-off-white);
-  border: 1px solid rgba(17, 24, 39, 0.08);
   border-radius: var(--radius-xl);
   padding: 2rem;
-  box-shadow: var(--shadow-sm);
+  border: 1px solid rgba(17, 24, 39, 0.08);
+  box-shadow: 0 1px 2px rgba(12, 31, 46, 0.08);
   height: 100%;
 }
 
