@@ -2760,14 +2760,14 @@
         newsletterRes,
         analyticsRes,
       ] = await Promise.allSettled([
-        authGet("/programs/admin"),
+        loadProgramsFromSupabase(true),
         loadProjectsFromSupabase(true),
         loadImpactFromSupabase(true),
         loadNewsFromSupabase(true),
         loadReportsFromSupabase(true),
         loadAdminSubmissionsFromSupabase("contacts"),
         authGet("/donate/list"),
-        apiGet("/team"),
+        loadAdminTeamMembersFromSupabase(),
         loadAdminSubmissionsFromSupabase("volunteers"),
         loadAdminSubmissionsFromSupabase("newsletter"),
         loadAnalyticsSummaryFromSupabase(30),
@@ -2963,22 +2963,31 @@
         singular: "initiative",
         title: "Initiatives",
         description: "Manage programs and projects together from one content workspace.",
-        load: () => authGet("/initiatives/admin"),
-        save: (record, payload) => {
-          const type = payload.entityType || record?.entityType || "program";
-          return record?.sourceId
-            ? authPut(`/initiatives/admin/${type}/${record.sourceId}`, payload)
-            : authPost("/initiatives/admin", payload);
+        load: async () => {
+          await window.WII_SUPABASE_READY;
+          const result = await window.WII_SUPABASE_DATA?.getAdminInitiatives?.();
+          return result?.error
+            ? { success: false, message: result.error.message || "Failed to load initiatives." }
+            : { success: true, data: result?.data || [] };
         },
-        archive: (record) => authPut(`/initiatives/admin/${record.entityType}/${record.sourceId}`, {
-          entityType: record.entityType,
-          slug: record.slug,
-          title: record.title,
-          summary: record.summary,
-          description: record.description,
-          status: "Paused",
-          isActive: false,
-        }),
+        save: async (record, payload) => {
+          await window.WII_SUPABASE_READY;
+          const result = await window.WII_SUPABASE_DATA?.saveInitiative?.(record, payload);
+          return result?.error
+            ? { success: false, message: result.error.message || "Failed to save initiative." }
+            : { success: true, data: result.data };
+        },
+        archive: async (record) => {
+          await window.WII_SUPABASE_READY;
+          const result = await window.WII_SUPABASE_DATA?.saveInitiative?.(record, {
+            ...record,
+            status: "Paused",
+            isActive: false,
+          });
+          return result?.error
+            ? { success: false, message: result.error.message || "Failed to archive initiative." }
+            : { success: true, data: result.data };
+        },
         itemLabel: (record) => record.title || record.slug || "Untitled initiative",
         itemMeta: (record) => `${record.entityType === "project" ? "Project" : "Program"} | ${record.statusLabel || record.status || "Active"}`,
         emptyLabel: "No initiatives loaded yet.",

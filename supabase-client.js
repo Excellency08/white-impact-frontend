@@ -390,6 +390,99 @@ function exposeAuthHelpers(client) {
     is_active: Boolean(values.isActive),
   });
 
+  const initiativeColumns = [
+    "id", "slug", "title", "summary", "description", "status", "status_label",
+    "status_detail", "card_summary", "card_icon", "hero_image_url", "hero_image_alt",
+    "body_copy", "seo_title", "seo_description", "display_order", "is_featured",
+    "is_active", "updated_at", "created_at",
+  ].join(", ");
+
+  const initiativeProjectColumns = [
+    "id", "slug", "title", "summary", "description", "program_slug", "location",
+    "status", "status_label", "status_detail", "card_summary", "card_icon",
+    "hero_image_url", "hero_image_alt", "body_copy", "seo_title", "seo_description",
+    "display_order", "is_featured", "is_active", "updated_at", "created_at",
+  ].join(", ");
+
+  const initiativeSlug = (value) => String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+  const initiativeBasePayload = (values) => ({
+    slug: initiativeSlug(values.slug),
+    title: String(values.title || "").trim(),
+    summary: String(values.summary || "").trim(),
+    description: String(values.description || "").trim(),
+    status: String(values.status || "Active").trim(),
+    status_label: String(values.statusLabel || "").trim() || null,
+    status_detail: String(values.statusDetail || "").trim() || null,
+    card_summary: String(values.cardSummary || "").trim() || null,
+    card_icon: String(values.cardIcon || "●").trim(),
+    hero_image_url: String(values.heroImageUrl || "").trim() || null,
+    hero_image_alt: String(values.heroImageAlt || "").trim() || null,
+    body_copy: Array.isArray(values.bodyCopy) ? values.bodyCopy : [],
+    seo_title: String(values.seoTitle || "").trim() || null,
+    seo_description: String(values.seoDescription || "").trim() || null,
+    display_order: Number(values.displayOrder || 0),
+    is_featured: Boolean(values.isFeatured),
+    is_active: values.isActive === undefined ? true : Boolean(values.isActive),
+  });
+
+  const formatInitiative = (row, entityType) => {
+    const base = entityType === "project"
+      ? formatProject(row, new Map(), false)
+      : formatProgram(row, false);
+    return {
+      ...base,
+      id: `${entityType}:${row.id}`,
+      sourceId: row.id,
+      entityType,
+    };
+  };
+
+  const getAdminInitiatives = async () => {
+    const [programs, projects] = await Promise.all([
+      client.from("programs").select(initiativeColumns),
+      client.from("projects").select(initiativeProjectColumns),
+    ]);
+    if (programs.error) return { data: null, error: programs.error };
+    if (projects.error) return { data: null, error: projects.error };
+
+    const data = [
+      ...(programs.data || []).map((row) => formatInitiative(row, "program")),
+      ...(projects.data || []).map((row) => formatInitiative(row, "project")),
+    ].sort((a, b) => Number(a.displayOrder || 0) - Number(b.displayOrder || 0) || a.title.localeCompare(b.title));
+    return { data, error: null };
+  };
+
+  const saveInitiative = async (record, values) => {
+    const entityType = String(values.entityType || record?.entityType || "program").toLowerCase();
+    const isProject = entityType === "project";
+    if (!['program', 'project'].includes(entityType)) {
+      return { data: null, error: new Error("entityType must be program or project.") };
+    }
+
+    const payload = initiativeBasePayload(values);
+    if (!payload.slug || !payload.title || !payload.summary || !payload.description) {
+      return { data: null, error: new Error("slug, title, summary, and description are required.") };
+    }
+    if (isProject) {
+      payload.program_slug = initiativeSlug(values.programSlug);
+      payload.location = String(values.location || "").trim() || null;
+    }
+
+    const table = isProject ? "projects" : "programs";
+    const columns = isProject ? initiativeProjectColumns : initiativeColumns;
+    const query = record?.sourceId
+      ? client.from(table).update(payload).eq("id", record.sourceId).select(columns).single()
+      : client.from(table).insert(payload).select(columns).single();
+    const result = await query;
+    if (result.error) return result;
+    return { data: formatInitiative(result.data, entityType), error: null };
+  };
+
   window.WII_SUPABASE_AUTH = {
     signUp: (credentials, options) => client.auth.signUp({ ...credentials, options }),
     signIn: (credentials) => client.auth.signInWithPassword(credentials),
@@ -411,6 +504,8 @@ function exposeAuthHelpers(client) {
       return { data: result.data.find((program) => program.slug === slug) || null, error: null };
     },
     getAdminPrograms: () => getPrograms(true),
+    getAdminInitiatives,
+    saveInitiative,
     createProgram: (values) => client.from("programs").insert(programPayload(values)).select(programColumns).single(),
     updateProgram: (id, values) => client.from("programs").update(programPayload(values)).eq("id", id).select(programColumns).single(),
     uploadProgramImage: async (programId, file, variant = "hero") => {
