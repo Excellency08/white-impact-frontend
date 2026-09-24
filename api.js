@@ -25,7 +25,7 @@
   const API_BASE =
     isLocal
       ? `http://${window.location.hostname}:3030/api`
-      : window.__WII_API_BASE__ || "https://white-impact-api.onrender.com/api";
+      : window.__WII_API_BASE__ || "";
   const API_ORIGIN = API_BASE.replace(/\/api\/?$/, "");
   const authDiagnosticsEnabled =
     ["localhost", "127.0.0.1"].includes(window.location.hostname) ||
@@ -323,12 +323,12 @@
     return parseJsonResponse(res);
   }
 
-  async function invokePublicEdgeFunction(name, body) {
+  async function invokePublicEdgeFunction(name, body, path = "") {
     await window.WII_SUPABASE_READY;
     const invoke = window.WII_SUPABASE_DATA?.invokePublicFunction;
     if (!invoke) throw new Error("Supabase public submission is unavailable.");
 
-    const result = await invoke(name, body);
+    const result = await invoke(name, body, path);
     if (result?.error) {
       throw new Error(result.error.message || "The submission could not be completed.");
     }
@@ -5271,7 +5271,7 @@
 
       setFormLoading(form, true);
       try {
-        const result = await apiPost("/newsletter", { email });
+        const result = await invokePublicEdgeFunction("newsletter", { email });
         if (result.success) {
           form.reset();
         } else {
@@ -5475,7 +5475,7 @@
     }
 
     try {
-      const result = await apiPost("/newsletter/confirm", { token });
+      const result = await invokePublicEdgeFunction("newsletter", { token }, "/confirm");
       status.textContent = result.message || "Subscription confirmed.";
     } catch {
       status.textContent = "Unable to confirm your subscription right now.";
@@ -5493,7 +5493,7 @@
     }
 
     try {
-      const result = await apiPost("/newsletter/unsubscribe", { token });
+      const result = await invokePublicEdgeFunction("newsletter", { token }, "/unsubscribe");
       status.textContent = result.message || "You have been unsubscribed.";
     } catch {
       status.textContent = "Unable to process your unsubscribe request.";
