@@ -6925,6 +6925,7 @@ body:not(.admin-app-page):not(.admin-login-page) .challenge-card:hover {
   .reach-map {
     height: 200px;
   }
+
 }
 
 @media (max-width: 1024px) {
