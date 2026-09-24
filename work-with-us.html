@@ -90,16 +90,15 @@
                                     <path d="m22 6-10 7L2 6" />
                                 </svg>info@whiteimpactinitiative.org</li>
                         </ul>
-                        <article class="reach-card reach-card-lg visible" data-animate>
-                            <p class="section-kicker">Base</p>
-                            <h3>Kaduna, Nigeria</h3>
-                            <p>Our coordination hub and registered address.</p>
-                            <p class="reach-address">
-                                No. 4A Marafa Estate Kaduna, Kaduna State, Nigeria.
-                            </p>
-                            <div id="reach-map" class="reach-map"
-                                aria-label="Map showing our Kaduna office location"></div>
-                        </article>
+                        <article class="reach-card reach-card-lg" data-animate>
+              <p class="section-kicker">Base</p>
+              <h3>Kaduna, Nigeria</h3>
+              <p>Our coordination hub and registered address.</p>
+              <p class="reach-address">
+                No. 4A Marafa Estate Kaduna, Kaduna State, Nigeria.
+              </p>
+              <div id="reach-map" class="reach-map" aria-label="Map showing our Kaduna office location"></div>
+            </article>
                     </div>
                     <form class="contact-form volunteer-form" data-volunteer novalidate data-animate>
                         <div class="form-row">
@@ -154,67 +153,74 @@
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            var mapElement = document.getElementById('reach-map');
-            if (!mapElement || typeof L === 'undefined') return;
-            try {
-                var officeCoords = [10.5105, 7.4165];
-                var map = L.map('reach-map', { scrollWheelZoom: false, attributionControl: false }).setView(officeCoords, 13);
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    maxZoom: 19,
-                    attribution: '&copy; OpenStreetMap contributors'
-                }).addTo(map);
-                var officeMarker = L.marker(officeCoords).addTo(map)
-                    .bindPopup('White Impact — No. 4A Marafa Estate Kaduna, Kaduna State, Nigeria');
+        var el = document.getElementById('reach-map');
+        if (!el) return;
+        try {
+          var lat = 10.5105; // approximate Kaduna coordinates
+          var lng = 7.4165;
+          var officeCoords = [lat, lng];
+          var map = L.map('reach-map', { scrollWheelZoom: false, attributionControl: false }).setView(officeCoords, 13);
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap contributors'
+          }).addTo(map);
+          var officeMarker = L.marker(officeCoords).addTo(map).bindPopup('White Impact — No. 4A Marafa Estate Kaduna, Kaduna State, Nigeria');
 
-                var LocateControl = L.Control.extend({
-                    options: { position: 'topright' },
-                    onAdd: function () {
-                        var container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
-                        var button = document.createElement('a');
-                        button.href = '#';
-                        button.id = 'locate-btn';
-                        button.className = 'map-locate-btn';
-                        button.title = 'Navigate to office';
-                        button.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path fill="currentColor" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5z"/></svg><span style="margin-left:6px;">Navigate</span>';
-                        L.DomEvent.disableClickPropagation(container);
-                        container.appendChild(button);
-                        return container;
-                    }
-                });
-                map.addControl(new LocateControl());
-
-                var userMarker = null;
-                var currentRoute = null;
-                function handleLocationSuccess(position) {
-                    var userCoords = [position.coords.latitude, position.coords.longitude];
-                    if (userMarker) map.removeLayer(userMarker);
-                    if (currentRoute) map.removeLayer(currentRoute);
-                    userMarker = L.marker(userCoords).addTo(map).bindPopup('You are here').openPopup();
-                    currentRoute = L.polyline([userCoords, officeCoords], { color: '#001a4d', weight: 4, opacity: 0.9 }).addTo(map);
-                    map.fitBounds(L.latLngBounds([userCoords, officeCoords]).pad(0.2));
-                }
-                function handleLocationError(error) {
-                    var message = error && error.message ? error.message : 'Unable to determine location';
-                    alert('Location error: ' + message + '\nPlease allow location access or try again.');
-                }
-                document.addEventListener('click', function (event) {
-                    var button = event.target.closest && event.target.closest('#locate-btn');
-                    if (!button) return;
-                    event.preventDefault();
-                    if (!navigator.geolocation) {
-                        alert('Geolocation is not supported by this browser.');
-                        return;
-                    }
-                    navigator.geolocation.getCurrentPosition(handleLocationSuccess, handleLocationError, {
-                        enableHighAccuracy: true,
-                        timeout: 10000
-                    });
-                });
-                officeMarker.openPopup();
-            } catch (error) {
-                console.warn('Map init failed', error);
+          // Add a locate / navigate control with pin icon
+          var LocateControl = L.Control.extend({
+            options: { position: 'topright' },
+            onAdd: function (map) {
+              var container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+              var btn = document.createElement('a');
+              btn.href = '#';
+              btn.id = 'locate-btn';
+              btn.className = 'map-locate-btn';
+              btn.title = 'Navigate to office';
+              btn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path fill="currentColor" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5z"/></svg><span style="margin-left:6px;">Navigate</span>';
+              L.DomEvent.disableClickPropagation(container);
+              container.appendChild(btn);
+              return container;
             }
-        });
+          });
+          map.addControl(new LocateControl());
+
+          var userMarker = null;
+          var currentRoute = null;
+
+          function handleLocationSuccess(position) {
+            var uLat = position.coords.latitude;
+            var uLng = position.coords.longitude;
+            if (userMarker) map.removeLayer(userMarker);
+            if (currentRoute) map.removeLayer(currentRoute);
+            userMarker = L.marker([uLat, uLng]).addTo(map).bindPopup('You are here').openPopup();
+            currentRoute = L.polyline([[uLat, uLng], officeCoords], { color: '#001a4d', weight: 4, opacity: 0.9 }).addTo(map);
+            var bounds = L.latLngBounds([[uLat, uLng], officeCoords]);
+            map.fitBounds(bounds.pad(0.2));
+          }
+
+          function handleLocationError(err) {
+            var msg = (err && err.message) ? err.message : 'Unable to determine location';
+            alert('Location error: ' + msg + '\nPlease allow location access or try again.');
+          }
+
+          document.addEventListener('click', function (ev) {
+            if (!ev.target) return;
+            var el = ev.target.closest && ev.target.closest('#locate-btn');
+            if (el) {
+              ev.preventDefault();
+              if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(handleLocationSuccess, handleLocationError, { enableHighAccuracy: true, timeout: 10000 });
+              } else {
+                alert('Geolocation is not supported by this browser.');
+              }
+            }
+          });
+
+          officeMarker.openPopup();
+        } catch (e) {
+          console.warn('Map init failed', e);
+        }
+      });
     </script>
 </body>
 
