@@ -1,15 +1,6 @@
 (function () {
     "use strict";
 
-    const isLocal =
-        ["localhost", "127.0.0.1"].includes(window.location.hostname) ||
-        ["5500", "5501"].includes(window.location.port);
-    const API_BASE = isLocal
-        ? `http://${window.location.hostname}:3030/api`
-        : window.__WII_API_BASE__ || "";
-
-    window.__WII_API_BASE__ = API_BASE;
-
     const header = document.querySelector("[data-header]");
     const mobileToggle = document.querySelector("[data-mobile-toggle]");
     const mobileNav = document.querySelector("[data-mobile-nav]");

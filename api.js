@@ -1,12 +1,8 @@
 /**
- * api.js — Frontend ↔ Backend connector
+ * api.js — Frontend Supabase and Edge Function connector
  *
- * Drop this file in your website root alongside script.js.
- * Add <script src="api.js"></script> BEFORE <script src="script.js"></script>
- * in every HTML page.
- *
- * It patches the existing form handlers in script.js to POST to your backend
- * instead of just showing a toast.
+ * This file coordinates the browser Supabase client, Edge Functions, and UI
+ * hydration for the static site.
  */
 
 (function () {
@@ -18,15 +14,7 @@
     .catch(() => null);
   window.WII_SUPABASE_READY = SUPABASE_READY;
 
-  // Support localhost and LAN access to the local frontend server.
-  const isLocal =
-    ["localhost", "127.0.0.1"].includes(window.location.hostname) ||
-    ["5500", "5501"].includes(window.location.port);
-  const API_BASE =
-    isLocal
-      ? `http://${window.location.hostname}:3030/api`
-      : window.__WII_API_BASE__ || "";
-  const API_ORIGIN = API_BASE.replace(/\/api\/?$/, "");
+  const API_ORIGIN = "";
   const authDiagnosticsEnabled =
     ["localhost", "127.0.0.1"].includes(window.location.hostname) ||
     ["5500", "5501"].includes(window.location.port);
@@ -68,44 +56,12 @@
 
   trackAnalyticsEvent("page_view");
 
-  /* ─── Generic fetch wrapper ───────────────────────────────────── */
-  async function parseJsonResponse(res) {
-    const body = await res.text();
-    if (!body.trim()) {
-      throw new Error(`API request failed (${res.status} ${res.statusText || "Unknown error"}).`);
-    }
-    try {
-      return JSON.parse(body);
-    } catch {
-      throw new Error(`API returned an invalid response (${res.status}).`);
-    }
-  }
-
   function formatDateInputValue(value) {
     if (!value) return "";
     const text = String(value);
     if (/^\d{4}-\d{2}-\d{2}$/.test(text)) return text;
     const date = new Date(value);
     return Number.isNaN(date.getTime()) ? "" : date.toISOString().slice(0, 10);
-  }
-
-  async function apiPost(endpoint, data) {
-    const res = await fetch(`${API_BASE}${endpoint}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-    return parseJsonResponse(res);
-  }
-
-  async function apiGet(endpoint) {
-    const res = await fetch(`${API_BASE}${endpoint}`, { cache: "no-store" });
-    return parseJsonResponse(res);
-  }
-
-  function clearLegacyAdminSession() {
-    // Remove transitional Express credentials left by an older login.
-    window.localStorage.removeItem("wii.admin.session");
   }
 
   function clearSupabaseApplicationState() {
@@ -282,45 +238,6 @@
     await prepareSupabaseCallback(supabaseAuth);
     authDiagnostic("getSession started");
     return authorizeSupabaseSession(supabaseAuth);
-  }
-
-  async function authRequest(endpoint, options = {}) {
-    // Transitional application requests remain Express-backed until their
-    // Supabase/RLS replacements are migrated in later phases. They no longer
-    // receive a legacy JWT from browser storage.
-    const headers = {
-      ...(options.headers || {}),
-    };
-    const requestOptions = { ...options };
-    delete requestOptions.__retried;
-
-    return fetch(`${API_BASE}${endpoint}`, {
-      ...requestOptions,
-      headers,
-    });
-  }
-
-  async function authGet(endpoint) {
-    const res = await authRequest(endpoint, { method: "GET" });
-    return parseJsonResponse(res);
-  }
-
-  async function authPost(endpoint, data) {
-    const res = await authRequest(endpoint, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-    return parseJsonResponse(res);
-  }
-
-  async function authPut(endpoint, data) {
-    const res = await authRequest(endpoint, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-    return parseJsonResponse(res);
   }
 
   async function invokePublicEdgeFunction(name, body, path = "") {
@@ -2717,7 +2634,6 @@
 
     const bootstrapAdminSession = async () => {
       let supabaseResult = null;
-      clearLegacyAdminSession();
       try {
         supabaseResult = await syncExistingSupabaseSession();
       } catch (error) {
@@ -2790,7 +2706,6 @@
     logoutBtn?.addEventListener("click", async () => {
       const supabaseAuth = await getSupabaseAuth();
       await supabaseAuth?.signOut().catch(() => {});
-      clearLegacyAdminSession();
       clearSupabaseApplicationState();
       setAdminPanelState(false);
       const status = document.querySelector("[data-admin-status]");
@@ -4816,7 +4731,6 @@
     logoutBtn?.addEventListener("click", async () => {
       const supabaseAuth = await getSupabaseAuth();
       await supabaseAuth?.signOut().catch(() => {});
-      clearLegacyAdminSession();
       clearSupabaseApplicationState();
       setStatus("Signed out.");
       showToast("Signed out successfully.");
@@ -5313,13 +5227,4 @@
     loadTeamPhotos();
   });
 
-  // Expose for debugging
-  window._wiiAPI = {
-    apiPost,
-    apiGet,
-    authGet,
-    authPost,
-    authPut,
-    API_BASE,
-  };
 })();
