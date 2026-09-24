@@ -403,6 +403,7 @@ function exposeAuthHelpers(client) {
     onAuthStateChange: (callback) => client.auth.onAuthStateChange(callback),
   };
   window.WII_SUPABASE_DATA = {
+    invokePublicFunction: (name, body) => client.functions.invoke(name, { body }),
     getPrograms: () => getPrograms(false),
     getProgram: async (slug) => {
       const result = await getPrograms(false, true);

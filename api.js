@@ -51,26 +51,19 @@
   }
 
   function trackAnalyticsEvent(eventKey, metadata = {}) {
-    const payload = JSON.stringify({
+    const payload = {
       eventKey,
       pagePath: window.location.pathname,
       referrer: document.referrer || null,
       sessionId: getAnalyticsSessionId(),
       metadata,
-    });
-    if (navigator.sendBeacon) {
-      navigator.sendBeacon(
-        `${API_BASE}/analytics/events`,
-        new Blob([payload], { type: "application/json" }),
-      );
-    } else {
-      fetch(`${API_BASE}/analytics/events`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: payload,
-        keepalive: true,
-      }).catch(() => {});
-    }
+    };
+
+    // Analytics is intentionally fire-and-forget so a failed Edge Function
+    // never blocks page rendering or the user's primary action.
+    void window.WII_SUPABASE_READY
+      .then(() => window.WII_SUPABASE_DATA?.invokePublicFunction?.("analytics-events", payload))
+      .catch(() => {});
   }
 
   trackAnalyticsEvent("page_view");
@@ -328,6 +321,18 @@
       body: JSON.stringify(data),
     });
     return parseJsonResponse(res);
+  }
+
+  async function invokePublicEdgeFunction(name, body) {
+    await window.WII_SUPABASE_READY;
+    const invoke = window.WII_SUPABASE_DATA?.invokePublicFunction;
+    if (!invoke) throw new Error("Supabase public submission is unavailable.");
+
+    const result = await invoke(name, body);
+    if (result?.error) {
+      throw new Error(result.error.message || "The submission could not be completed.");
+    }
+    return result?.data || {};
   }
 
   async function updateTeamMemberInSupabase(id, payload) {
@@ -5141,7 +5146,7 @@
 
       setFormLoading(form, true);
       try {
-        const result = await apiPost("/contact", data);
+        const result = await invokePublicEdgeFunction("contact-submit", data);
         if (result.success) {
           form.reset();
           // Silent success - backend handles it
@@ -5192,7 +5197,7 @@
 
       setFormLoading(form, true);
       try {
-        const result = await apiPost("/volunteers", data);
+        const result = await invokePublicEdgeFunction("volunteer-submit", data);
         if (result.success) {
           form.reset();
           showToast("Volunteer application submitted.");
