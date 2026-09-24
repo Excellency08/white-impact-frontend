@@ -6834,6 +6834,11 @@ body[data-page="our-story"] .values-grid {
 }
 
 @media (max-width: 768px) {
+  body[data-page="our-story"] .mission-vision-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
+  }
+
   .hero-home .hero-content h1 { font-size: clamp(2.7rem, 13vw, 4rem); }
   .hero-home .hero-float { display: none; }
   .hero-home .hero-storyline-item { min-height: auto; }
