@@ -481,6 +481,17 @@
     };
   }
 
+  const PARTNERS_CMS_DEFAULTS = Object.freeze({
+    pageKey: "partners",
+    pageType: "global",
+    title: "Partners",
+    seoTitle: "Partners | White Impact Development Initiative",
+    seoDescription: "",
+    status: "Published",
+    displayOrder: 0,
+    isActive: true,
+  });
+
   async function loadCmsFromSupabase(admin = false) {
     await window.WII_SUPABASE_READY;
     const getCms = admin
@@ -536,13 +547,23 @@
     }
     const file = typeof payload.get === "function" ? payload.get("heroImageUrl") : null;
     const values = cmsFormValues(payload, record || {});
+    const isPartners = values.pageKey === PARTNERS_CMS_DEFAULTS.pageKey || record?.pageKey === PARTNERS_CMS_DEFAULTS.pageKey;
+    if (isPartners) {
+      Object.assign(values, PARTNERS_CMS_DEFAULTS, {
+        body: {
+          ...(record?.body || {}),
+          ...(values.body || {}),
+          logos: Array.isArray(values.body?.logos) ? values.body.logos : [],
+        },
+      });
+    }
     const partnerFiles = typeof payload.entries === "function"
       ? [...payload.entries()].filter(([name, value]) => name.startsWith("partnerLogoFile_") && value instanceof File && value.size > 0)
       : [];
-    const requestedIsActive = values.isActive;
+    const requestedIsActive = isPartners ? true : values.isActive;
     let created = null;
     if (!record?.id) {
-      values.isActive = false;
+      values.isActive = isPartners ? true : false;
       const result = await dataApi.createCms(values);
       if (result.error) return { success: false, message: result.error.message || "Failed to create CMS page." };
       created = result.data;
@@ -2403,9 +2424,12 @@
         );
 
         const track = document.querySelector("[data-partner-track]");
-        const logos = Array.isArray(partners.logos) ? partners.logos : [];
-        if (track && logos.length) {
-          track.innerHTML = logos
+        const logos = Array.isArray(partners.logos)
+          ? [...partners.logos].sort((left, right) => Number(left?.displayOrder || 0) - Number(right?.displayOrder || 0))
+          : [];
+        if (track) {
+          const renderedLogos = logos.length ? [...logos, ...logos] : [{ name: "Partner directory coming soon" }];
+          track.innerHTML = renderedLogos
             .map((item) => {
               const label =
                 typeof item === "string"
@@ -3489,54 +3513,16 @@
         itemMeta: (record) => record.status || "Draft",
         emptyLabel: "No partner record loaded yet.",
         defaultRecord: {
-          pageKey: "partners",
-          pageType: "collection",
-          status: "Draft",
+          ...PARTNERS_CMS_DEFAULTS,
           isActive: true,
           body: {},
           settings: {},
         },
         fields: [
           {
-            name: "pageKey",
-            label: "Page key",
-            type: "text",
-            required: true,
-            readOnlyOnUpdate: true,
-          },
-          {
-            name: "pageType",
-            label: "Page type",
-            type: "select",
-            options: ["collection", "page", "section", "global"],
-          },
-          { name: "title", label: "Title", type: "text", required: true },
-          { name: "summary", label: "Summary", type: "textarea", rows: 3 },
-          { name: "seoTitle", label: "SEO title", type: "text" },
-          {
-            name: "seoDescription",
-            label: "SEO description",
-            type: "textarea",
-            rows: 3,
-          },
-          {
-            name: "status",
-            label: "Status",
-            type: "select",
-            options: ["Draft", "Review", "Published", "Archived"],
-          },
-          { name: "displayOrder", label: "Display order", type: "number" },
-          { name: "isActive", label: "Active", type: "checkbox" },
-          {
             name: "partnerLogos",
-            label: "Partner logos",
+            label: "Published partners",
             type: "partner-list",
-          },
-          {
-            name: "settings",
-            label: "Settings",
-            type: "json",
-            rows: 6,
           },
         ],
       },
@@ -3995,12 +3981,13 @@
             ${items.map((item, index) => `
               <div class="structured-list-item partner-logo-editor-item" data-partner-logo-item>
                 <div class="structured-list-fields">
+                  <span class="partner-logo-order" data-partner-logo-order>${index + 1}</span>
                   <label>
                     <span>Partner name</span>
                     <input type="text" data-partner-logo-name value="${escapeHtml(item?.name || item?.label || "")}" required />
                   </label>
                   <label>
-                    <span>Logo file</span>
+                    <span>Partner logo</span>
                     <input type="file" data-partner-logo-file="${index}" accept="image/jpeg,image/png,image/webp,image/gif" />
                   </label>
                   ${item?.logoUrl ? `<img class="content-admin-image-preview" src="${escapeHtml(item.logoUrl)}" alt="Current partner logo" loading="lazy" />` : ""}
@@ -4016,12 +4003,21 @@
 
     function readPartnerLogoList(container) {
       return [...container.querySelectorAll("[data-partner-logo-item]")]
-        .map((item) => ({
+        .map((item, index) => ({
           name: item.querySelector("[data-partner-logo-name]")?.value.trim() || "",
           logoUrl: item.dataset.logoUrl || item.querySelector("img")?.getAttribute("src") || "",
+          displayOrder: index + 1,
           file: item.querySelector("[data-partner-logo-file]")?.files?.[0] || null,
         }))
         .filter((item) => item.name);
+    }
+
+    function refreshPartnerLogoOrder(container) {
+      container.querySelectorAll("[data-partner-logo-item]").forEach((item, index) => {
+        item.querySelector("[data-partner-logo-order]")?.replaceChildren(document.createTextNode(String(index + 1)));
+        const file = item.querySelector("[data-partner-logo-file]");
+        if (file) file.dataset.partnerLogoFile = String(index);
+      });
     }
 
     function bindPartnerLogoEditors(form) {
@@ -4034,17 +4030,21 @@
             itemsEl.insertAdjacentHTML("beforeend", `
               <div class="structured-list-item partner-logo-editor-item" data-partner-logo-item>
                 <div class="structured-list-fields">
+                  <span class="partner-logo-order" data-partner-logo-order>${index + 1}</span>
                   <label><span>Partner name</span><input type="text" data-partner-logo-name required /></label>
-                  <label><span>Logo file</span><input type="file" data-partner-logo-file="${index}" accept="image/jpeg,image/png,image/webp,image/gif" required /></label>
+                  <label><span>Partner logo</span><input type="file" data-partner-logo-file="${index}" accept="image/jpeg,image/png,image/webp,image/gif" required /></label>
                 </div>
                 <button class="btn btn-ghost structured-list-remove" type="button" data-partner-logo-remove>Remove</button>
               </div>
             `);
+            refreshPartnerLogoOrder(container);
           }
           if (event.target.closest("[data-partner-logo-remove]")) {
             event.target.closest("[data-partner-logo-item]")?.remove();
             if (!itemsEl.querySelector("[data-partner-logo-item]")) {
               itemsEl.innerHTML = `<p class="content-admin-empty" data-partner-logo-empty>No partners added yet.</p>`;
+            } else {
+              refreshPartnerLogoOrder(container);
             }
           }
         });
@@ -4673,7 +4673,7 @@
             if (field.type === "partner-list") {
               const container = input.closest("[data-partner-logo-list]");
               const items = container ? readPartnerLogoList(container) : [];
-              const partnerValues = items.map(({ name, logoUrl }) => ({ name, logoUrl }));
+              const partnerValues = items.map(({ name, logoUrl, displayOrder }) => ({ name, logoUrl, displayOrder }));
               if (hasFileField) {
                 payload.append("partnerLogos", JSON.stringify(partnerValues));
                 items.forEach((item, index) => {
