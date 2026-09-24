@@ -817,6 +817,16 @@
       : { success: true, data: (data || []).map(format) };
   }
 
+  async function loadAdminDonationsFromSupabase() {
+    await window.WII_SUPABASE_READY;
+    const load = window.WII_SUPABASE_DATA?.getAdminDonations;
+    if (!load) return { success: false, message: "Supabase donation management is unavailable." };
+    const { data, error } = await load();
+    return error
+      ? { success: false, message: error.message || "Failed to load donations." }
+      : { success: true, data: Array.isArray(data) ? data : [] };
+  }
+
   async function saveAdminSubmissionInSupabase(kind, record, payload) {
     await window.WII_SUPABASE_READY;
     if (!record?.id) return { success: false, message: "Existing submissions can only be updated." };
@@ -2766,7 +2776,7 @@
         loadNewsFromSupabase(true),
         loadReportsFromSupabase(true),
         loadAdminSubmissionsFromSupabase("contacts"),
-        authGet("/donate/list"),
+        loadAdminDonationsFromSupabase(),
         loadAdminTeamMembersFromSupabase(),
         loadAdminSubmissionsFromSupabase("volunteers"),
         loadAdminSubmissionsFromSupabase("newsletter"),
@@ -4073,9 +4083,9 @@
         title: "Donations",
         description:
           "Review donation records, payment status, and verification state.",
-        load: () => authGet("/donate/admin"),
+        load: loadAdminDonationsFromSupabase,
         save: (record, payload) =>
-          authPut(`/donate/admin/${record.id}`, payload),
+          invokePublicEdgeFunction("donation-approve", { donationId: record.id, ...payload }),
         itemLabel: (record) => record.fullName || record.reference || "Donation",
         itemMeta: (record) =>
           `${record.paymentStatus || record.status || "pending"} · ₦${Number(record.amountNaira || 0).toLocaleString()}`,
@@ -4491,6 +4501,11 @@
                 </div>
               </div>`
             : ""}
+          ${config.label === "Donations" && record.receiptStoragePath
+            ? `<div class="content-admin-record-actions">
+                <button class="btn btn-ghost" type="button" data-content-admin-receipt-access data-record-id="${escapeHtml(record.id)}">Open private receipt</button>
+              </div>`
+            : ""}
           <dl class="content-admin-record-details">
             ${config.fields.map((field) => `
               <div>
@@ -4654,7 +4669,8 @@
           button.disabled = true;
           syncPanelState("donations", "Approving donation and notifying donor…");
           try {
-            const result = await authPut(`/donate/admin/${record.id}`, {
+            const result = await invokePublicEdgeFunction("donation-approve", {
+              donationId: record.id,
               status: "verified",
               paymentStatus: "succeeded",
               confirmationMethod: "admin_approved",
@@ -4666,6 +4682,25 @@
           } catch (error) {
             syncPanelState("donations", error.message || "Donation approval failed.", "error");
             showToast(error.message || "Donation approval failed.", "error");
+          } finally {
+            button.disabled = false;
+          }
+        });
+      });
+
+      panelsEl.querySelectorAll("[data-content-admin-receipt-access]").forEach((button) => {
+        button.addEventListener("click", async () => {
+          button.disabled = true;
+          try {
+            const result = await invokePublicEdgeFunction("donation-receipt-access", {
+              donationId: button.dataset.recordId,
+            });
+            if (!result.success || !result.data?.signedUrl) {
+              throw new Error(result.message || "Private receipt access failed.");
+            }
+            window.open(result.data.signedUrl, "_blank", "noopener,noreferrer");
+          } catch (error) {
+            showToast(error.message || "Private receipt access failed.", "error");
           } finally {
             button.disabled = false;
           }
@@ -5361,11 +5396,7 @@
 
       setFormLoading(form, true);
       try {
-        const res = await fetch(`${API_BASE}/donate/receipt`, {
-          method: "POST",
-          body: formData,
-        });
-        const result = await parseJsonResponse(res);
+        const result = await invokePublicEdgeFunction("donation-receipt-submit", formData);
 
         if (result.success) {
           document
@@ -5413,7 +5444,7 @@
 
       setFormLoading(form, true);
       try {
-        const result = await apiPost("/donate/initiate", data);
+        const result = await invokePublicEdgeFunction("donation-submit", data);
 
         if (result.success) {
           showDonationInstructions(result);

@@ -457,6 +457,49 @@ function exposeAuthHelpers(client) {
     return { data, error: null };
   };
 
+  const donationColumns = [
+    "id", "reference", "full_name", "email", "phone", "amount_kobo",
+    "amount_naira", "program_area", "message", "status", "payment_provider",
+    "payment_reference", "payment_status", "receipt_url", "receipt_storage_path",
+    "paystack_data", "provider_payload", "confirmation_method", "verified_at",
+    "paid_at", "created_at", "updated_at",
+  ].join(", ");
+
+  const formatDonation = (row) => ({
+    id: row.id,
+    reference: row.reference,
+    fullName: row.full_name || "",
+    email: row.email || "",
+    phone: row.phone || "",
+    amountKobo: Number(row.amount_kobo || 0),
+    amountNaira: Number(row.amount_naira || 0),
+    programArea: row.program_area || "",
+    message: row.message || "",
+    status: row.status || "pending",
+    paymentProvider: row.payment_provider || "bank_transfer",
+    paymentReference: row.payment_reference || "",
+    paymentStatus: row.payment_status || row.status || "pending",
+    receiptUrl: row.receipt_url || "",
+    receiptStoragePath: row.receipt_storage_path || "",
+    paystackData: row.paystack_data || null,
+    providerPayload: row.provider_payload || null,
+    confirmationMethod: row.confirmation_method || "",
+    verifiedAt: row.verified_at || null,
+    paidAt: row.paid_at || null,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at || row.created_at,
+  });
+
+  const getAdminDonations = async () => {
+    const result = await client
+      .from("donations")
+      .select(donationColumns)
+      .order("created_at", { ascending: false })
+      .limit(300);
+    if (result.error) return result;
+    return { data: (result.data || []).map(formatDonation), error: null };
+  };
+
   const saveInitiative = async (record, values) => {
     const entityType = String(values.entityType || record?.entityType || "program").toLowerCase();
     const isProject = entityType === "project";
@@ -506,6 +549,7 @@ function exposeAuthHelpers(client) {
     getAdminPrograms: () => getPrograms(true),
     getAdminInitiatives,
     saveInitiative,
+    getAdminDonations,
     createProgram: (values) => client.from("programs").insert(programPayload(values)).select(programColumns).single(),
     updateProgram: (id, values) => client.from("programs").update(programPayload(values)).eq("id", id).select(programColumns).single(),
     uploadProgramImage: async (programId, file, variant = "hero") => {
