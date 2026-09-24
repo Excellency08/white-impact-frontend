@@ -923,75 +923,6 @@
     return { success: true, data: result.data };
   }
 
-  async function loadProjectsFromSupabase(admin = false, slug = "") {
-    await window.WII_SUPABASE_READY;
-    const getProjects = admin
-      ? window.WII_SUPABASE_DATA?.getAdminProjects
-      : slug
-        ? window.WII_SUPABASE_DATA?.getProject
-        : window.WII_SUPABASE_DATA?.getProjects;
-    if (!getProjects) return { success: false, message: "Supabase Projects read is unavailable." };
-    const result = slug ? await getProjects(slug) : await getProjects();
-    if (result.error) return { success: false, message: result.error.message || "Failed to load projects." };
-    return { success: true, data: Array.isArray(result.data) ? result.data : [] };
-  }
-
-  function projectFormValues(payload, existing = {}) {
-    const get = (name, fallback = "") => {
-      const value = payload.get(name);
-      return value === null ? fallback : String(value);
-    };
-    const json = (name, fallback = []) => {
-      try { return JSON.parse(get(name, JSON.stringify(existing[name] || fallback))); } catch { return existing[name] || fallback; }
-    };
-    return {
-      slug: get("slug", existing.slug), title: get("title", existing.title),
-      summary: get("summary", existing.summary), description: get("description", existing.description),
-      programSlug: get("programSlug", existing.programSlug), location: get("location", existing.location),
-      heroImageUrl: existing.heroImageUrl || "", heroImageAlt: get("heroImageAlt", existing.heroImageAlt),
-      cardIcon: get("cardIcon", existing.cardIcon), cardSummary: get("cardSummary", existing.cardSummary),
-      status: get("status", existing.status || "Draft"), statusLabel: get("statusLabel", existing.statusLabel), statusDetail: get("statusDetail", existing.statusDetail),
-      seoTitle: get("seoTitle", existing.seoTitle), seoDescription: get("seoDescription", existing.seoDescription),
-      displayOrder: Number(get("displayOrder", existing.displayOrder || 0) || 0),
-      isFeatured: get("isFeatured", String(Boolean(existing.isFeatured))) === "true",
-      isActive: get("isActive", String(Boolean(existing.isActive))) === "true",
-      bodyCopy: json("bodyCopy"), timeline: json("timeline"), objectives: json("objectives"),
-      outcomes: json("outcomes"), media: json("media"), impactMetrics: json("impactMetrics"),
-      reports: json("reports"), partners: json("partners"),
-    };
-  }
-
-  async function saveProjectInSupabase(record, payload) {
-    await window.WII_SUPABASE_READY;
-    const dataApi = window.WII_SUPABASE_DATA;
-    if (!dataApi?.createProject || !dataApi?.updateProject || !dataApi?.uploadProjectImage) {
-      return { success: false, message: "Supabase Projects management is unavailable." };
-    }
-    const file = payload.get("heroImageUrl");
-    const values = projectFormValues(payload, record || {});
-    let created = null;
-    if (!record?.id) {
-      values.isActive = false;
-      const result = await dataApi.createProject(values);
-      if (result.error) return { success: false, message: result.error.message || "Failed to create project." };
-      created = result.data;
-    }
-    const projectId = record?.id || created?.id;
-    if (file instanceof File && file.size > 0) {
-      const upload = await dataApi.uploadProjectImage(projectId, file, "hero");
-      if (upload.error) {
-        if (created?.id) await dataApi.updateProject(created.id, { ...values, isActive: false });
-        return { success: false, message: upload.error.message || "Project image upload failed." };
-      }
-      values.heroImageUrl = upload.data.publicUrl;
-    } else {
-      values.heroImageUrl = record?.heroImageUrl || "";
-    }
-    const result = await dataApi.updateProject(projectId, values);
-    if (result.error) return { success: false, message: result.error.message || "Failed to save project." };
-    return { success: true, data: result.data };
-  }
-
   function reportFormValues(payload, existing = {}) {
     const get = (name, fallback = "") => {
       const value = payload.get(name);
@@ -1232,35 +1163,6 @@
     `;
 
     grid.innerHTML = cards + supportCard;
-    grid
-      .querySelectorAll("[data-animate]")
-      .forEach((el) => el.classList.add("visible"));
-  }
-
-  function renderProjectCards(projects) {
-    const grid = document.querySelector("[data-project-grid]");
-    if (!grid) return;
-    if (!projects.length) {
-      grid.innerHTML = '<p class="content-loading-state">No projects are currently available.</p>';
-      return;
-    }
-
-    const cards = projects
-      .map(
-        (project) => `
-          <a class="solution-hub-card" href="${escapeHtml(project.pageUrl || `project.html?slug=${encodeURIComponent(project.slug)}`)}" data-animate>
-            <div class="solution-hub-icon">${escapeHtml(project.cardIcon || "●")}</div>
-            <div>
-              <h3>${escapeHtml(project.title)}</h3>
-              <p>${escapeHtml(project.cardSummary || project.summary)}</p>
-              <span class="program-link">${escapeHtml(project.location || project.programTitle || "View project")} →</span>
-            </div>
-          </a>
-        `,
-      )
-      .join("");
-
-    grid.innerHTML = cards;
     grid
       .querySelectorAll("[data-animate]")
       .forEach((el) => el.classList.add("visible"));
@@ -2281,39 +2183,6 @@
     }
   }
 
-  async function loadProjectsContent() {
-    const page = document.body.dataset.page;
-    if (page !== "projects" && page !== "project") return;
-
-    try {
-      if (page === "projects") {
-        const result = await loadProjectsFromSupabase(false);
-        if (result.success && Array.isArray(result.data)) {
-          renderProjectCards(result.data);
-        } else {
-          renderProjectCards([]);
-        }
-        return;
-      }
-
-      const params = new URLSearchParams(window.location.search);
-      const slug = params.get("slug");
-      const result = await loadProjectsFromSupabase(false, slug || "");
-
-      if (result.success && result.data) {
-        if (Array.isArray(result.data)) {
-          applyProjectData(result.data[0]);
-        } else {
-          applyProjectData(result.data);
-        }
-      } else if (Array.isArray(result.data) && result.data.length) {
-        applyProjectData(result.data[0]);
-      }
-    } catch {
-      // Static fallback remains visible.
-    }
-  }
-
   async function loadNewsContent() {
     const page = document.body.dataset.page;
     if (page !== "news" && page !== "news-article") return;
@@ -2629,11 +2498,6 @@
         href: "solutions.html",
       },
       {
-        label: "Projects",
-        value: summary.projects,
-        href: "projects.html",
-      },
-      {
         label: "Impact metrics",
         value: summary.impact?.summary?.totalMetrics || summary.impact?.metrics,
         href: "index.html#impact",
@@ -2759,7 +2623,6 @@
 
       const [
         programsRes,
-        projectsRes,
         impactRes,
         newsRes,
         reportsRes,
@@ -2771,7 +2634,6 @@
         analyticsRes,
       ] = await Promise.allSettled([
         loadProgramsFromSupabase(true),
-        loadProjectsFromSupabase(true),
         loadImpactFromSupabase(true),
         loadNewsFromSupabase(true),
         loadReportsFromSupabase(true),
@@ -2786,7 +2648,6 @@
       const settledData = (result) =>
         result.status === "fulfilled" ? result.value : null;
       const programsData = settledData(programsRes);
-      const projectsData = settledData(projectsRes);
       const impactData = settledData(impactRes);
       const newsData = settledData(newsRes);
       const reportsData = settledData(reportsRes);
@@ -2800,9 +2661,6 @@
       renderAdminSummaryCards({
         programs: Array.isArray(programsData?.data)
           ? programsData.data.length
-          : 0,
-        projects: Array.isArray(projectsData?.data)
-          ? projectsData.data.length
           : 0,
         impact: impactData?.data || null,
         news: Array.isArray(newsData?.data) ? newsData.data.length : 0,
@@ -2972,7 +2830,7 @@
         label: "Initiatives",
         singular: "initiative",
         title: "Initiatives",
-        description: "Manage programs and projects together from one content workspace.",
+        description: "Manage program records from one content workspace.",
         load: async () => {
           await window.WII_SUPABASE_READY;
           const result = await window.WII_SUPABASE_DATA?.getAdminInitiatives?.();
@@ -2999,17 +2857,14 @@
             : { success: true, data: result.data };
         },
         itemLabel: (record) => record.title || record.slug || "Untitled initiative",
-        itemMeta: (record) => `${record.entityType === "project" ? "Project" : "Program"} | ${record.statusLabel || record.status || "Active"}`,
+        itemMeta: (record) => `Program | ${record.statusLabel || record.status || "Active"}`,
         emptyLabel: "No initiatives loaded yet.",
         defaultRecord: { entityType: "program", status: "Draft", displayOrder: 0, isFeatured: false, isActive: true, bodyCopy: [] },
         fields: [
-          { name: "entityType", label: "Type", type: "select", options: ["program", "project"], readOnlyOnUpdate: true },
           { name: "slug", label: "Slug", type: "text", required: true },
           { name: "title", label: "Title", type: "text", required: true },
           { name: "summary", label: "Summary", type: "textarea", rows: 3, required: true },
           { name: "description", label: "Description", type: "textarea", rows: 4, required: true },
-          { name: "programSlug", label: "Parent program slug", type: "text" },
-          { name: "location", label: "Location", type: "text" },
           { name: "heroImageUrl", label: "Upload hero image", type: "image", accept: "image/*" },
           { name: "heroImageAlt", label: "Hero image alt text", type: "text" },
           { name: "cardIcon", label: "Card icon", type: "text" },
@@ -3158,112 +3013,6 @@
           { name: "locations", label: "Locations", type: "json", rows: 5 },
           { name: "timeline", label: "Timeline", type: "json", rows: 5 },
           { name: "gallery", label: "Gallery", type: "json", rows: 5 },
-          {
-            name: "impactMetrics",
-            label: "Impact metrics",
-            type: "json",
-            rows: 5,
-          },
-          { name: "reports", label: "Reports", type: "json", rows: 5 },
-          { name: "partners", label: "Partners", type: "json", rows: 5 },
-        ],
-      },
-      projects: {
-        label: "Projects",
-        singular: "project",
-        title: "Projects",
-        description:
-          "Edit project records, linked program slugs, outcome blocks, and media assets.",
-        load: () => loadProjectsFromSupabase(true),
-        save: (record, payload) => saveProjectInSupabase(record, payload),
-        archive: async (record) => {
-          await window.WII_SUPABASE_READY;
-          const updateProject = window.WII_SUPABASE_DATA?.updateProject;
-          if (!updateProject) return { success: false, message: "Supabase Projects update is unavailable." };
-          const { data, error } = await updateProject(record.id, { ...record, isActive: false, status: "Paused" });
-          return error
-            ? { success: false, message: error.message || "Project could not be archived." }
-            : { success: true, data };
-        },
-        itemLabel: (record) =>
-          record.title || record.slug || "Untitled project",
-        itemMeta: (record) => record.statusLabel || record.status || "Active",
-        emptyLabel: "No projects loaded yet.",
-        defaultRecord: {
-          status: "Draft",
-          displayOrder: 0,
-          isFeatured: false,
-          isActive: true,
-          bodyCopy: [],
-          timeline: [],
-          objectives: [],
-          outcomes: [],
-          media: [],
-          impactMetrics: [],
-          reports: [],
-          partners: [],
-        },
-        fields: [
-          { name: "slug", label: "Slug", type: "text", required: true },
-          { name: "title", label: "Title", type: "text", required: true },
-          {
-            name: "summary",
-            label: "Summary",
-            type: "textarea",
-            rows: 3,
-            required: true,
-          },
-          {
-            name: "description",
-            label: "Description",
-            type: "textarea",
-            rows: 4,
-            required: true,
-          },
-          { name: "programSlug", label: "Program slug", type: "text" },
-          { name: "location", label: "Location", type: "text" },
-          { name: "cardIcon", label: "Card icon", type: "text" },
-          {
-            name: "cardSummary",
-            label: "Card summary",
-            type: "textarea",
-            rows: 3,
-          },
-          { name: "heroImageUrl", label: "Upload hero image", type: "image", accept: "image/*" },
-          { name: "heroImageAlt", label: "Hero image alt text", type: "text" },
-          {
-            name: "status",
-            label: "Status",
-            type: "select",
-            options: ["Active", "Draft", "Paused"],
-          },
-          { name: "statusLabel", label: "Status label", type: "text" },
-          {
-            name: "statusDetail",
-            label: "Status detail",
-            type: "textarea",
-            rows: 3,
-          },
-          { name: "seoTitle", label: "SEO title", type: "text" },
-          {
-            name: "seoDescription",
-            label: "SEO description",
-            type: "textarea",
-            rows: 3,
-          },
-          { name: "displayOrder", label: "Display order", type: "number" },
-          { name: "isFeatured", label: "Featured", type: "checkbox" },
-          { name: "isActive", label: "Active", type: "checkbox" },
-          { name: "bodyCopy", label: "Body copy", type: "json", rows: 5 },
-          { name: "timeline", label: "Timeline", type: "json", rows: 5 },
-          {
-            name: "objectives",
-            label: "Objectives",
-            type: "json",
-            rows: 5,
-          },
-          { name: "outcomes", label: "Outcomes", type: "json", rows: 5 },
-          { name: "media", label: "Media", type: "json", rows: 5 },
           {
             name: "impactMetrics",
             label: "Impact metrics",
@@ -4749,7 +4498,7 @@
             current?.pageKey || key,
           );
           const hasFileField = config.fields.some(
-            (field) => field.type === "file" || ((["programs", "projects", "news"].includes(key) || isCmsKey) && field.type === "image"),
+            (field) => field.type === "file" || ((["programs", "news"].includes(key) || isCmsKey) && field.type === "image"),
           );
           const fileFields = config.fields.filter(
             (field) => field.type === "file",
@@ -4899,12 +4648,10 @@
               ? await saveReportInSupabase(current, payload)
               : key === "programs"
                 ? await saveProgramInSupabase(current, payload)
-                : key === "projects"
-                  ? await saveProjectInSupabase(current, payload)
-                  : key === "news"
-                    ? await saveNewsInSupabase(current, payload)
-                    : isCmsKey
-                      ? await saveCmsInSupabase(current, payload)
+                : key === "news"
+                  ? await saveNewsInSupabase(current, payload)
+                  : isCmsKey
+                    ? await saveCmsInSupabase(current, payload)
               : await config.save(current, payload);
             if (!result.success) {
               throw new Error(result.message || "Save failed.");
@@ -5560,7 +5307,6 @@
     loadImpactData();
     loadCmsContent();
     loadProgramsContent();
-    loadProjectsContent();
     loadNewsContent();
     loadReportsContent();
     hydrateStaticReportLinks();

@@ -20,8 +20,6 @@
 
   const workPages = new Set([
     "solutions",
-    "projects",
-    "project",
     "edu4all",
     "blood-donation",
     "creative-lab",
@@ -164,7 +162,6 @@
                     </div>
                 </div>
                 <a class="nav-link${activePage("solutions")}" href="solutions.html">Programmes</a>
-                <a class="nav-link${activePage("projects")}" href="projects.html">Projects</a>
                 <a class="nav-link${activePage("news")}" href="news.html">Insights</a>
                 <div class="nav-dropdown" data-dropdown>
                     <button class="nav-link nav-btn${activeGroup(involvementPages)}" type="button" data-dropdown-trigger aria-expanded="false">
@@ -191,7 +188,6 @@
                     <p class="mobile-nav-label">Main</p>
                     <a class="mobile-link${activePage("home")}" href="index.html">Home</a>
                     <a class="mobile-link${activePage("solutions")}" href="solutions.html">Programmes</a>
-                    <a class="mobile-link${activePage("projects")}" href="projects.html">Projects</a>
                     <a class="mobile-link mobile-link-sm" href="news.html">Insights</a>
                     <a class="mobile-link mobile-link-sm" href="index.html#contact">Contact</a>
                 </div>
@@ -235,7 +231,6 @@
                     <a href="index.html">Home</a>
                     <a href="our-story.html">About Us</a>
                     <a href="solutions.html">Our Work</a>
-                    <a href="projects.html">Projects</a>
                     <a href="news.html">Insights</a>
                     <a href="work-with-us.html">Get Involved</a>
                     <a href="donate.html">Donate</a>
@@ -243,7 +238,6 @@
                 <div class="footer-col">
                   <p class="footer-title">Our Work</p>
                   <a href="solutions.html">Programmes</a>
-                  <a href="projects.html">Projects</a>
                   <a href="work-with-us.html">Get Involved</a>
                   <a href="donate.html">Donate</a>
                 </div>
