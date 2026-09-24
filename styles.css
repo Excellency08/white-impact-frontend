@@ -7630,6 +7630,40 @@ body:not(.admin-app-page):not(.admin-login-page) .challenge-card:hover {
   min-height: 2.7rem;
 }
 
+/* Public partner marquee: give each uploaded logo a clear vertical identity. */
+.partners .marquee-track .partner-logo {
+  flex-direction: column;
+  justify-content: center;
+  min-width: 10rem;
+  min-height: 8rem;
+  gap: 0.7rem;
+  text-align: center;
+  white-space: normal;
+  line-height: 1.25;
+}
+
+.partners .marquee-track .partner-logo img {
+  width: 5.5rem;
+  height: 5.5rem;
+  padding: 0.45rem;
+  border-radius: 0.75rem;
+  background: #ffffff;
+  box-shadow: 0 4px 14px rgba(0, 26, 77, 0.12);
+}
+
+@media (max-width: 680px) {
+  .partners .marquee-track .partner-logo {
+    min-width: 8.5rem;
+    min-height: 7rem;
+    font-size: 0.95rem;
+  }
+
+  .partners .marquee-track .partner-logo img {
+    width: 4.5rem;
+    height: 4.5rem;
+  }
+}
+
 @media (max-width: 980px) {
   .admin-app-page .content-admin-list-panel {
     position: static;
