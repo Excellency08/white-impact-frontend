@@ -488,7 +488,7 @@ function exposeAuthHelpers(client) {
       if (!/^\d+$/.test(String(cmsId))) return { data: null, error: new Error("A valid CMS page ID is required.") };
       if (!file || !allowedTypes[file.type]) return { data: null, error: new Error("Only JPG, PNG, WEBP, and GIF images are allowed.") };
       if (file.size <= 0 || file.size > 10 * 1024 * 1024) return { data: null, error: new Error("CMS images must be smaller than 10 MB.") };
-      const folder = variant === "media" ? "media" : "hero";
+      const folder = variant === "media" ? "media" : variant === "partner" ? "partners" : "hero";
       const nonce = globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
       const path = `cms/${cmsId}/${folder}/cms-${nonce}.${allowedTypes[file.type]}`;
       const upload = await client.storage.from("content-images").upload(path, file, {

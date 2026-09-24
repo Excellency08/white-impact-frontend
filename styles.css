@@ -30,10 +30,10 @@
   --font-display: "Playfair Display", Georgia, serif;
   --font-body: "DM Sans", system-ui, sans-serif;
 
-  --shadow-sm: 0 1px 3px rgba(12, 31, 46, 0.08);
-  --shadow-md: 0 4px 20px rgba(12, 31, 46, 0.1);
-  --shadow-lg: 0 12px 40px rgba(12, 31, 46, 0.14);
-  --shadow-xl: 0 24px 60px rgba(12, 31, 46, 0.18);
+  --shadow-sm: 0 1px 2px rgba(12, 31, 46, 0.05);
+  --shadow-md: 0 3px 12px rgba(12, 31, 46, 0.07);
+  --shadow-lg: 0 8px 24px rgba(12, 31, 46, 0.09);
+  --shadow-xl: 0 14px 36px rgba(12, 31, 46, 0.11);
 
   --radius-sm: 8px;
   --radius-md: 12px;
@@ -1088,12 +1088,20 @@ ul {
 .partner-logo {
   display: inline-flex;
   align-items: center;
+  gap: 0.65rem;
   font-size: 1.125rem;
   font-weight: 700;
   color: var(--color-gray-200);
   white-space: nowrap;
   letter-spacing: 0.02em;
   text-decoration: none;
+}
+
+.partner-logo img {
+  width: 2rem;
+  height: 2rem;
+  object-fit: contain;
+  border-radius: 0.35rem;
 }
 
 .partner-logo:hover {
@@ -6826,6 +6834,45 @@ body[data-page="our-story"] .mission-vision-card .btn {
 
 body[data-page="our-story"] .values-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+/* Keep public cards on the system background with a quieter elevation. */
+body:not(.admin-app-page):not(.admin-login-page) {
+  --public-card-bg: var(--color-page-bg);
+}
+
+body:not(.admin-app-page):not(.admin-login-page) .value-card,
+body:not(.admin-app-page):not(.admin-login-page) .program-card,
+body:not(.admin-app-page):not(.admin-login-page) .solution-hub-card,
+body:not(.admin-app-page):not(.admin-login-page) .blog-card,
+body:not(.admin-app-page):not(.admin-login-page) .info-card,
+body:not(.admin-app-page):not(.admin-login-page) .team-card,
+body:not(.admin-app-page):not(.admin-login-page) .report-item,
+body:not(.admin-app-page):not(.admin-login-page) .newsletter-card,
+body:not(.admin-app-page):not(.admin-login-page) .donate-card,
+body:not(.admin-app-page):not(.admin-login-page) .donation-card,
+body:not(.admin-app-page):not(.admin-login-page) .contact-form,
+body:not(.admin-app-page):not(.admin-login-page) .challenge-card,
+body:not(.admin-app-page):not(.admin-login-page) .impact-chart-card,
+body:not(.admin-app-page):not(.admin-login-page) .impact-narrative,
+body:not(.admin-app-page):not(.admin-login-page) .mission-vision-card,
+body:not(.admin-app-page):not(.admin-login-page) .report-card,
+body:not(.admin-app-page):not(.admin-login-page) .hero-card-main {
+  background: var(--public-card-bg);
+  box-shadow: var(--shadow-sm);
+}
+
+body:not(.admin-app-page):not(.admin-login-page) .value-card:hover,
+body:not(.admin-app-page):not(.admin-login-page) .program-card:hover,
+body:not(.admin-app-page):not(.admin-login-page) .solution-hub-card:hover,
+body:not(.admin-app-page):not(.admin-login-page) .blog-card:hover,
+body:not(.admin-app-page):not(.admin-login-page) .info-card:hover,
+body:not(.admin-app-page):not(.admin-login-page) .team-card:hover,
+body:not(.admin-app-page):not(.admin-login-page) .report-item:hover,
+body:not(.admin-app-page):not(.admin-login-page) .newsletter-card:hover,
+body:not(.admin-app-page):not(.admin-login-page) .donate-card:hover,
+body:not(.admin-app-page):not(.admin-login-page) .challenge-card:hover {
+  box-shadow: var(--shadow-md);
 }
 
 @media (max-width: 1024px) {

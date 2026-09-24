@@ -508,12 +508,15 @@
         return existing[name] || fallback;
       }
     };
+    const body = json("body");
+    const partnerLogos = json("partnerLogos", null);
+    if (Array.isArray(partnerLogos)) body.logos = partnerLogos;
     return {
       pageKey: get("pageKey", existing.pageKey),
       pageType: get("pageType", existing.pageType || "page"),
       title: get("title", existing.title),
       summary: get("summary", existing.summary),
-      body: json("body"),
+      body,
       settings: json("settings"),
       heroImageUrl: existing.heroImageUrl || "",
       heroImageAlt: get("heroImageAlt", existing.heroImageAlt),
@@ -533,6 +536,9 @@
     }
     const file = typeof payload.get === "function" ? payload.get("heroImageUrl") : null;
     const values = cmsFormValues(payload, record || {});
+    const partnerFiles = typeof payload.entries === "function"
+      ? [...payload.entries()].filter(([name, value]) => name.startsWith("partnerLogoFile_") && value instanceof File && value.size > 0)
+      : [];
     const requestedIsActive = values.isActive;
     let created = null;
     if (!record?.id) {
@@ -542,6 +548,15 @@
       created = result.data;
     }
     const cmsId = record?.id || created?.id;
+    if (Array.isArray(values.body?.logos) && partnerFiles.length) {
+      for (const [name, partnerFile] of partnerFiles) {
+        const index = Number(name.replace("partnerLogoFile_", ""));
+        if (!Number.isInteger(index) || !values.body.logos[index]) continue;
+        const upload = await dataApi.uploadCmsImage(cmsId, partnerFile, "partner");
+        if (upload.error) return { success: false, message: upload.error.message || "Partner logo upload failed." };
+        values.body.logos[index].logoUrl = upload.data.publicUrl;
+      }
+    }
     if (file instanceof File && file.size > 0) {
       const upload = await dataApi.uploadCmsImage(cmsId, file, "hero");
       if (upload.error) {
@@ -759,6 +774,23 @@
     return error
       ? { success: false, message: error.message || "Failed to update record." }
       : { success: true, data: format(data) };
+  }
+
+  async function reviewAdminSubmissionInSupabase(kind, record, message) {
+    const status = kind === "volunteers" ? "approved" : "responded";
+    try {
+      const result = await invokePublicEdgeFunction("submission-review", {
+        kind,
+        id: record.id,
+        status,
+        message,
+      });
+      return result?.success === false
+        ? { success: false, message: result.message || "Submission review failed." }
+        : { success: true, data: result.data, message: result.message };
+    } catch (error) {
+      return { success: false, message: error.message || "Submission review failed." };
+    }
   }
 
   async function loadAnalyticsSummaryFromSupabase(days = 30) {
@@ -2351,7 +2383,7 @@
         );
       }
 
-      if (page === "partner-with-us") {
+      if (page === "home" || page === "partner-with-us") {
         updateElementText(
           document,
           "[data-partner-page-title]",
@@ -2381,9 +2413,12 @@
                   : item?.name || item?.label || "";
               const href = typeof item === "object" ? item?.href || "" : "";
               const content = escapeHtml(label);
+              const logo = typeof item === "object" && item?.logoUrl
+                ? `<img src="${escapeHtml(item.logoUrl)}" alt="" loading="lazy" />`
+                : "";
               return href
-                ? `<a class="partner-logo" href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer">${content}</a>`
-                : `<span class="partner-logo">${content}</span>`;
+                ? `<a class="partner-logo" href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer">${logo}${content}</a>`
+                : `<span class="partner-logo">${logo}${content}</span>`;
             })
             .join("");
         }
@@ -3493,11 +3528,9 @@
           { name: "displayOrder", label: "Display order", type: "number" },
           { name: "isActive", label: "Active", type: "checkbox" },
           {
-            name: "body",
-            label: "Body",
-            type: "json",
-            rows: 10,
-            help: "Array or object describing partner names, logos, and links.",
+            name: "partnerLogos",
+            label: "Partner logos",
+            type: "partner-list",
           },
           {
             name: "settings",
@@ -3790,7 +3823,6 @@
       "site-settings",
       "homepage",
       "footer",
-      "impact",
       "hero",
       "seo",
     ]);
@@ -3944,8 +3976,85 @@
       });
     }
 
+    function partnerLogoItems(value) {
+      return Array.isArray(value) ? value : [];
+    }
+
+    function renderPartnerLogoList(field, value) {
+      const items = partnerLogoItems(value);
+      return `
+        <div class="form-group content-admin-span-full structured-list-field partner-logo-editor" data-partner-logo-list>
+          <div class="structured-list-head">
+            <div>
+              <label>${escapeHtml(field.label)}</label>
+              <p class="field-help">Add a partner name and choose its logo from your computer. Saved entries appear in the homepage marquee.</p>
+            </div>
+            <button class="btn btn-ghost" type="button" data-partner-logo-add>Add partner</button>
+          </div>
+          <div data-partner-logo-items>
+            ${items.map((item, index) => `
+              <div class="structured-list-item partner-logo-editor-item" data-partner-logo-item>
+                <div class="structured-list-fields">
+                  <label>
+                    <span>Partner name</span>
+                    <input type="text" data-partner-logo-name value="${escapeHtml(item?.name || item?.label || "")}" required />
+                  </label>
+                  <label>
+                    <span>Logo file</span>
+                    <input type="file" data-partner-logo-file="${index}" accept="image/jpeg,image/png,image/webp,image/gif" />
+                  </label>
+                  ${item?.logoUrl ? `<img class="content-admin-image-preview" src="${escapeHtml(item.logoUrl)}" alt="Current partner logo" loading="lazy" />` : ""}
+                </div>
+                <button class="btn btn-ghost structured-list-remove" type="button" data-partner-logo-remove>Remove</button>
+              </div>
+            `).join("") || `<p class="content-admin-empty" data-partner-logo-empty>No partners added yet.</p>`}
+          </div>
+          <input type="hidden" name="partnerLogos" value="" />
+        </div>
+      `;
+    }
+
+    function readPartnerLogoList(container) {
+      return [...container.querySelectorAll("[data-partner-logo-item]")]
+        .map((item) => ({
+          name: item.querySelector("[data-partner-logo-name]")?.value.trim() || "",
+          logoUrl: item.dataset.logoUrl || item.querySelector("img")?.getAttribute("src") || "",
+          file: item.querySelector("[data-partner-logo-file]")?.files?.[0] || null,
+        }))
+        .filter((item) => item.name);
+    }
+
+    function bindPartnerLogoEditors(form) {
+      form.querySelectorAll("[data-partner-logo-list]").forEach((container) => {
+        const itemsEl = container.querySelector("[data-partner-logo-items]");
+        container.addEventListener("click", (event) => {
+          if (event.target.closest("[data-partner-logo-add]")) {
+            container.querySelector("[data-partner-logo-empty]")?.remove();
+            const index = itemsEl.querySelectorAll("[data-partner-logo-item]").length;
+            itemsEl.insertAdjacentHTML("beforeend", `
+              <div class="structured-list-item partner-logo-editor-item" data-partner-logo-item>
+                <div class="structured-list-fields">
+                  <label><span>Partner name</span><input type="text" data-partner-logo-name required /></label>
+                  <label><span>Logo file</span><input type="file" data-partner-logo-file="${index}" accept="image/jpeg,image/png,image/webp,image/gif" required /></label>
+                </div>
+                <button class="btn btn-ghost structured-list-remove" type="button" data-partner-logo-remove>Remove</button>
+              </div>
+            `);
+          }
+          if (event.target.closest("[data-partner-logo-remove]")) {
+            event.target.closest("[data-partner-logo-item]")?.remove();
+            if (!itemsEl.querySelector("[data-partner-logo-item]")) {
+              itemsEl.innerHTML = `<p class="content-admin-empty" data-partner-logo-empty>No partners added yet.</p>`;
+            }
+          }
+        });
+      });
+    }
+
     function renderField(config, field, record) {
-      const value = record?.[field.name];
+      const value = field.type === "partner-list"
+        ? record?.body?.logos || []
+        : record?.[field.name];
       const id = `${config.label}-${field.name}`
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, "-");
@@ -3953,6 +4062,10 @@
       const help = field.help
         ? `<p class="field-help">${escapeHtml(field.help)}</p>`
         : "";
+
+      if (field.type === "partner-list") {
+        return renderPartnerLogoList(field, value);
+      }
 
       if (field.type === "checkbox") {
         return `
@@ -4131,6 +4244,12 @@
 
     function renderReadOnlyRecord(config, record) {
       if (!record) return `<p class="content-admin-empty">Select a record to view its details.</p>`;
+      const submissionKind = config.label === "Volunteer applications"
+        ? "volunteers"
+        : config.label === "Contact submissions"
+          ? "contacts"
+          : "";
+      const canNotifySubmission = Boolean(submissionKind && record.status !== "approved" && record.status !== "responded");
       return `
         <div class="content-admin-readonly">
           <div class="content-admin-form-head">
@@ -4141,6 +4260,28 @@
             </div>
             <span class="content-admin-record-badge">${escapeHtml(config.itemMeta(record))}</span>
           </div>
+          ${canNotifySubmission
+            ? `<div class="content-admin-record-actions">
+                <button class="btn btn-primary" type="button" data-content-admin-open-submission-review data-review-kind="${submissionKind}" data-record-id="${escapeHtml(record.id)}">Approve and notify ${submissionKind === "volunteers" ? "volunteer" : "sender"}</button>
+                <div class="donation-approval-card" data-submission-review-card hidden>
+                  <div>
+                    <p class="section-kicker">Email notification</p>
+                    <h4>Confirm submission response</h4>
+                    <p class="section-desc">The message will be sent to the email address submitted with this record.</p>
+                  </div>
+                  <dl class="donation-approval-summary">
+                    <div><dt>Recipient</dt><dd>${escapeHtml(record.fullName || "Not provided")}</dd></div>
+                    <div><dt>Email</dt><dd>${escapeHtml(record.email || "Not provided")}</dd></div>
+                  </dl>
+                  <label class="donation-approval-message-label" for="submission-review-message-${escapeHtml(record.id)}">Message</label>
+                  <textarea id="submission-review-message-${escapeHtml(record.id)}" data-submission-review-message rows="5">Thank you for contacting White Impact Development Initiative. We have reviewed your submission and appreciate your interest in our work.</textarea>
+                  <div class="donation-approval-actions">
+                    <button class="btn btn-ghost" type="button" data-content-admin-cancel-submission-review>Cancel</button>
+                    <button class="btn btn-primary" type="button" data-content-admin-send-submission-review data-review-kind="${submissionKind}" data-record-id="${escapeHtml(record.id)}">Send email</button>
+                  </div>
+                </div>
+              </div>`
+            : ""}
           ${config.label === "Donations" && record.status !== "verified" && record.paymentStatus !== "succeeded"
             ? `<div class="content-admin-record-actions">
                 <button class="btn btn-primary" type="button" data-content-admin-open-approval data-record-id="${escapeHtml(record.id)}">Approve payment and notify donor</button>
@@ -4309,6 +4450,51 @@
         });
       });
 
+      panelsEl.querySelectorAll("[data-content-admin-open-submission-review]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const card = button.parentElement?.querySelector("[data-submission-review-card]");
+          if (!card) return;
+          card.hidden = false;
+          button.hidden = true;
+          card.querySelector("[data-submission-review-message]")?.focus();
+        });
+      });
+
+      panelsEl.querySelectorAll("[data-content-admin-cancel-submission-review]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const card = button.closest("[data-submission-review-card]");
+          const openButton = card?.parentElement?.querySelector("[data-content-admin-open-submission-review]");
+          if (card) card.hidden = true;
+          if (openButton) openButton.hidden = false;
+        });
+      });
+
+      panelsEl.querySelectorAll("[data-content-admin-send-submission-review]").forEach((button) => {
+        button.addEventListener("click", async () => {
+          const kind = button.dataset.reviewKind;
+          const record = getRecords(kind).find((item) => String(item.id) === String(button.dataset.recordId));
+          const card = button.closest("[data-submission-review-card]");
+          const message = card?.querySelector("[data-submission-review-message]")?.value.trim() || "";
+          if (!record || !message) {
+            showToast("Please add a message before sending.", "error");
+            return;
+          }
+          button.disabled = true;
+          syncPanelState(kind, "Updating submission and sending email…");
+          try {
+            const result = await reviewAdminSubmissionInSupabase(kind, record, message);
+            if (!result.success) throw new Error(result.message);
+            await loadSection(kind, record.id);
+            showToast(result.message || "Submission updated and email sent.");
+          } catch (error) {
+            syncPanelState(kind, error.message || "Submission review failed.", "error");
+            showToast(error.message || "Submission review failed.", "error");
+          } finally {
+            button.disabled = false;
+          }
+        });
+      });
+
       panelsEl.querySelectorAll("[data-content-admin-cancel-approval]").forEach((button) => {
         button.addEventListener("click", () => {
           const card = button.closest("[data-donation-approval-card]");
@@ -4399,7 +4585,10 @@
         });
       });
 
-      panelsEl.querySelectorAll("[data-content-admin-form]").forEach(bindStructuredEditors);
+      panelsEl.querySelectorAll("[data-content-admin-form]").forEach((form) => {
+        bindStructuredEditors(form);
+        bindPartnerLogoEditors(form);
+      });
 
       panelsEl.querySelectorAll("[data-content-admin-form]").forEach((form) => {
         const key = form.dataset.contentAdminForm;
@@ -4413,7 +4602,7 @@
             current?.pageKey || key,
           );
           const hasFileField = config.fields.some(
-            (field) => field.type === "file" || ((["programs", "news"].includes(key) || isCmsKey) && field.type === "image"),
+            (field) => field.type === "file" || field.type === "partner-list" || ((["programs", "news"].includes(key) || isCmsKey) && field.type === "image"),
           );
           const fileFields = config.fields.filter(
             (field) => field.type === "file",
@@ -4480,6 +4669,21 @@
           for (const field of config.fields) {
             const input = form.elements.namedItem(field.name);
             if (!input) continue;
+
+            if (field.type === "partner-list") {
+              const container = input.closest("[data-partner-logo-list]");
+              const items = container ? readPartnerLogoList(container) : [];
+              const partnerValues = items.map(({ name, logoUrl }) => ({ name, logoUrl }));
+              if (hasFileField) {
+                payload.append("partnerLogos", JSON.stringify(partnerValues));
+                items.forEach((item, index) => {
+                  if (item.file) payload.append(`partnerLogoFile_${index}`, item.file);
+                });
+              } else {
+                payload[field.name] = partnerValues;
+              }
+              continue;
+            }
 
             if (field.type === "image" || field.type === "asset") {
               const file = input.files?.[0];
