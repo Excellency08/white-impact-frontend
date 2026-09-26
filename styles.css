@@ -7692,3 +7692,66 @@ body:not(.admin-app-page):not(.admin-login-page) .challenge-card:hover {
     grid-column: 2 / -1;
   }
 }
+
+/* Responsive clarity: keep the shared layout readable at every viewport size. */
+@media (min-width: 1200px) {
+  .container.header-inner {
+    padding-inline: clamp(1.5rem, 3vw, 3.5rem);
+  }
+
+  .container.header-inner .nav {
+    gap: 0.45rem;
+  }
+}
+
+@media (max-width: 680px) {
+  .container {
+    width: min(100% - 1.5rem, 1200px);
+  }
+
+  .container.header-inner {
+    height: 4.25rem;
+    padding-inline: 0.75rem;
+    gap: 0.5rem;
+  }
+
+  .brand-logo {
+    width: 52px;
+    height: 52px;
+    padding: 7px;
+  }
+
+  .brand-name {
+    font-size: clamp(0.78rem, 3.4vw, 0.92rem);
+  }
+
+  .brand-tagline {
+    font-size: 0.52rem;
+  }
+
+  .mobile-nav-inner {
+    width: min(100% - 1.5rem, 34rem);
+    gap: 1rem;
+    padding-block: 1rem 1.25rem;
+  }
+
+  .mobile-link {
+    min-height: 3rem;
+    padding: 0.8rem 0.9rem;
+  }
+
+  .site-footer .footer-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1.75rem !important;
+  }
+
+  .site-footer .footer-brand,
+  .site-footer .footer-links {
+    grid-column: auto !important;
+    grid-row: auto !important;
+  }
+
+  .site-footer .footer-links {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
