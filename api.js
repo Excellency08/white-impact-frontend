@@ -4493,11 +4493,12 @@
 
       panelsEl.querySelectorAll("[data-content-admin-open-submission-review]").forEach((button) => {
         button.addEventListener("click", () => {
-          const card = button.parentElement?.querySelector("[data-submission-review-card]");
+          const actionGroup = button.closest("[data-content-admin-record-actions]");
+          const card = actionGroup?.querySelector("[data-submission-review-card]");
           if (!card) return;
           card.dataset.reviewStatus = button.dataset.reviewStatus || "";
           card.hidden = false;
-          button.parentElement?.querySelectorAll("[data-content-admin-open-submission-review]").forEach((action) => {
+          actionGroup.querySelectorAll("[data-content-admin-open-submission-review]").forEach((action) => {
             action.hidden = true;
           });
           card.querySelector("[data-submission-review-message]")?.focus();
