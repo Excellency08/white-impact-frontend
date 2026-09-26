@@ -4353,7 +4353,7 @@
               </div>`
             : ""}
           <dl class="content-admin-record-details">
-            ${config.fields.map((field) => `
+            ${(config.fields || []).map((field) => `
               <div>
                 <dt>${escapeHtml(field.label)}</dt>
                 <dd>${escapeHtml(displayReadOnlyValue(record[field.name]))}</dd>
