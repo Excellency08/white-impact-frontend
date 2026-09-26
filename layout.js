@@ -27,7 +27,6 @@
     "nextgen-civic-lab",
   ]);
 
-  const aboutPages = new Set(["our-story", "advisory-board"]);
   const involvementPages = new Set([
     "work-with-us",
     "partner-with-us",
@@ -143,15 +142,7 @@
             </a>
             <nav class="nav" aria-label="Primary navigation" data-nav>
                 <a class="nav-link${activePage("home")}" href="index.html">Home</a>
-                <div class="nav-dropdown" data-dropdown>
-                    <button class="nav-link nav-btn${activeGroup(aboutPages)}" type="button" data-dropdown-trigger aria-expanded="false">
-                        About Us
-                        <svg class="chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
-                    </button>
-                    <div class="dropdown-panel">
-                        ${renderLinks(aboutLinks)}
-                    </div>
-                </div>
+                ${renderLinks(aboutLinks)}
                 <div class="nav-dropdown" data-dropdown>
                     <button class="nav-link nav-btn${activeGroup(workPages)}" type="button" data-dropdown-trigger aria-expanded="false">
                         Our Work
