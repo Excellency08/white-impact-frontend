@@ -4496,7 +4496,9 @@
           const actionGroup = button.closest("[data-content-admin-record-actions]");
           const card = actionGroup?.querySelector("[data-submission-review-card]");
           if (!card) return;
-          card.dataset.reviewStatus = button.dataset.reviewStatus || "";
+          const reviewStatus = button.dataset.reviewStatus || "";
+          card.dataset.reviewStatus = reviewStatus;
+          card.querySelector("[data-content-admin-send-submission-review]")?.setAttribute("data-review-status", reviewStatus);
           card.hidden = false;
           actionGroup.querySelectorAll("[data-content-admin-open-submission-review]").forEach((action) => {
             action.hidden = true;
@@ -4522,7 +4524,7 @@
           const record = getRecords(kind).find((item) => String(item.id) === String(button.dataset.recordId));
           const card = button.closest("[data-submission-review-card]");
           const message = card?.querySelector("[data-submission-review-message]")?.value.trim() || "";
-          const status = card?.dataset.reviewStatus || "";
+          const status = button.dataset.reviewStatus || card?.dataset.reviewStatus || "";
           if (!record || !message) {
             showToast("Please add a message before sending.", "error");
             return;
