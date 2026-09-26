@@ -797,8 +797,14 @@
       : { success: true, data: format(data) };
   }
 
-  async function reviewAdminSubmissionInSupabase(kind, record, message) {
-    const status = kind === "volunteers" ? "approved" : "responded";
+  async function reviewAdminSubmissionInSupabase(kind, record, message, status) {
+    const allowedStatuses = {
+      contacts: new Set(["pending", "responded"]),
+      volunteers: new Set(["pending", "approved", "rejected", "reviewed"]),
+    };
+    if (!allowedStatuses[kind]?.has(status) || status === "pending") {
+      return { success: false, message: "That submission status is not available." };
+    }
     try {
       const result = await invokePublicEdgeFunction("submission-review", {
         kind,
@@ -4249,7 +4255,16 @@
         : config.label === "Contact submissions"
           ? "contacts"
           : "";
-      const canNotifySubmission = Boolean(submissionKind && record.status !== "approved" && record.status !== "responded");
+      const currentStatus = String(record.status || "pending").trim();
+      const submissionReviewActions = submissionKind === "contacts" && currentStatus === "pending"
+        ? [{ status: "responded", label: "Mark Responded" }]
+        : submissionKind === "volunteers" && currentStatus === "pending"
+          ? [
+              { status: "approved", label: "Approve" },
+              { status: "rejected", label: "Reject" },
+              { status: "reviewed", label: "Mark Reviewed" },
+            ]
+          : [];
       return `
         <div class="content-admin-readonly">
           <div class="content-admin-form-head">
@@ -4260,9 +4275,11 @@
             </div>
             <span class="content-admin-record-badge">${escapeHtml(config.itemMeta(record))}</span>
           </div>
-          ${canNotifySubmission
+          ${submissionReviewActions.length
             ? `<div class="content-admin-record-actions">
-                <button class="btn btn-primary" type="button" data-content-admin-open-submission-review data-review-kind="${submissionKind}" data-record-id="${escapeHtml(record.id)}">Approve and notify ${submissionKind === "volunteers" ? "volunteer" : "sender"}</button>
+                <div class="content-admin-action-group" role="group" aria-label="Submission actions">
+                  ${submissionReviewActions.map((action) => `<button class="btn ${action.status === "rejected" ? "btn-ghost" : "btn-primary"}" type="button" data-content-admin-open-submission-review data-review-kind="${submissionKind}" data-review-status="${action.status}" data-record-id="${escapeHtml(record.id)}">${action.label}</button>`).join("")}
+                </div>
                 <div class="donation-approval-card" data-submission-review-card hidden>
                   <div>
                     <p class="section-kicker">Email notification</p>
@@ -4454,8 +4471,11 @@
         button.addEventListener("click", () => {
           const card = button.parentElement?.querySelector("[data-submission-review-card]");
           if (!card) return;
+          card.dataset.reviewStatus = button.dataset.reviewStatus || "";
           card.hidden = false;
-          button.hidden = true;
+          button.parentElement?.querySelectorAll("[data-content-admin-open-submission-review]").forEach((action) => {
+            action.hidden = true;
+          });
           card.querySelector("[data-submission-review-message]")?.focus();
         });
       });
@@ -4463,9 +4483,11 @@
       panelsEl.querySelectorAll("[data-content-admin-cancel-submission-review]").forEach((button) => {
         button.addEventListener("click", () => {
           const card = button.closest("[data-submission-review-card]");
-          const openButton = card?.parentElement?.querySelector("[data-content-admin-open-submission-review]");
+          const openButtons = card?.parentElement?.querySelectorAll("[data-content-admin-open-submission-review]");
           if (card) card.hidden = true;
-          if (openButton) openButton.hidden = false;
+          openButtons?.forEach((openButton) => {
+            openButton.hidden = false;
+          });
         });
       });
 
@@ -4475,6 +4497,7 @@
           const record = getRecords(kind).find((item) => String(item.id) === String(button.dataset.recordId));
           const card = button.closest("[data-submission-review-card]");
           const message = card?.querySelector("[data-submission-review-message]")?.value.trim() || "";
+          const status = card?.dataset.reviewStatus || "";
           if (!record || !message) {
             showToast("Please add a message before sending.", "error");
             return;
@@ -4482,7 +4505,7 @@
           button.disabled = true;
           syncPanelState(kind, "Updating submission and sending email…");
           try {
-            const result = await reviewAdminSubmissionInSupabase(kind, record, message);
+            const result = await reviewAdminSubmissionInSupabase(kind, record, message, status);
             if (!result.success) throw new Error(result.message);
             await loadSection(kind, record.id);
             showToast(result.message || "Submission updated and email sent.");
