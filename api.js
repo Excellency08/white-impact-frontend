@@ -4318,7 +4318,7 @@
                   <textarea id="submission-review-message-${escapeHtml(record.id)}" data-submission-review-message rows="5">Thank you for contacting White Impact Development Initiative. We have reviewed your submission and appreciate your interest in our work.</textarea>
                   <div class="donation-approval-actions">
                     <button class="btn btn-ghost" type="button" data-content-admin-cancel-submission-review>Cancel</button>
-                    <button class="btn btn-primary" type="button" data-content-admin-send-submission-review data-review-kind="${submissionKind}" data-record-id="${escapeHtml(record.id)}">Send email</button>
+                    <button class="btn btn-primary" type="button" data-content-admin-send-submission-review data-review-kind="${submissionKind}" data-review-status="${submissionReviewActions[0]?.status || ""}" data-record-id="${escapeHtml(record.id)}">Send email</button>
                   </div>
                 </div>
               </div>`
