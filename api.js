@@ -770,6 +770,19 @@
       : { success: true, data: (data || []).map(format) };
   }
 
+  async function loadAdminPartnershipRequestsFromSupabase() {
+    const result = await loadAdminSubmissionsFromSupabase("contacts");
+    if (!result.success) return result;
+    return {
+      success: true,
+      data: result.data.filter((record) => {
+        const subject = String(record.subject || "").trim().toLowerCase();
+        const category = String(record.category || "").trim().toLowerCase();
+        return category === "partnership" || subject === "partnership" || subject.includes("partnership");
+      }),
+    };
+  }
+
   async function loadAdminDonationsFromSupabase() {
     await window.WII_SUPABASE_READY;
     const load = window.WII_SUPABASE_DATA?.getAdminDonations;
@@ -3653,6 +3666,7 @@
       },
       volunteers: {
         label: "Volunteers",
+        submissionKind: "volunteers",
         readOnly: true,
         singular: "volunteer application",
         title: "Volunteer applications",
@@ -3701,6 +3715,7 @@
       },
       contacts: {
         label: "Contacts",
+        submissionKind: "contacts",
         readOnly: true,
         singular: "contact submission",
         title: "Contact submissions",
@@ -3737,6 +3752,19 @@
           },
           { name: "notes", label: "Notes", type: "textarea", rows: 3 },
         ],
+      },
+      partnerships: {
+        label: "Partnership requests",
+        submissionKind: "contacts",
+        readOnly: true,
+        singular: "partnership request",
+        title: "Partnership requests",
+        description:
+          "Review organizations that contacted White Impact about partnership opportunities, then add approved partners through the Partners editor.",
+        load: loadAdminPartnershipRequestsFromSupabase,
+        itemLabel: (record) => record.fullName || record.email || "Partnership request",
+        itemMeta: (record) => `${record.status || "pending"} · ${record.subject || "Partnership inquiry"}`,
+        emptyLabel: "No partnership requests loaded yet.",
       },
       newsletter: {
         label: "Newsletter",
@@ -4250,11 +4278,7 @@
 
     function renderReadOnlyRecord(config, record) {
       if (!record) return `<p class="content-admin-empty">Select a record to view its details.</p>`;
-      const submissionKind = config.label === "Volunteer applications"
-        ? "volunteers"
-        : config.label === "Contact submissions"
-          ? "contacts"
-          : "";
+      const submissionKind = config.submissionKind || "";
       const currentStatus = String(record.status || "pending").trim();
       const submissionReviewActions = submissionKind === "contacts" && currentStatus === "pending"
         ? [{ status: "responded", label: "Mark Responded" }]
@@ -5074,6 +5098,7 @@
         email: form.querySelector('[name="email"]')?.value,
         subject: form.querySelector('[name="subject"]')?.value,
         message: form.querySelector('[name="message"]')?.value,
+        category: document.body.dataset.page === "partner-with-us" ? "partnership" : "general",
       };
 
       setFormLoading(form, true);
