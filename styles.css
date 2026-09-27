@@ -279,7 +279,7 @@ ul {
 .top-bar-inner {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: flex-start;
   gap: 1.5rem;
   flex-wrap: wrap;
   row-gap: 0.45rem;
@@ -298,17 +298,31 @@ ul {
 
 .top-social {
   display: flex;
+  align-items: center;
+  flex-wrap: wrap;
   gap: 0.75rem;
-  margin-left: 0.5rem;
+  margin-left: auto;
 }
 
 .top-social a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  color: rgba(255, 255, 255, 0.9);
   opacity: 0.7;
   transition: opacity var(--transition);
 }
 
-.top-social a:hover {
+.top-social a:hover,
+.top-social a:focus-visible {
   opacity: 1;
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.5);
 }
 
 .header-inner {
