@@ -279,16 +279,17 @@ ul {
 .top-bar-inner {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
-  gap: 1.5rem;
-  flex-wrap: wrap;
-  row-gap: 0.45rem;
+  justify-content: flex-end;
+  gap: 1rem;
+  flex-wrap: nowrap;
+  min-height: 2.75rem;
 }
 
 .top-link {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
+  white-space: nowrap;
   transition: color var(--transition);
 }
 
@@ -301,8 +302,10 @@ ul {
   align-items: center;
   flex-wrap: nowrap;
   gap: 0;
-  margin-left: auto;
+  margin-left: 0.25rem;
   margin-right: 0;
+  padding-left: 0.75rem;
+  border-left: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .top-social a {
