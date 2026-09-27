@@ -4276,7 +4276,7 @@
       return String(value);
     }
 
-    function renderReadOnlyRecord(config, record) {
+    function renderReadOnlyRecord(config, record, recordKey = config.submissionKind || "") {
       if (!record) return `<p class="content-admin-empty">Select a record to view its details.</p>`;
       const submissionKind = config.submissionKind || "";
       const currentStatus = String(record.status || "pending").trim();
@@ -4302,7 +4302,7 @@
           ${submissionReviewActions.length
             ? `<div class="content-admin-record-actions">
                 <div class="content-admin-action-group" role="group" aria-label="Submission actions">
-                  ${submissionReviewActions.map((action) => `<button class="btn ${action.status === "rejected" ? "btn-ghost" : "btn-primary"}" type="button" data-content-admin-open-submission-review data-review-kind="${submissionKind}" data-review-status="${action.status}" data-record-id="${escapeHtml(record.id)}">${action.label}</button>`).join("")}
+                  ${submissionReviewActions.map((action) => `<button class="btn ${action.status === "rejected" ? "btn-ghost" : "btn-primary"}" type="button" data-content-admin-open-submission-review data-review-kind="${submissionKind}" data-review-key="${escapeHtml(recordKey)}" data-review-status="${action.status}" data-record-id="${escapeHtml(record.id)}">${action.label}</button>`).join("")}
                 </div>
                 <div class="donation-approval-card" data-submission-review-card hidden>
                   <div>
@@ -4318,7 +4318,7 @@
                   <textarea id="submission-review-message-${escapeHtml(record.id)}" data-submission-review-message rows="5">Thank you for contacting White Impact Development Initiative. We have reviewed your submission and appreciate your interest in our work.</textarea>
                   <div class="donation-approval-actions">
                     <button class="btn btn-ghost" type="button" data-content-admin-cancel-submission-review>Cancel</button>
-                    <button class="btn btn-primary" type="button" data-content-admin-send-submission-review data-review-kind="${submissionKind}" data-review-status="${submissionReviewActions[0]?.status || ""}" data-record-id="${escapeHtml(record.id)}">Send email</button>
+                    <button class="btn btn-primary" type="button" data-content-admin-send-submission-review data-review-kind="${submissionKind}" data-review-key="${escapeHtml(recordKey)}" data-review-status="${submissionReviewActions[0]?.status || ""}" data-record-id="${escapeHtml(record.id)}">Send email</button>
                   </div>
                 </div>
               </div>`
@@ -4445,7 +4445,7 @@
                 </aside>
                 <div class="content-admin-editor-panel">
                   ${config.readOnly
-                    ? renderReadOnlyRecord(config, selected)
+                    ? renderReadOnlyRecord(config, selected, key)
                     : renderForm(key, config, selected || getDefaultRecord(config))}
                 </div>
               </div>
@@ -4521,7 +4521,8 @@
       panelsEl.querySelectorAll("[data-content-admin-send-submission-review]").forEach((button) => {
         button.addEventListener("click", async () => {
           const kind = button.dataset.reviewKind;
-          const record = getRecords(kind).find((item) => String(item.id) === String(button.dataset.recordId));
+          const recordKey = button.dataset.reviewKey || kind;
+          const record = getRecords(recordKey).find((item) => String(item.id) === String(button.dataset.recordId));
           const card = button.closest("[data-submission-review-card]");
           const message = card?.querySelector("[data-submission-review-message]")?.value.trim() || "";
           const status = button.dataset.reviewStatus || card?.dataset.reviewStatus || "";
@@ -4530,14 +4531,14 @@
             return;
           }
           button.disabled = true;
-          syncPanelState(kind, "Updating submission and sending email…");
+          syncPanelState(recordKey, "Updating submission and sending email…");
           try {
             const result = await reviewAdminSubmissionInSupabase(kind, record, message, status);
             if (!result.success) throw new Error(result.message);
-            await loadSection(kind, record.id);
+            await loadSection(recordKey, record.id);
             showToast(result.message || "Submission updated and email sent.");
           } catch (error) {
-            syncPanelState(kind, error.message || "Submission review failed.", "error");
+            syncPanelState(recordKey, error.message || "Submission review failed.", "error");
             showToast(error.message || "Submission review failed.", "error");
           } finally {
             button.disabled = false;
