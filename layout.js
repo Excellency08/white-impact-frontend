@@ -20,11 +20,13 @@
 
   const workPages = new Set([
     "solutions",
-    "edu4all",
-    "blood-donation",
-    "creative-lab",
-    "nextgen-ai",
-    "nextgen-civic-lab",
+    "education-access-opportunity",
+    "ai-technology-next-generation",
+    "career-pathways-future-readiness",
+    "civic-engagement-digital-citizenship",
+    "community-needs-research-action",
+    "health-access-community-well-being",
+    "think-tank-policy-innovation-lab",
   ]);
 
   const involvementPages = new Set([
@@ -38,19 +40,13 @@
   const activeGroup = (group) => activeIf(group.has(page));
 
   const workLinks = [
-    { href: "edu4all.html", label: "Edu4All", id: "edu4all" },
-    {
-      href: "blood-donation.html",
-      label: "Blood Donation",
-      id: "blood-donation",
-    },
-    { href: "creative-lab.html", label: "Creative Lab", id: "creative-lab" },
-    { href: "nextgen-ai.html", label: "NextGen AI", id: "nextgen-ai" },
-    {
-      href: "nextgen-civic-lab.html",
-      label: "NextGen Civic Action Lab",
-      id: "nextgen-civic-lab",
-    },
+    { href: "education-access-opportunity.html", label: "Education Access & Opportunity", id: "education-access-opportunity" },
+    { href: "ai-technology-next-generation.html", label: "AI & Technology for the Next Generation", id: "ai-technology-next-generation" },
+    { href: "career-pathways-future-readiness.html", label: "Career Pathways & Future Readiness", id: "career-pathways-future-readiness" },
+    { href: "civic-engagement-digital-citizenship.html", label: "Civic Engagement & Digital Citizenship", id: "civic-engagement-digital-citizenship" },
+    { href: "community-needs-research-action.html", label: "Community Needs Research & Action", id: "community-needs-research-action" },
+    { href: "health-access-community-well-being.html", label: "Health Access & Community Well-being", id: "health-access-community-well-being" },
+    { href: "think-tank-policy-innovation-lab.html", label: "Think Tank & Policy Innovation Lab", id: "think-tank-policy-innovation-lab" },
   ];
 
   const aboutLinks = [

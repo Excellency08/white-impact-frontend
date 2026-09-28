@@ -2151,11 +2151,13 @@
     }
 
     const programPages = new Set([
-      "edu4all",
-      "blood-donation",
-      "nextgen-civic-lab",
-      "nextgen-ai",
-      "creative-lab",
+      "education-access-opportunity",
+      "ai-technology-next-generation",
+      "career-pathways-future-readiness",
+      "civic-engagement-digital-citizenship",
+      "community-needs-research-action",
+      "health-access-community-well-being",
+      "think-tank-policy-innovation-lab",
     ]);
 
     if (!programPages.has(page)) return;
