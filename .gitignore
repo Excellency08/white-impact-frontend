@@ -1,2 +1,4 @@
 supabase-config.js
 
+.vercel
+.env*
