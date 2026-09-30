@@ -4088,6 +4088,133 @@
       });
     }
 
+    const PROGRAM_LEGACY_IMAGE_AUDIT = {
+      "1|./assets/images/education 1.jpg": {
+        matches: ["programs/1/hero/program-50f523aa75b8f182590204e7fcb1eae96383676bf6ebf20601be5507312ba4d9.jpg"],
+        hero: true,
+      },
+      "1|./assets/images/education  3.jpg": {
+        matches: ["programs/1/gallery/program-06740bf8e13dcd03322c97a08fb8df1bc2854469f0c97c414838b3e2a1350640.jpg"],
+      },
+      "1|./assets/images/WhatsApp Image 2026-06-24 at 12.14.50 PM.jpeg": {
+        matches: [
+          "programs/1/gallery/program-480117260007a979de4fb69a46c03d06559d7c9ce78c9fdbac4e34b2e0b850de.jpeg",
+          "programs/4/gallery/program-480117260007a979de.jpeg",
+          "programs/5/gallery/program-480117260007a979de.jpeg",
+        ],
+      },
+      "2|./assets/images/donation 6.jpg": {
+        matches: ["programs/2/hero/program-ac3fe2fc46608bde299dc3130e03ccd5f196a0d96142254e7d457dbc5bda717b.jpg"],
+        hero: true,
+      },
+      "2|./assets/images/donation 1.jpg": {
+        matches: ["programs/2/gallery/program-5976a3944dfaee386a0788f0db227518ef54cd2b19e393ff7833da7e51dd78de.jpg"],
+      },
+      "2|./assets/images/WhatsApp Image 2026-06-24 at 12.14.51 PM.jpeg": {
+        matches: [
+          "programs/2/gallery/program-2ab074ee50b3a80e764e506b18c4d4e9ec1592a3fee9a23ebb7ae75631df173c.jpeg",
+          "programs/4/gallery/program-2ab074ee50b3a80e764e506b18c4d4e9ec1592a3fee9a23ebb7ae75631df173c.jpeg",
+        ],
+      },
+      "3|./assets/images/nextGen.jpeg": {
+        matches: ["programs/3/hero/program-f5b81efc527b298c126eae924a34cbf9e456a830fbc3a11e777955992a6daeae.jpeg"],
+        hero: true,
+      },
+      "3|./assets/images/WhatsApp Image 2026-06-24 at 12.14.50 PM (1).jpeg": {
+        matches: [
+          "programs/3/gallery/program-0331da4641e83179827a40bbd0b03fc13e50573c429a31cfed9868703bee5510.jpeg",
+          "programs/5/gallery/program-0331da4641e83179827a40bbd0b03fc13e50573c429a31cfed9868703bee5510.jpeg",
+        ],
+      },
+      "3|./assets/images/WhatsApp Image 2026-06-24 at 12.14.50 PM (2).jpeg": {
+        matches: ["programs/3/gallery/program-d2d9fd8173d6bd07c7cbb1844d64d5baa2b585b9b62d2904ee91b76c3104802b.jpeg"],
+      },
+      "4|./assets/images/ai gen.jpeg": {
+        matches: ["programs/4/hero/program-a5d8d01ffbe6afe215d52b2349357f369284a0151406a370a438820b3fe66c59.jpeg"],
+        hero: true,
+      },
+      "4|./assets/images/WhatsApp Image 2026-06-24 at 12.14.50 PM.jpeg": {
+        matches: [
+          "programs/1/gallery/program-480117260007a979de4fb69a46c03d06559d7c9ce78c9fdbac4e34b2e0b850de.jpeg",
+          "programs/4/gallery/program-480117260007a979de.jpeg",
+          "programs/5/gallery/program-480117260007a979de.jpeg",
+        ],
+      },
+      "4|./assets/images/WhatsApp Image 2026-06-24 at 12.14.51 PM.jpeg": {
+        matches: [
+          "programs/2/gallery/program-2ab074ee50b3a80e764e506b18c4d4e9ec1592a3fee9a23ebb7ae75631df173c.jpeg",
+          "programs/4/gallery/program-2ab074ee50b3a80e764e506b18c4d4e9ec1592a3fee9a23ebb7ae75631df173c.jpeg",
+        ],
+      },
+      "6|./assets/images/creative-lab.jpeg": {
+        matches: ["programs/5/hero/program-d793e382c0fc0b734c6bad6b96ade52a0a489c8f1a4611cc7f6b56a6d95e31a2.jpeg"],
+      },
+      "6|./assets/images/WhatsApp Image 2026-06-24 at 12.14.50 PM.jpeg": {
+        matches: [
+          "programs/1/gallery/program-480117260007a979de4fb69a46c03d06559d7c9ce78c9fdbac4e34b2e0b850de.jpeg",
+          "programs/4/gallery/program-480117260007a979de.jpeg",
+          "programs/5/gallery/program-480117260007a979de.jpeg",
+        ],
+      },
+      "6|./assets/images/WhatsApp Image 2026-06-24 at 12.14.50 PM (1).jpeg": {
+        matches: [
+          "programs/3/gallery/program-0331da4641e83179827a40bbd0b03fc13e50573c429a31cfed9868703bee5510.jpeg",
+          "programs/5/gallery/program-0331da4641e83179827a40bbd0b03fc13e50573c429a31cfed9868703bee5510.jpeg",
+        ],
+      },
+    };
+
+    function legacyImageAudit(programId, url) {
+      return PROGRAM_LEGACY_IMAGE_AUDIT[`${programId}|${url}`] || { matches: [] };
+    }
+
+    function renderProgramLegacyImages(record) {
+      const programId = record?.id || "";
+      const items = Array.isArray(record?.legacyGallery) ? record.legacyGallery : [];
+      if (!items.length) {
+        return `
+          <section class="program-gallery-legacy" data-program-legacy-images>
+            <div class="structured-list-head"><div><h4>Legacy / unmanaged images</h4><p class="field-help">No legacy gallery images are recorded for this Program.</p></div></div>
+          </section>
+        `;
+      }
+
+      return `
+        <section class="program-gallery-legacy" data-program-legacy-images>
+          <div class="structured-list-head">
+            <div>
+              <h4>Legacy / unmanaged images</h4>
+              <p class="field-help">These images remain in the legacy JSON gallery. They are not imported automatically. Select the approved local file to create a separate Program-owned Storage copy.</p>
+            </div>
+          </div>
+          <div class="program-gallery-legacy-grid">
+            ${items.map((item, index) => {
+              const url = item?.url || "";
+              const audit = legacyImageAudit(programId, url);
+              const warning = audit.hero || audit.matches.some((match) => !match.startsWith(`programs/${programId}/`));
+              return `
+                <article class="program-gallery-legacy-card" data-legacy-gallery-card data-legacy-url="${escapeHtml(url)}">
+                  <img src="${escapeHtml(url)}" alt="${escapeHtml(item?.alt || "Legacy Program image")}" loading="lazy" />
+                  <div class="program-gallery-legacy-body">
+                    <strong>${escapeHtml(item?.alt || `Legacy image ${index + 1}`)}</strong>
+                    <code>${escapeHtml(url)}</code>
+                    <p class="field-help">Matching Storage: ${audit.matches.length ? audit.matches.map((match) => `<code>${escapeHtml(match)}</code>`).join(" ") : "Not found in the audited Storage inventory."}</p>
+                    ${audit.hero ? '<p class="program-gallery-warning">This content matches the current Program hero.</p>' : ""}
+                    ${warning && !audit.hero ? '<p class="program-gallery-warning">This content is already stored under another Program. A new Program-owned copy is required.</p>' : ""}
+                    <div class="program-gallery-legacy-actions">
+                      <input type="file" data-legacy-copy-file accept="image/jpeg,image/png,image/webp,image/gif" />
+                      <button class="btn btn-ghost" type="button" data-legacy-copy>Create Program-Owned Copy</button>
+                    </div>
+                    <p class="program-gallery-file-status" data-legacy-copy-status>Nothing selected. No Storage operation has occurred.</p>
+                  </div>
+                </article>
+              `;
+            }).join("")}
+          </div>
+        </section>
+      `;
+    }
+
     function renderProgramGalleryManager(field, record) {
       const items = Array.isArray(record?.gallery) ? record.gallery : [];
       const programId = record?.id || "";
@@ -4125,6 +4252,7 @@
             `).join("") || `<p class="content-admin-empty">No relational gallery images added yet.</p>`}
           </div>
           <p class="field-help">Removing an image removes only its gallery association. The Storage object is intentionally retained.</p>
+          ${renderProgramLegacyImages(record)}
         </section>
       `;
     }
@@ -4133,9 +4261,11 @@
       form.querySelectorAll("[data-program-gallery-manager]").forEach((container) => {
         const filesInput = container.querySelector("[data-program-gallery-files]");
         const pending = container.querySelector("[data-program-gallery-pending]");
+        container._galleryUploadState = new Map();
         const revokePreviews = () => {
           (container._galleryPreviewUrls || []).forEach((url) => URL.revokeObjectURL(url));
           container._galleryPreviewUrls = [];
+          container._galleryUploadState = new Map();
         };
 
         filesInput?.addEventListener("change", () => {
@@ -4143,10 +4273,11 @@
           const files = [...(filesInput.files || [])];
           if (!pending) return;
           pending.hidden = !files.length;
-          pending.innerHTML = files.map((file) => {
+          container._galleryUploadState = new Map(files.map((file) => [file, "ready"]));
+          pending.innerHTML = files.map((file, index) => {
             const url = URL.createObjectURL(file);
             container._galleryPreviewUrls.push(url);
-            return `<figure><img src="${escapeHtml(url)}" alt="${escapeHtml(file.name)}" /><figcaption>${escapeHtml(file.name)}</figcaption></figure>`;
+            return `<figure data-gallery-upload-item data-file-index="${index}"><img src="${escapeHtml(url)}" alt="${escapeHtml(file.name)}" /><figcaption>${escapeHtml(file.name)}<span data-gallery-upload-status>Ready to upload</span></figcaption></figure>`;
           }).join("");
         });
 
@@ -4165,20 +4296,70 @@
             if (typeof dataApi?.uploadProgramGalleryImage !== "function") {
               throw new Error("Supabase gallery upload is unavailable.");
             }
-            for (const file of files) {
+            for (const [index, file] of files.entries()) {
+              if (container._galleryUploadState.get(file) === "uploaded") continue;
+              const status = pending?.querySelector(`[data-file-index="${index}"] [data-gallery-upload-status]`);
+              status?.replaceChildren(document.createTextNode("Uploading…"));
               const result = await dataApi.uploadProgramGalleryImage(programId, file);
-              if (result.error) throw new Error(result.error.message || "Gallery upload failed.");
+              if (result.error) {
+                status?.replaceChildren(document.createTextNode("Failed"));
+                container._galleryUploadState.set(file, "failed");
+                throw new Error(`${file.name}: ${result.error.message || "Gallery upload failed."}`);
+              }
+              container._galleryUploadState.set(file, "uploaded");
+              status?.replaceChildren(document.createTextNode("Uploaded and verified"));
             }
             await loadSection("programs", programId);
             revokePreviews();
             if (filesInput) filesInput.value = "";
             showToast(`${files.length} gallery image${files.length === 1 ? "" : "s"} uploaded.`);
           } catch (error) {
-            syncPanelState("programs", error.message || "Gallery upload failed.", "error");
-            showToast(error.message || "Gallery upload failed.", "error");
+            const message = `${error.message || "Gallery upload failed."} Retry only the failed file; a successful upload may already have a gallery row.`;
+            syncPanelState("programs", message, "error");
+            showToast(message, "error");
           } finally {
             button.disabled = false;
           }
+        });
+
+        container.querySelectorAll("[data-legacy-gallery-card]").forEach((card) => {
+          const fileInput = card.querySelector("[data-legacy-copy-file]");
+          const status = card.querySelector("[data-legacy-copy-status]");
+          fileInput?.addEventListener("change", () => {
+            const file = fileInput.files?.[0];
+            if (status) status.textContent = file ? `${file.name} selected. Ready for explicit confirmation.` : "Nothing selected. No Storage operation has occurred.";
+          });
+          card.querySelector("[data-legacy-copy]")?.addEventListener("click", async (event) => {
+            const file = fileInput?.files?.[0];
+            if (!file) {
+              showToast("Select the approved local image file first.", "error");
+              return;
+            }
+            const audit = legacyImageAudit(container.dataset.programId, card.dataset.legacyUrl);
+            const warning = audit.hero || audit.matches.some((match) => !match.startsWith(`programs/${container.dataset.programId}/`));
+            if (warning && !window.confirm("This image already exists under another Program or matches an existing hero image. Creating a Program-owned copy will create a separate Storage object for this Program. The original image will not be deleted or changed. Continue?")) return;
+            const button = event.currentTarget;
+            button.disabled = true;
+            if (status) status.textContent = "Uploading and verifying…";
+            try {
+              const dataApi = window.WII_SUPABASE_DATA;
+              if (typeof dataApi?.uploadProgramGalleryImage !== "function") {
+                throw new Error("Supabase gallery upload is unavailable.");
+              }
+              const result = await dataApi.uploadProgramGalleryImage(container.dataset.programId, file, {
+                altText: card.querySelector("img")?.alt || "",
+              });
+              if (result.error) throw new Error(result.error.message || "Program-owned copy failed.");
+              await loadSection("programs", container.dataset.programId);
+              showToast("Program-owned copy uploaded and added to the gallery.");
+            } catch (error) {
+              const message = `${error.message || "Program-owned copy failed."} The source file was not changed.`;
+              if (status) status.textContent = message;
+              showToast(message, "error");
+            } finally {
+              button.disabled = false;
+            }
+          });
         });
 
         container.addEventListener("click", async (event) => {
@@ -4222,6 +4403,7 @@
               await loadSection("programs", container.dataset.programId);
               showToast("Gallery order saved.");
             } catch (error) {
+              await loadSection("programs", container.dataset.programId).catch(() => {});
               showToast(error.message || "Gallery order could not be saved.", "error");
             } finally {
               moveButton.disabled = false;

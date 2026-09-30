@@ -4392,6 +4392,78 @@ body.inner-page main {
   overflow-wrap: anywhere;
 }
 
+.program-gallery-pending figcaption span,
+.program-gallery-file-status {
+  display: block;
+  color: #526579;
+  font-size: 0.76rem;
+  margin-top: 0.2rem;
+}
+
+.program-gallery-legacy {
+  border-top: 1px solid #d5dde5;
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+}
+
+.program-gallery-legacy h4 {
+  color: var(--color-primary, #102a56);
+  margin: 0;
+}
+
+.program-gallery-legacy-grid {
+  display: grid;
+  gap: 0.9rem;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+}
+
+.program-gallery-legacy-card {
+  display: grid;
+  gap: 0.8rem;
+  overflow: hidden;
+  border: 1px solid #d5dde5;
+  border-radius: 0.8rem;
+  background: #fff;
+}
+
+.program-gallery-legacy-card > img {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  background: #e7edf3;
+}
+
+.program-gallery-legacy-body {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0 0.9rem 0.9rem;
+}
+
+.program-gallery-legacy-body code {
+  color: #526579;
+  font-size: 0.72rem;
+  overflow-wrap: anywhere;
+}
+
+.program-gallery-warning {
+  margin: 0;
+  padding: 0.5rem 0.65rem;
+  border-left: 3px solid #c27a00;
+  background: #fff5df;
+  color: #704400;
+  font-size: 0.8rem;
+}
+
+.program-gallery-legacy-actions {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.program-gallery-legacy-actions input[type="file"] {
+  width: 100%;
+  min-width: 0;
+}
+
 .program-gallery-grid-admin {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
