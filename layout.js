@@ -140,15 +140,6 @@
             <nav class="nav" aria-label="Primary navigation" data-nav>
                 <a class="nav-link${activePage("home")}" href="index.html">Home</a>
                 ${renderLinks(aboutLinks)}
-                <div class="nav-dropdown" data-dropdown>
-                    <button class="nav-link nav-btn${activeGroup(workPages)}" type="button" data-dropdown-trigger aria-expanded="false">
-                        Our Work
-                        <svg class="chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
-                    </button>
-                    <div class="dropdown-panel dropdown-panel-wide">
-                        ${renderLinks(workLinks)}
-                    </div>
-                </div>
                 <a class="nav-link${activePage("solutions")}" href="solutions.html">Programmes</a>
                 <a class="nav-link${activePage("news")}" href="news.html">Insights</a>
                 <div class="nav-dropdown" data-dropdown>
@@ -182,10 +173,6 @@
                 <div class="mobile-nav-section">
                     <p class="mobile-nav-label">About</p>
                     ${renderLinks(aboutLinks, "mobile-link mobile-link-sm")}
-                </div>
-                <div class="mobile-nav-section">
-                    <p class="mobile-nav-label">Our Work</p>
-                    ${renderLinks(workLinks, "mobile-link mobile-link-sm")}
                 </div>
                 <div class="mobile-nav-section">
                     <p class="mobile-nav-label">Get Involved</p>
