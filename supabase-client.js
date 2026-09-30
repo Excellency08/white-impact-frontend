@@ -57,6 +57,7 @@ function exposeAuthHelpers(client) {
       displayOrder: Number(row.display_order || 0),
       isFeatured: Boolean(row.is_featured),
       isActive: Boolean(row.is_active),
+      legacyGallery: row.gallery || [],
       updatedAt: row.updated_at,
       createdAt: row.created_at,
     };
@@ -111,7 +112,13 @@ function exposeAuthHelpers(client) {
       if (childBeneficiaries.length) item.beneficiaries = childBeneficiaries.map((v) => ({ title: v.title, summary: v.description, imageUrl: v.image_url }));
       if (childLocations.length) item.locations = childLocations.map((v) => ({ title: v.name, summary: v.description, country: v.country, state: v.state, city: v.city }));
       if (childTimeline.length) item.timeline = childTimeline.map((v) => ({ year: v.milestone_date, title: v.title, summary: v.description }));
-      if (childGallery.length) item.gallery = childGallery.map((v) => ({ url: v.image_url, alt: v.alt_text, caption: v.caption }));
+      if (childGallery.length) item.gallery = childGallery.map((v) => ({
+        id: v.id,
+        url: v.image_url,
+        alt: v.alt_text,
+        caption: v.caption,
+        displayOrder: Number(v.display_order || 0),
+      }));
       if (childMetrics.length) item.impact_metrics = childMetrics.map((v) => ({ label: v.label, value: v.value, description: v.description, icon: v.icon, category: v.category }));
       if (childReports.length) item.reports = childReports.map((v) => ({ title: v.title, url: v.file_url, description: v.description }));
       if (childPartners.length) item.partners = childPartners.map((v) => partnerById.get(v.partner_id)).filter(Boolean).map((v) => ({ title: v.name, description: v.description, logoUrl: v.logo_url }));
@@ -443,6 +450,84 @@ function exposeAuthHelpers(client) {
       const publicUrl = client.storage.from("content-images").getPublicUrl(path).data.publicUrl;
       return { data: { path, publicUrl }, error: null };
     },
+    getProgramGallery: async (programId) => client
+      .from("program_gallery")
+      .select("id, program_id, image_url, alt_text, caption, display_order, created_at, updated_at")
+      .eq("program_id", programId)
+      .order("display_order")
+      .order("id"),
+    uploadProgramGalleryImage: async (programId, file, metadata = {}) => {
+      const allowedTypes = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/gif": "gif" };
+      if (!/^\d+$/.test(String(programId))) return { data: null, error: new Error("A valid program ID is required.") };
+      if (!file || !allowedTypes[file.type]) return { data: null, error: new Error("Only JPG, PNG, WEBP, and GIF images are allowed.") };
+      if (file.size <= 0 || file.size > 10 * 1024 * 1024) return { data: null, error: new Error("Program images must be smaller than 10 MB.") };
+
+      const nonce = globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const folder = `programs/${programId}/gallery`;
+      const fileName = `program-${nonce}.${allowedTypes[file.type]}`;
+      const path = `${folder}/${fileName}`;
+      const storage = client.storage.from("content-images");
+      const upload = await storage.upload(path, file, {
+        cacheControl: "3600",
+        contentType: file.type,
+        upsert: false,
+      });
+      if (upload.error) return { data: null, error: upload.error };
+
+      const verification = await storage.list(folder, { search: fileName, limit: 100 });
+      const verified = !verification.error && (verification.data || []).some((item) => item.name === fileName);
+      if (!verified) {
+        return { data: null, error: new Error("Gallery upload could not be verified in Storage.") };
+      }
+
+      const existing = await client
+        .from("program_gallery")
+        .select("display_order")
+        .eq("program_id", programId)
+        .order("display_order", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (existing.error) return { data: null, error: existing.error };
+      const displayOrder = Number.isFinite(Number(metadata.displayOrder))
+        ? Number(metadata.displayOrder)
+        : Number(existing.data?.display_order || -1) + 1;
+      const publicUrl = storage.getPublicUrl(path).data.publicUrl;
+      const galleryRow = await client.from("program_gallery").insert({
+        program_id: Number(programId),
+        image_url: publicUrl,
+        alt_text: String(metadata.altText || "").trim() || null,
+        caption: String(metadata.caption || "").trim() || null,
+        display_order: displayOrder,
+      }).select("id, program_id, image_url, alt_text, caption, display_order").single();
+      if (galleryRow.error) return { data: null, error: new Error(`${galleryRow.error.message} The uploaded Storage object was not removed.`) };
+      return { data: { ...galleryRow.data, path, publicUrl }, error: null };
+    },
+    updateProgramGalleryItem: (programId, id, values) => client
+      .from("program_gallery")
+      .update({
+        alt_text: String(values.altText || "").trim() || null,
+        caption: String(values.caption || "").trim() || null,
+        display_order: Number(values.displayOrder || 0),
+      })
+      .eq("id", id)
+      .eq("program_id", programId)
+      .select("id, program_id, image_url, alt_text, caption, display_order")
+      .single(),
+    reorderProgramGallery: async (programId, orderedIds) => {
+      for (const [index, id] of orderedIds.entries()) {
+        const result = await client.from("program_gallery")
+          .update({ display_order: index })
+          .eq("id", id)
+          .eq("program_id", programId);
+        if (result.error) return result;
+      }
+      return { data: true, error: null };
+    },
+    removeProgramGalleryItem: (programId, id) => client
+      .from("program_gallery")
+      .delete()
+      .eq("id", id)
+      .eq("program_id", programId),
     getNews: () => getNews(false),
     getNewsPost: (slug) => getNews(false, slug),
     getAdminNews: () => getNews(true),

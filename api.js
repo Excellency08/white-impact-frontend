@@ -876,7 +876,7 @@
       isActive: get("isActive", String(Boolean(existing.isActive))) === "true",
       bodyCopy: json("bodyCopy"), heroStats: json("heroStats"), featureItems: json("featureItems"),
       objectives: json("objectives"), activities: json("activities"), beneficiaries: json("beneficiaries"),
-      locations: json("locations"), timeline: json("timeline"), gallery: json("gallery"),
+      locations: json("locations"), timeline: json("timeline"), gallery: json("gallery", existing.legacyGallery || []),
       impactMetrics: json("impactMetrics"), reports: json("reports"), partners: json("partners"),
     };
   }
@@ -2933,6 +2933,7 @@
           },
           { name: "heroImageUrl", label: "Upload hero image", type: "image", accept: "image/*" },
           { name: "heroImageAlt", label: "Hero image alt text", type: "text" },
+          { name: "galleryManager", label: "Program gallery", type: "gallery-manager" },
           { name: "cardIcon", label: "Card icon", type: "text" },
           {
             name: "cardSummary",
@@ -4087,10 +4088,171 @@
       });
     }
 
+    function renderProgramGalleryManager(field, record) {
+      const items = Array.isArray(record?.gallery) ? record.gallery : [];
+      const programId = record?.id || "";
+      return `
+        <section class="form-group content-admin-span-full program-gallery-manager" data-program-gallery-manager data-program-id="${escapeHtml(programId)}">
+          <div class="structured-list-head">
+            <div>
+              <label>${escapeHtml(field.label)}</label>
+              <p class="field-help">Manage relational gallery images for this Program. New uploads receive a Program-specific Storage path.</p>
+            </div>
+          </div>
+          ${programId ? `
+            <div class="program-gallery-upload-bar">
+              <input type="file" data-program-gallery-files accept="image/jpeg,image/png,image/webp,image/gif" multiple />
+              <button class="btn btn-ghost" type="button" data-program-gallery-upload>Upload selected images</button>
+            </div>
+            <div class="program-gallery-pending" data-program-gallery-pending hidden></div>
+          ` : `<p class="content-admin-empty">Save this Program before adding gallery images.</p>`}
+          <div class="program-gallery-grid-admin" data-program-gallery-items>
+            ${items.map((item, index) => `
+              <article class="program-gallery-admin-card" data-program-gallery-card data-gallery-id="${escapeHtml(item.id || "")}">
+                <img src="${escapeHtml(item.url || "")}" alt="${escapeHtml(item.alt || item.caption || "Program gallery image")}" loading="lazy" />
+                <div class="program-gallery-admin-card-body">
+                  <span class="program-gallery-order">${index + 1}</span>
+                  <label><span>Alt text</span><input type="text" data-gallery-alt value="${escapeHtml(item.alt || "")}" /></label>
+                  <label><span>Caption</span><textarea data-gallery-caption rows="2">${escapeHtml(item.caption || "")}</textarea></label>
+                  <div class="program-gallery-card-actions">
+                    <button class="btn btn-ghost" type="button" data-gallery-move="up" ${index === 0 ? "disabled" : ""}>Move up</button>
+                    <button class="btn btn-ghost" type="button" data-gallery-move="down" ${index === items.length - 1 ? "disabled" : ""}>Move down</button>
+                    <button class="btn btn-ghost" type="button" data-gallery-save>Save details</button>
+                    <button class="btn btn-ghost" type="button" data-gallery-remove>Remove from gallery</button>
+                  </div>
+                </div>
+              </article>
+            `).join("") || `<p class="content-admin-empty">No relational gallery images added yet.</p>`}
+          </div>
+          <p class="field-help">Removing an image removes only its gallery association. The Storage object is intentionally retained.</p>
+        </section>
+      `;
+    }
+
+    function bindProgramGalleryEditors(form) {
+      form.querySelectorAll("[data-program-gallery-manager]").forEach((container) => {
+        const filesInput = container.querySelector("[data-program-gallery-files]");
+        const pending = container.querySelector("[data-program-gallery-pending]");
+        const revokePreviews = () => {
+          (container._galleryPreviewUrls || []).forEach((url) => URL.revokeObjectURL(url));
+          container._galleryPreviewUrls = [];
+        };
+
+        filesInput?.addEventListener("change", () => {
+          revokePreviews();
+          const files = [...(filesInput.files || [])];
+          if (!pending) return;
+          pending.hidden = !files.length;
+          pending.innerHTML = files.map((file) => {
+            const url = URL.createObjectURL(file);
+            container._galleryPreviewUrls.push(url);
+            return `<figure><img src="${escapeHtml(url)}" alt="${escapeHtml(file.name)}" /><figcaption>${escapeHtml(file.name)}</figcaption></figure>`;
+          }).join("");
+        });
+
+        container.querySelector("[data-program-gallery-upload]")?.addEventListener("click", async (event) => {
+          const programId = container.dataset.programId;
+          const files = [...(filesInput?.files || [])];
+          if (!programId || !files.length) {
+            showToast("Choose one or more gallery images first.", "error");
+            return;
+          }
+          const button = event.currentTarget;
+          button.disabled = true;
+          syncPanelState("programs", "Uploading gallery images…");
+          try {
+            const dataApi = window.WII_SUPABASE_DATA;
+            if (typeof dataApi?.uploadProgramGalleryImage !== "function") {
+              throw new Error("Supabase gallery upload is unavailable.");
+            }
+            for (const file of files) {
+              const result = await dataApi.uploadProgramGalleryImage(programId, file);
+              if (result.error) throw new Error(result.error.message || "Gallery upload failed.");
+            }
+            await loadSection("programs", programId);
+            revokePreviews();
+            if (filesInput) filesInput.value = "";
+            showToast(`${files.length} gallery image${files.length === 1 ? "" : "s"} uploaded.`);
+          } catch (error) {
+            syncPanelState("programs", error.message || "Gallery upload failed.", "error");
+            showToast(error.message || "Gallery upload failed.", "error");
+          } finally {
+            button.disabled = false;
+          }
+        });
+
+        container.addEventListener("click", async (event) => {
+          const card = event.target.closest("[data-program-gallery-card]");
+          if (!card) return;
+          const galleryId = card.dataset.galleryId;
+          const dataApi = window.WII_SUPABASE_DATA;
+          if (!galleryId || !dataApi) return;
+
+          const saveButton = event.target.closest("[data-gallery-save]");
+          if (saveButton) {
+            saveButton.disabled = true;
+            try {
+              const result = await dataApi.updateProgramGalleryItem(container.dataset.programId, galleryId, {
+                altText: card.querySelector("[data-gallery-alt]")?.value || "",
+                caption: card.querySelector("[data-gallery-caption]")?.value || "",
+                displayOrder: [...container.querySelectorAll("[data-program-gallery-card]")].indexOf(card),
+              });
+              if (result.error) throw new Error(result.error.message || "Gallery details could not be saved.");
+              showToast("Gallery details saved.");
+            } catch (error) {
+              showToast(error.message || "Gallery details could not be saved.", "error");
+            } finally {
+              saveButton.disabled = false;
+            }
+            return;
+          }
+
+          const moveButton = event.target.closest("[data-gallery-move]");
+          if (moveButton) {
+            const cards = [...container.querySelectorAll("[data-program-gallery-card]")];
+            const index = cards.indexOf(card);
+            const nextIndex = moveButton.dataset.galleryMove === "up" ? index - 1 : index + 1;
+            if (nextIndex < 0 || nextIndex >= cards.length) return;
+            moveButton.disabled = true;
+            try {
+              const orderedIds = cards.map((item) => item.dataset.galleryId);
+              [orderedIds[index], orderedIds[nextIndex]] = [orderedIds[nextIndex], orderedIds[index]];
+              const result = await dataApi.reorderProgramGallery(container.dataset.programId, orderedIds);
+              if (result.error) throw new Error(result.error.message || "Gallery order could not be saved.");
+              await loadSection("programs", container.dataset.programId);
+              showToast("Gallery order saved.");
+            } catch (error) {
+              showToast(error.message || "Gallery order could not be saved.", "error");
+            } finally {
+              moveButton.disabled = false;
+            }
+            return;
+          }
+
+          const removeButton = event.target.closest("[data-gallery-remove]");
+          if (removeButton && window.confirm("Remove this image from the Program gallery? The Storage object will be retained.")) {
+            removeButton.disabled = true;
+            try {
+              const result = await dataApi.removeProgramGalleryItem(container.dataset.programId, galleryId);
+              if (result.error) throw new Error(result.error.message || "Gallery image could not be removed.");
+              await loadSection("programs", container.dataset.programId);
+              showToast("Image removed from the gallery.");
+            } catch (error) {
+              showToast(error.message || "Gallery image could not be removed.", "error");
+            } finally {
+              removeButton.disabled = false;
+            }
+          }
+        });
+      });
+    }
+
     function renderField(config, field, record) {
       const value = field.type === "partner-list"
         ? record?.body?.logos || []
-        : record?.[field.name];
+        : field.name === "gallery" && record?.legacyGallery !== undefined
+          ? record.legacyGallery
+          : record?.[field.name];
       const id = `${config.label}-${field.name}`
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, "-");
@@ -4101,6 +4263,10 @@
 
       if (field.type === "partner-list") {
         return renderPartnerLogoList(field, value);
+      }
+
+      if (field.type === "gallery-manager") {
+        return renderProgramGalleryManager(field, record);
       }
 
       if (field.type === "checkbox") {
@@ -4641,6 +4807,7 @@
       panelsEl.querySelectorAll("[data-content-admin-form]").forEach((form) => {
         bindStructuredEditors(form);
         bindPartnerLogoEditors(form);
+        bindProgramGalleryEditors(form);
       });
 
       panelsEl.querySelectorAll("[data-content-admin-form]").forEach((form) => {

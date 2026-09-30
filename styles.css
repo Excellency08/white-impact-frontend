@@ -4335,6 +4335,105 @@ body.inner-page main {
   grid-column: span 1;
 }
 
+.program-gallery-manager {
+  padding: 1rem;
+  border: 1px solid #d5dde5;
+  border-radius: 0.9rem;
+  background: #f7fafc;
+}
+
+.program-gallery-upload-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding: 0.85rem;
+  border: 1px dashed #8b9aaa;
+  border-radius: 0.75rem;
+  background: #fff;
+}
+
+.program-gallery-upload-bar input[type="file"] {
+  min-width: min(100%, 260px);
+  flex: 1 1 260px;
+  padding: 0.65rem;
+  border: 1px solid #8b9aaa;
+  color: #102a43;
+}
+
+.program-gallery-pending {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.85rem;
+}
+
+.program-gallery-pending figure,
+.program-gallery-admin-card {
+  margin: 0;
+  border: 1px solid #d5dde5;
+  border-radius: 0.75rem;
+  background: #fff;
+  overflow: hidden;
+}
+
+.program-gallery-pending img,
+.program-gallery-admin-card > img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  background: #e7edf3;
+}
+
+.program-gallery-pending figcaption {
+  padding: 0.45rem;
+  color: #526579;
+  font-size: 0.72rem;
+  overflow-wrap: anywhere;
+}
+
+.program-gallery-grid-admin {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.program-gallery-admin-card-body {
+  display: grid;
+  gap: 0.65rem;
+  padding: 0.8rem;
+}
+
+.program-gallery-admin-card-body label span {
+  display: block;
+  margin-bottom: 0.25rem;
+  color: #526579;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.program-gallery-admin-card-body input,
+.program-gallery-admin-card-body textarea {
+  width: 100%;
+}
+
+.program-gallery-order {
+  color: var(--color-primary);
+  font-weight: 800;
+}
+
+.program-gallery-card-actions {
+  display: flex;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.program-gallery-card-actions .btn {
+  padding: 0.45rem 0.65rem;
+  font-size: 0.78rem;
+}
+
 .form-toggle {
   display: inline-flex;
   align-items: center;
