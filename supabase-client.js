@@ -437,6 +437,12 @@ function exposeAuthHelpers(client) {
     getAdminDonations,
     createProgram: (values) => client.from("programs").insert(programPayload(values)).select(programColumns).single(),
     updateProgram: (id, values) => client.from("programs").update(programPayload(values)).eq("id", id).select(programColumns).single(),
+    updateProgramHeroImage: (id, publicUrl) => client
+      .from("programs")
+      .update({ hero_image_url: String(publicUrl || "").trim() })
+      .eq("id", id)
+      .select(programColumns)
+      .single(),
     uploadProgramImage: async (programId, file, variant = "hero") => {
       const allowedTypes = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/gif": "gif" };
       if (!/^\d+$/.test(String(programId))) return { data: null, error: new Error("A valid program ID is required.") };

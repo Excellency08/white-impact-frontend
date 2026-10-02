@@ -4429,7 +4429,7 @@
       });
     }
 
-    function renderField(config, field, record) {
+    function renderField(config, field, record, key = "") {
       const value = field.type === "partner-list"
         ? record?.body?.logos || []
         : field.name === "gallery" && record?.legacyGallery !== undefined
@@ -4508,13 +4508,23 @@
             <label for="${escapeHtml(id)}">${escapeHtml(field.label)}</label>
             <div class="content-admin-image-picker">
               ${preview}
-              <input
-                id="${escapeHtml(id)}"
-                name="${escapeHtml(field.name)}"
-                type="file"
-                accept="${escapeHtml(field.accept || "image/*")}" />
+              <div class="content-admin-image-input">
+                <input
+                  id="${escapeHtml(id)}"
+                  name="${escapeHtml(field.name)}"
+                  type="file"
+                  accept="${escapeHtml(field.accept || "image/*")}" />
+                ${key === "programs" && field.name === "heroImageUrl" ? `
+                  <button class="btn btn-ghost" type="button" data-program-hero-upload ${record?.id ? "" : "disabled"}>
+                    Upload selected image
+                  </button>
+                  <span class="content-admin-image-upload-status" data-program-hero-upload-status>
+                    ${record?.id ? "Upload immediately or use Save Programs." : "Save this Program first to enable direct upload."}
+                  </span>
+                ` : ""}
+              </div>
             </div>
-            <p class="field-help">Choose a file from your computer. It will upload when you save this record.</p>
+            <p class="field-help">Choose a file from your computer. It will upload when you save this record.${key === "programs" && field.name === "heroImageUrl" ? " Existing Programs can also upload it immediately." : ""}</p>
             ${help}
           </div>
         `;
@@ -4611,7 +4621,7 @@
             </div>
           </div>
           <div class="content-admin-form-grid">
-            ${config.fields.map((field) => renderField(config, field, record)).join("")}
+            ${config.fields.map((field) => renderField(config, field, record, key)).join("")}
           </div>
           <input type="hidden" name="id" value="${escapeHtml(record?.id || "")}" />
           <p class="content-admin-panel-status" data-content-admin-panel-status="${escapeHtml(config.label)}"></p>
@@ -4990,6 +5000,49 @@
         bindStructuredEditors(form);
         bindPartnerLogoEditors(form);
         bindProgramGalleryEditors(form);
+      });
+
+      panelsEl.querySelectorAll("[data-program-hero-upload]").forEach((button) => {
+        button.addEventListener("click", async () => {
+          const form = button.closest("[data-content-admin-form]");
+          const programId = Number(form?.querySelector('input[name="id"]')?.value || 0);
+          const input = form?.querySelector('input[name="heroImageUrl"]');
+          const status = form?.querySelector("[data-program-hero-upload-status]");
+          const file = input?.files?.[0];
+          if (!programId) {
+            if (status) status.textContent = "Save this new Program first to enable direct upload.";
+            return;
+          }
+          if (!file) {
+            if (status) status.textContent = "Choose a hero image first.";
+            return;
+          }
+
+          button.disabled = true;
+          if (status) status.textContent = "Uploading hero image…";
+          syncPanelState("programs", "Uploading hero image…");
+          try {
+            await window.WII_SUPABASE_READY;
+            const dataApi = window.WII_SUPABASE_DATA;
+            if (!dataApi?.uploadProgramImage || !dataApi?.updateProgramHeroImage) {
+              throw new Error("Supabase hero image upload is unavailable.");
+            }
+            const upload = await dataApi.uploadProgramImage(programId, file, "hero");
+            if (upload.error) throw new Error(upload.error.message || "Hero image upload failed.");
+            const saved = await dataApi.updateProgramHeroImage(programId, upload.data.publicUrl);
+            if (saved.error) {
+              throw new Error(`${saved.error.message || "Hero image could not be saved."} The uploaded Storage object was not removed.`);
+            }
+            await loadSection("programs", programId);
+            showToast("Hero image uploaded successfully.");
+          } catch (error) {
+            if (status) status.textContent = error.message || "Hero image upload failed.";
+            syncPanelState("programs", error.message || "Hero image upload failed.", "error");
+            showToast(error.message || "Hero image upload failed.", "error");
+          } finally {
+            button.disabled = false;
+          }
+        });
       });
 
       panelsEl.querySelectorAll("[data-content-admin-form]").forEach((form) => {

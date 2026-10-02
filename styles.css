@@ -4266,6 +4266,18 @@ body.inner-page main {
   color: #102a43;
 }
 
+.content-admin-image-input {
+  display: grid;
+  gap: 0.65rem;
+  min-width: 0;
+}
+
+.content-admin-image-upload-status {
+  color: #526579;
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
 .structured-list-field {
   padding: 1rem;
   border: 1px solid #d5dde5;
