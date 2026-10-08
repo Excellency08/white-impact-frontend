@@ -24,6 +24,18 @@
   }
 
   const ANALYTICS_SESSION_KEY = "wii.analytics.session";
+  const ADMIN_INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000;
+  const ADMIN_ACTIVITY_EVENTS = [
+    ["pointerdown", { passive: true }],
+    ["keydown", undefined],
+    ["touchstart", { passive: true }],
+    ["wheel", { passive: true }],
+    ["scroll", { passive: true }],
+    ["focusin", undefined],
+  ];
+  let adminInactivityTimer = null;
+  let adminActivityMonitoring = false;
+  let adminAuthSubscription = null;
 
   function getAnalyticsSessionId() {
     try {
@@ -70,6 +82,69 @@
 
   function getSupabaseApplicationState() {
     return window.WII_APPLICATION_AUTH || null;
+  }
+
+  function isProtectedAdminPage() {
+    return ["admin", "admin-section", "content-admin"].includes(document.body?.dataset?.page);
+  }
+
+  function stopAdminInactivityMonitor() {
+    if (adminInactivityTimer) {
+      window.clearTimeout(adminInactivityTimer);
+      adminInactivityTimer = null;
+    }
+    if (!adminActivityMonitoring) return;
+    ADMIN_ACTIVITY_EVENTS.forEach(([eventName, options]) => {
+      document.removeEventListener(eventName, resetAdminInactivityTimer, options);
+    });
+    adminActivityMonitoring = false;
+  }
+
+  function redirectToPublicHome() {
+    if (isProtectedAdminPage()) window.location.assign("index.html");
+  }
+
+  function resetAdminInactivityTimer() {
+    if (!getSupabaseApplicationState()?.authenticated || !isProtectedAdminPage()) return;
+    if (adminInactivityTimer) window.clearTimeout(adminInactivityTimer);
+    adminInactivityTimer = window.setTimeout(() => {
+      void logoutAdminSession({ redirect: true });
+    }, ADMIN_INACTIVITY_TIMEOUT_MS);
+  }
+
+  function handleAdminAuthStateChange(event) {
+    if (event !== "SIGNED_OUT") return;
+    stopAdminInactivityMonitor();
+    clearSupabaseApplicationState();
+    redirectToPublicHome();
+  }
+
+  function startAdminInactivityMonitor(supabaseAuth) {
+    if (!isProtectedAdminPage() || !getSupabaseApplicationState()?.authenticated) return;
+
+    if (!adminAuthSubscription) {
+      const subscriptionResult = supabaseAuth?.onAuthStateChange?.(handleAdminAuthStateChange);
+      adminAuthSubscription = subscriptionResult?.data?.subscription || null;
+    }
+
+    if (!adminActivityMonitoring) {
+      ADMIN_ACTIVITY_EVENTS.forEach(([eventName, options]) => {
+        document.addEventListener(eventName, resetAdminInactivityTimer, options);
+      });
+      adminActivityMonitoring = true;
+    }
+    resetAdminInactivityTimer();
+  }
+
+  async function logoutAdminSession({ redirect = true } = {}) {
+    stopAdminInactivityMonitor();
+    const supabaseAuth = await getSupabaseAuth();
+    await supabaseAuth?.signOut().catch(() => {});
+    adminAuthSubscription?.unsubscribe?.();
+    adminAuthSubscription = null;
+    clearSupabaseApplicationState();
+    setAdminPanelState(false);
+    if (redirect) redirectToPublicHome();
   }
 
   function getSupabaseCallbackDetails() {
@@ -221,6 +296,7 @@
       role: profile.application_role,
       mappingStatus: profile.mapping_status || "linked",
     };
+    startAdminInactivityMonitor(supabaseAuth);
     return {
       success: true,
       user: {
@@ -2784,13 +2860,10 @@
     });
 
     logoutBtn?.addEventListener("click", async () => {
-      const supabaseAuth = await getSupabaseAuth();
-      await supabaseAuth?.signOut().catch(() => {});
-      clearSupabaseApplicationState();
-      setAdminPanelState(false);
+      await logoutAdminSession();
       const status = document.querySelector("[data-admin-status]");
       if (status) status.textContent = "Signed out.";
-      showToast("Signed out successfully.");
+      if (!isProtectedAdminPage()) showToast("Signed out successfully.");
     });
   }
 
@@ -5388,11 +5461,9 @@
     });
 
     logoutBtn?.addEventListener("click", async () => {
-      const supabaseAuth = await getSupabaseAuth();
-      await supabaseAuth?.signOut().catch(() => {});
-      clearSupabaseApplicationState();
+      await logoutAdminSession();
       setStatus("Signed out.");
-      showToast("Signed out successfully.");
+      if (!isProtectedAdminPage()) showToast("Signed out successfully.");
     });
 
     Promise.allSettled(keys.map((key) => loadSection(key))).then(() => {
