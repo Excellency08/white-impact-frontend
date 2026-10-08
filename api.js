@@ -5709,109 +5709,8 @@
     const hero = document.querySelector(".page-hero-lead");
     if (hero) {
       hero.textContent =
-        "Transfer to our account below, then submit your payment receipt for confirmation.";
+        "Transfer to our account below using the payment reference. Our team will confirm your donation after the transfer is received.";
     }
-  }
-
-  function initReceiptForm() {
-    const form = document.querySelector("[data-receipt-form]");
-    const instructionsStep = document.querySelector(
-      '[data-donation-step="instructions"]',
-    );
-    const previewBox = document.querySelector("[data-receipt-file-preview]");
-    const fileInput = form?.querySelector('[name="receipt"]');
-    if (!form || !instructionsStep || !fileInput || !previewBox) return;
-
-    fileInput.addEventListener("change", () => {
-      const file = fileInput.files?.[0];
-      previewBox.innerHTML = "";
-
-      if (!file) {
-        previewBox.hidden = true;
-        return;
-      }
-
-      const card = document.createElement("div");
-      card.className = "receipt-file-preview-card";
-
-      const icon = document.createElement("div");
-      icon.className = "receipt-file-preview-icon";
-      icon.textContent = file.type.startsWith("image/") ? "🖼️" : "📄";
-
-      const content = document.createElement("div");
-      content.className = "receipt-file-preview-content";
-      content.innerHTML = `
-        <strong>${file.name}</strong>
-        <span>${(file.size / 1024).toFixed(1)} KB · ${file.type.replace("application/", "").replace("image/", "")}</span>
-      `;
-
-      card.append(icon, content);
-
-      if (file.type.startsWith("image/")) {
-        const thumb = document.createElement("img");
-        thumb.className = "receipt-file-preview-thumb";
-        thumb.alt = "Receipt file preview";
-
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          thumb.src = event.target.result;
-          previewBox.insertBefore(thumb, card);
-        };
-        reader.readAsDataURL(file);
-      }
-
-      previewBox.appendChild(card);
-      previewBox.hidden = false;
-    });
-
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-
-      const reference = instructionsStep.dataset.reference;
-      const file = fileInput.files?.[0];
-
-      if (!reference) {
-        showToast(
-          "Donation reference missing. Please submit the donation form again.",
-          "error",
-        );
-        return;
-      }
-      if (!file) {
-        showToast("Please select your payment receipt to upload.", "error");
-        return;
-      }
-
-      const formData = new FormData();
-      formData.append("reference", reference);
-      formData.append("receipt", file);
-
-      setFormLoading(form, true);
-      try {
-        const result = await invokePublicEdgeFunction("donation-receipt-submit", formData);
-
-        if (result.success) {
-          document
-            .querySelector(".bank-transfer-details")
-            ?.setAttribute("hidden", "");
-          document
-            .querySelector(".receipt-upload-section")
-            ?.setAttribute("hidden", "");
-          const successPanel = document.querySelector("[data-receipt-success]");
-          successPanel?.removeAttribute("hidden");
-          showToast(result.message || "Receipt submitted successfully!");
-        } else {
-          showToast(
-            result.message || "Receipt upload failed. Please try again.",
-            "error",
-          );
-        }
-      } catch {
-        showToast("Network error. Please check your connection.", "error");
-      } finally {
-        setFormLoading(form, false);
-      }
-    });
   }
 
   function initDonationForm() {
@@ -5944,7 +5843,6 @@
   initVolunteerForm();
   initNewsletterForm();
   initDonationForm();
-  initReceiptForm();
   initNewsletterConfirmationPage();
   initNewsletterUnsubscribePage();
     initAdminConsole();
