@@ -24,7 +24,7 @@
   }
 
   const ANALYTICS_SESSION_KEY = "wii.analytics.session";
-  const ADMIN_INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000;
+  const ADMIN_INACTIVITY_TIMEOUT_MS = 10 * 60 * 1000;
   const ADMIN_ACTIVITY_EVENTS = [
     ["pointerdown", { passive: true }],
     ["keydown", undefined],
