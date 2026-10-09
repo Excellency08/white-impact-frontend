@@ -7268,7 +7268,6 @@ body[data-page="our-story"] .page-content .split-section {
 }
 
 body[data-page="our-story"] .about-image {
-  min-height: 540px;
   border-radius: var(--radius-xl);
   border-left: 0;
   box-shadow: var(--shadow-lg);
@@ -7423,7 +7422,6 @@ body:not(.admin-app-page):not(.admin-login-page) .challenge-card:hover {
   .hero-home .hero-content h1 { font-size: clamp(2.7rem, 13vw, 4rem); }
   .hero-home .hero-float { display: none; }
   .hero-home .hero-storyline-item { min-height: auto; }
-  body[data-page="our-story"] .about-image { min-height: 400px; }
   body[data-page="our-story"] .about-badge {
     right: 0;
     bottom: -0.75rem;
@@ -7441,6 +7439,262 @@ body:not(.admin-app-page):not(.admin-login-page) .challenge-card:hover {
 
 .reach-card-lg .reach-map {
   height: 280px;
+}
+
+/* Mission and story imagery: crop away unused background while keeping the
+   people and the existing copy as the focus of each section. */
+.mission {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 8% 88%, rgba(178, 210, 255, 0.42), transparent 26%),
+    linear-gradient(135deg, #f8fbff 0%, #e6f0ff 100%);
+}
+
+.mission::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.45;
+  background-image: radial-gradient(rgba(0, 26, 77, 0.12) 1px, transparent 1px);
+  background-size: 26px 26px;
+}
+
+.mission .split-section,
+.mission .about-content,
+.mission .about-media {
+  position: relative;
+  z-index: 1;
+}
+
+.mission .split-section {
+  grid-template-columns: minmax(280px, 0.82fr) minmax(0, 1.18fr);
+  gap: clamp(2.5rem, 5vw, 5.5rem);
+  align-items: start;
+}
+
+.mission .about-media {
+  margin-top: 0.5rem;
+}
+
+.mission .about-image {
+  width: 100%;
+  height: auto;
+  aspect-ratio: auto;
+  object-fit: contain;
+  border: 0;
+  border-radius: var(--radius-xl);
+  box-shadow: 0 22px 48px rgba(0, 26, 77, 0.18);
+}
+
+.mission .about-media::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  width: 68%;
+  height: 68%;
+  right: -1.25rem;
+  bottom: -1.25rem;
+  border: 1px solid rgba(0, 26, 77, 0.16);
+  border-radius: var(--radius-xl);
+}
+
+.mission .about-badge {
+  right: -0.75rem;
+  bottom: -0.75rem;
+  padding: 1rem 1.2rem;
+  border: 1px solid rgba(0, 26, 77, 0.08);
+}
+
+.mission .badge-year {
+  font-size: clamp(1.3rem, 2.2vw, 1.65rem);
+}
+
+.mission .about-content h2 {
+  max-width: 13ch;
+  margin-bottom: 1rem;
+  font-size: clamp(2.15rem, 4vw, 3.45rem);
+  line-height: 0.98;
+  letter-spacing: -0.045em;
+}
+
+.mission .prose > p:not(.section-kicker) {
+  max-width: 68ch;
+  line-height: 1.72;
+  text-align: left;
+}
+
+.mission .feature-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem;
+  margin: 1.5rem 0;
+}
+
+.mission .feature-item {
+  min-height: 5.65rem;
+  padding: 0.9rem;
+  border-radius: 0.9rem;
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: 0 8px 24px rgba(0, 26, 77, 0.05);
+}
+
+.mission .feature-item:last-child {
+  grid-column: 1;
+}
+
+.mission .feature-item strong {
+  margin-bottom: 0.18rem;
+}
+
+.mission-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.mission .feature-list .mission-actions {
+  grid-column: 2;
+  grid-row: 2;
+  flex-direction: column;
+  justify-content: center;
+  align-items: stretch;
+  gap: 0.55rem;
+  margin: 0;
+}
+
+.mission .feature-list .mission-actions .btn {
+  width: 100%;
+  justify-content: center;
+}
+
+body[data-page="our-story"] .page-content {
+  padding-block: clamp(3rem, 5vw, 4.75rem);
+}
+
+body[data-page="our-story"] .page-content .split-section {
+  grid-template-columns: minmax(280px, 0.85fr) minmax(0, 1.15fr);
+  align-items: start;
+}
+
+body[data-page="our-story"] .about-media {
+  margin-top: 0.35rem;
+}
+
+body[data-page="our-story"] .about-image {
+  width: 100%;
+  min-height: 0;
+  height: auto;
+  aspect-ratio: auto;
+  object-fit: contain;
+  box-shadow: 0 22px 48px rgba(0, 26, 77, 0.16);
+}
+
+body[data-page="our-story"] .prose {
+  max-width: 70ch;
+}
+
+body[data-page="our-story"] .prose > p {
+  text-align: left;
+}
+
+@media (max-width: 1024px) {
+  .mission .split-section,
+  body[data-page="our-story"] .page-content .split-section {
+    grid-template-columns: 1fr;
+  }
+
+  .mission .about-media,
+  body[data-page="our-story"] .about-media {
+    width: min(100%, 34rem);
+    margin-inline: auto;
+  }
+
+  .mission .about-image {
+    height: auto;
+    aspect-ratio: auto;
+  }
+
+  body[data-page="our-story"] .about-image {
+    height: auto;
+    aspect-ratio: auto;
+  }
+}
+
+@media (max-width: 600px) {
+  .mission .about-content h2 {
+    font-size: clamp(2rem, 11vw, 2.7rem);
+  }
+
+  .mission .feature-list {
+    grid-template-columns: 1fr;
+  }
+
+  .mission .feature-item:last-child {
+    grid-column: auto;
+  }
+
+  .mission .feature-list .mission-actions {
+    grid-column: auto;
+    grid-row: auto;
+    margin-top: 0.15rem;
+  }
+
+  .mission-actions .btn {
+    flex: 1 1 11rem;
+  }
+}
+
+/* Long-form content controls shared by the Mission and About WIDI sections. */
+.expandable-content[hidden] {
+  display: none;
+}
+
+.text-expander {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0.15rem 0 1.35rem;
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid currentColor;
+  border-radius: 0;
+  background: transparent;
+  color: var(--color-primary);
+  font: inherit;
+  font-weight: 700;
+  line-height: 1.45;
+  cursor: pointer;
+}
+
+.text-expander:hover {
+  color: var(--color-navy);
+}
+
+.text-expander:focus-visible {
+  outline: 3px solid rgba(0, 26, 77, 0.26);
+  outline-offset: 4px;
+}
+
+.text-expander-icon {
+  display: inline-block;
+  font-size: 1.05em;
+  transition: transform var(--transition);
+}
+
+.text-expander[aria-expanded="true"] .text-expander-icon {
+  transform: rotate(180deg);
+}
+
+@media (min-width: 1025px) {
+  .mission .about-media,
+  body[data-page="our-story"] .about-media {
+    position: sticky;
+    top: calc(var(--header-height) + var(--top-bar-height) + 1.5rem);
+    align-self: start;
+  }
 }
 
 @media (max-width: 768px) {

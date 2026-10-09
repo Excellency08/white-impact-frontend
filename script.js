@@ -157,6 +157,20 @@
         requestAnimationFrame(update);
     }
 
+    /* Expand long-form section copy without altering its original content. */
+    document.querySelectorAll(".text-expander[aria-controls]").forEach((button) => {
+        const content = document.getElementById(button.getAttribute("aria-controls"));
+        const label = button.querySelector("span:first-child");
+        if (!content || !label) return;
+
+        button.addEventListener("click", () => {
+            const expanded = button.getAttribute("aria-expanded") === "true";
+            content.hidden = expanded;
+            button.setAttribute("aria-expanded", String(!expanded));
+            label.textContent = expanded ? "Read more" : "Show less";
+        });
+    });
+
     /* Testimonial slider */
     const slider = document.querySelector("[data-slider]");
     if (slider) {
