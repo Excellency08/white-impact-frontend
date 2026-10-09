@@ -5716,9 +5716,13 @@
   function initDonationForm() {
     const form = document.querySelector("[data-donation-form]");
     if (!form) return;
+    const submitButton = form.querySelector('[type="submit"]');
+    let donationSubmitting = false;
+    let donationSubmitted = false;
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
+      if (donationSubmitting || donationSubmitted) return;
       if (!form.checkValidity()) {
         form.reportValidity();
         return;
@@ -5733,11 +5737,18 @@
         message: document.querySelector("#donor-message")?.value,
       };
 
+      donationSubmitting = true;
       setFormLoading(form, true);
+      if (submitButton) submitButton.textContent = "Submitting…";
       try {
         const result = await invokePublicEdgeFunction("donation-submit", data);
 
         if (result.success) {
+          donationSubmitted = true;
+          if (submitButton) {
+            submitButton.disabled = true;
+            submitButton.textContent = "Donation Submitted";
+          }
           showDonationInstructions(result);
         } else {
           const errorMessage =
@@ -5750,7 +5761,8 @@
       } catch (err) {
         showToast("Network error. Please check your connection.", "error");
       } finally {
-        setFormLoading(form, false);
+        donationSubmitting = false;
+        if (!donationSubmitted) setFormLoading(form, false);
       }
     });
   }
