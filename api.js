@@ -5679,14 +5679,36 @@
 
   /* ─── Donation form ───────────────────────────────────────────── */
   function showDonationInstructions(result) {
+    const { reference, donation, bank } = result;
+    const pendingDonation = {
+      reference: String(reference || ""),
+      amountNaira: Number(donation?.amountNaira || 0),
+      programArea: String(donation?.programArea || ""),
+      bank: {
+        bankName: String(bank?.bankName || ""),
+        accountName: String(bank?.accountName || ""),
+        accountNumber: String(bank?.accountNumber || ""),
+      },
+    };
+
+    try {
+      sessionStorage.setItem(
+        "wii.pendingDonation",
+        JSON.stringify(pendingDonation),
+      );
+      window.location.assign("donation-pending.html");
+      return;
+    } catch {
+      // Keep the transfer instructions on this page if browser storage is blocked.
+    }
+
     const formStep = document.querySelector('[data-donation-step="form"]');
     const instructionsStep = document.querySelector(
       '[data-donation-step="instructions"]',
     );
     if (!formStep || !instructionsStep) return;
 
-    const { reference, donation, bank } = result;
-    const amount = Number(donation?.amountNaira || 0);
+    const amount = pendingDonation.amountNaira;
 
     document.querySelector("[data-bank-name]").textContent =
       bank?.bankName || "—";
@@ -5700,7 +5722,7 @@
       reference || "—";
 
     instructionsStep.dataset.reference = reference || "";
-    instructionsStep.dataset.programArea = donation?.programArea || "";
+    instructionsStep.dataset.programArea = pendingDonation.programArea;
 
     formStep.hidden = true;
     instructionsStep.hidden = false;
@@ -5709,7 +5731,7 @@
     const hero = document.querySelector(".page-hero-lead");
     if (hero) {
       hero.textContent =
-        "Transfer to our account below, then submit your payment receipt for confirmation.";
+        "Transfer to our account below using the payment reference. Your donation remains pending until our team verifies the payment.";
     }
   }
 
