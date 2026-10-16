@@ -4758,11 +4758,11 @@
             : ""}
           ${config.label === "Donations" && !["verified", "rejected"].includes(String(record.status || "").toLowerCase()) && record.paymentStatus !== "succeeded"
             ? `<div class="content-admin-record-actions">
-                <div class="content-admin-action-group" role="group" aria-label="Donation payment review actions">
-                  <button class="btn btn-primary" type="button" data-content-admin-open-approval data-record-id="${escapeHtml(record.id)}">Approve payment and notify donor</button>
-                  <button class="btn btn-ghost" type="button" data-content-admin-open-rejection data-record-id="${escapeHtml(record.id)}">Reject payment</button>
+                <div class="donation-review-tabs" role="group" aria-label="Choose donation payment review action">
+                  <button class="donation-review-tab" id="donation-approve-tab-${escapeHtml(record.id)}" type="button" aria-pressed="false" aria-controls="donation-approve-panel-${escapeHtml(record.id)}" data-content-admin-open-approval data-record-id="${escapeHtml(record.id)}">Approve payment</button>
+                  <button class="donation-review-tab" id="donation-reject-tab-${escapeHtml(record.id)}" type="button" aria-pressed="false" aria-controls="donation-reject-panel-${escapeHtml(record.id)}" data-content-admin-open-rejection data-record-id="${escapeHtml(record.id)}">Reject payment</button>
                 </div>
-                <div class="donation-approval-card" data-donation-approval-card hidden>
+                <div class="donation-approval-card" id="donation-approve-panel-${escapeHtml(record.id)}" role="region" aria-label="Approve donation and notify donor" data-donation-approval-card hidden>
                   <div>
                     <p class="section-kicker">Approval message</p>
                     <h4>Confirm donor notification</h4>
@@ -4781,7 +4781,7 @@
                     <button class="btn btn-primary" type="button" data-content-admin-send-approval data-record-id="${escapeHtml(record.id)}">Send approval email</button>
                   </div>
                 </div>
-                <div class="donation-approval-card" data-donation-rejection-card hidden>
+                <div class="donation-approval-card" id="donation-reject-panel-${escapeHtml(record.id)}" role="region" aria-label="Reject donation and notify donor" data-donation-rejection-card hidden>
                   <div>
                     <p class="section-kicker">Rejection notice</p>
                     <h4>Confirm payment rejection</h4>
@@ -4936,29 +4936,34 @@
           });
         });
 
+      function selectDonationReviewView(actions, view) {
+        if (!actions) return;
+        const approveButton = actions.querySelector("[data-content-admin-open-approval]");
+        const rejectButton = actions.querySelector("[data-content-admin-open-rejection]");
+        const approvalCard = actions.querySelector("[data-donation-approval-card]");
+        const rejectionCard = actions.querySelector("[data-donation-rejection-card]");
+        const approveSelected = view === "approve";
+        const rejectSelected = view === "reject";
+
+        if (approveButton) approveButton.setAttribute("aria-pressed", String(approveSelected));
+        if (rejectButton) rejectButton.setAttribute("aria-pressed", String(rejectSelected));
+        if (approvalCard) approvalCard.hidden = !approveSelected;
+        if (rejectionCard) rejectionCard.hidden = !rejectSelected;
+      }
+
       panelsEl.querySelectorAll("[data-content-admin-open-approval]").forEach((button) => {
         button.addEventListener("click", () => {
           const actions = button.closest(".content-admin-record-actions");
-          const card = actions?.querySelector("[data-donation-approval-card]");
-          if (!card) return;
-          card.hidden = false;
-          actions.querySelectorAll("[data-content-admin-open-approval], [data-content-admin-open-rejection]").forEach((action) => {
-            action.hidden = true;
-          });
-          card.querySelector("[data-donation-approval-message]")?.focus();
+          selectDonationReviewView(actions, "approve");
+          actions?.querySelector("[data-donation-approval-message]")?.focus();
         });
       });
 
       panelsEl.querySelectorAll("[data-content-admin-open-rejection]").forEach((button) => {
         button.addEventListener("click", () => {
           const actions = button.closest(".content-admin-record-actions");
-          const card = actions?.querySelector("[data-donation-rejection-card]");
-          if (!card) return;
-          card.hidden = false;
-          actions.querySelectorAll("[data-content-admin-open-approval], [data-content-admin-open-rejection]").forEach((action) => {
-            action.hidden = true;
-          });
-          card.querySelector("[data-donation-rejection-message]")?.focus();
+          selectDonationReviewView(actions, "reject");
+          actions?.querySelector("[data-donation-rejection-message]")?.focus();
         });
       });
 
@@ -5019,23 +5024,13 @@
 
       panelsEl.querySelectorAll("[data-content-admin-cancel-approval]").forEach((button) => {
         button.addEventListener("click", () => {
-          const card = button.closest("[data-donation-approval-card]");
-          const actions = card?.closest(".content-admin-record-actions");
-          if (card) card.hidden = true;
-          actions?.querySelectorAll("[data-content-admin-open-approval], [data-content-admin-open-rejection]").forEach((openButton) => {
-            openButton.hidden = false;
-          });
+          selectDonationReviewView(button.closest(".content-admin-record-actions"), null);
         });
       });
 
       panelsEl.querySelectorAll("[data-content-admin-cancel-rejection]").forEach((button) => {
         button.addEventListener("click", () => {
-          const card = button.closest("[data-donation-rejection-card]");
-          const actions = card?.closest(".content-admin-record-actions");
-          if (card) card.hidden = true;
-          actions?.querySelectorAll("[data-content-admin-open-approval], [data-content-admin-open-rejection]").forEach((openButton) => {
-            openButton.hidden = false;
-          });
+          selectDonationReviewView(button.closest(".content-admin-record-actions"), null);
         });
       });
 

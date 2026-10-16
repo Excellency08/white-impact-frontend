@@ -4622,6 +4622,50 @@ body.inner-page main {
   gap: 1rem;
 }
 
+.donation-review-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+  padding: 0.35rem;
+  border: 1px solid var(--admin-line, #d7e1f1);
+  border-radius: var(--radius-md);
+  background: #f3f6fb;
+}
+
+.donation-review-tab {
+  min-height: 2.75rem;
+  padding: 0.65rem 1rem;
+  border: 1px solid transparent;
+  border-radius: calc(var(--radius-md) - 0.2rem);
+  background: transparent;
+  color: var(--admin-ink, #102044);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 160ms ease, color 160ms ease, box-shadow 160ms ease;
+}
+
+.donation-review-tab:hover {
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.donation-review-tab[aria-pressed="true"][data-content-admin-open-approval] {
+  background: #157347;
+  color: #fff;
+  box-shadow: 0 3px 9px rgba(21, 115, 71, 0.2);
+}
+
+.donation-review-tab[aria-pressed="true"][data-content-admin-open-rejection] {
+  background: #b42318;
+  color: #fff;
+  box-shadow: 0 3px 9px rgba(180, 35, 24, 0.2);
+}
+
+.donation-review-tab:focus-visible {
+  outline: 3px solid rgba(0, 26, 77, 0.3);
+  outline-offset: 2px;
+}
+
 .donation-approval-card {
   display: grid;
   gap: 1rem;
@@ -4630,6 +4674,10 @@ body.inner-page main {
   border-radius: var(--radius-md);
   background: var(--admin-primary-soft, #e8f0ff);
   box-shadow: 0 10px 24px rgba(0, 26, 77, 0.08);
+}
+
+.donation-approval-card[hidden] {
+  display: none;
 }
 
 .donation-approval-card h4 {
@@ -4686,6 +4734,16 @@ body.inner-page main {
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: 0.75rem;
+}
+
+.donation-approval-card [data-content-admin-send-rejection] {
+  background: #b42318;
+  border-color: #b42318;
+}
+
+.donation-approval-card [data-content-admin-send-rejection]:hover {
+  background: #912018;
+  border-color: #912018;
 }
 
 .program-gallery-card img {
