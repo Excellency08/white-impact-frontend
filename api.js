@@ -3881,7 +3881,7 @@
           invokePublicEdgeFunction("donation-approve", { donationId: record.id, ...payload }),
         itemLabel: (record) => record.fullName || record.reference || "Donation",
         itemMeta: (record) =>
-          `${record.paymentStatus || record.status || "pending"} · ₦${Number(record.amountNaira || 0).toLocaleString()}`,
+          `${record.status || record.paymentStatus || "pending"} · ₦${Number(record.amountNaira || 0).toLocaleString()}`,
         emptyLabel: "No donations loaded yet.",
         defaultRecord: {
           status: "pending",
@@ -4760,7 +4760,7 @@
             ? `<div class="content-admin-record-actions">
                 <div class="donation-review-tabs" role="group" aria-label="Choose donation payment review action">
                   <button class="donation-review-tab" id="donation-approve-tab-${escapeHtml(record.id)}" type="button" aria-pressed="false" aria-controls="donation-approve-panel-${escapeHtml(record.id)}" data-content-admin-open-approval data-record-id="${escapeHtml(record.id)}">Approve payment</button>
-                  <button class="donation-review-tab" id="donation-reject-tab-${escapeHtml(record.id)}" type="button" aria-pressed="false" aria-controls="donation-reject-panel-${escapeHtml(record.id)}" data-content-admin-open-rejection data-record-id="${escapeHtml(record.id)}">Reject payment</button>
+                  <button class="donation-review-tab donation-review-reject" type="button" data-content-admin-send-rejection data-record-id="${escapeHtml(record.id)}">Reject payment now</button>
                 </div>
                 <div class="donation-approval-card" id="donation-approve-panel-${escapeHtml(record.id)}" role="region" aria-label="Approve donation and notify donor" data-donation-approval-card hidden>
                   <div>
@@ -4779,25 +4779,6 @@
                   <div class="donation-approval-actions">
                     <button class="btn btn-ghost" type="button" data-content-admin-cancel-approval>Cancel</button>
                     <button class="btn btn-primary" type="button" data-content-admin-send-approval data-record-id="${escapeHtml(record.id)}">Send approval email</button>
-                  </div>
-                </div>
-                <div class="donation-approval-card" id="donation-reject-panel-${escapeHtml(record.id)}" role="region" aria-label="Reject donation and notify donor" data-donation-rejection-card hidden>
-                  <div>
-                    <p class="section-kicker">Rejection notice</p>
-                    <h4>Confirm payment rejection</h4>
-                    <p class="section-desc">The donor will receive this explanation with their donation reference and amount. Ask them to contact the team if they already transferred.</p>
-                  </div>
-                  <dl class="donation-approval-summary">
-                    <div><dt>Donor</dt><dd>${escapeHtml(record.fullName || "Not provided")}</dd></div>
-                    <div><dt>Email</dt><dd>${escapeHtml(record.email || "Not provided")}</dd></div>
-                    <div><dt>Amount</dt><dd>₦${Number(record.amountNaira || 0).toLocaleString()}</dd></div>
-                    <div><dt>Reference</dt><dd>${escapeHtml(record.reference || "Not provided")}</dd></div>
-                  </dl>
-                  <label class="donation-approval-message-label" for="donation-rejection-message-${escapeHtml(record.id)}">Reason and message to donor</label>
-                  <textarea id="donation-rejection-message-${escapeHtml(record.id)}" data-donation-rejection-message rows="5">We could not verify this transfer in our bank records. If you have already sent the transfer, please contact info@whiteimpactinitiative.org with your bank transaction reference so we can investigate.</textarea>
-                  <div class="donation-approval-actions">
-                    <button class="btn btn-ghost" type="button" data-content-admin-cancel-rejection>Cancel</button>
-                    <button class="btn btn-primary" type="button" data-content-admin-send-rejection data-record-id="${escapeHtml(record.id)}">Reject payment and email donor</button>
                   </div>
                 </div>
               </div>`
@@ -4939,16 +4920,11 @@
       function selectDonationReviewView(actions, view) {
         if (!actions) return;
         const approveButton = actions.querySelector("[data-content-admin-open-approval]");
-        const rejectButton = actions.querySelector("[data-content-admin-open-rejection]");
         const approvalCard = actions.querySelector("[data-donation-approval-card]");
-        const rejectionCard = actions.querySelector("[data-donation-rejection-card]");
         const approveSelected = view === "approve";
-        const rejectSelected = view === "reject";
 
         if (approveButton) approveButton.setAttribute("aria-pressed", String(approveSelected));
-        if (rejectButton) rejectButton.setAttribute("aria-pressed", String(rejectSelected));
         if (approvalCard) approvalCard.hidden = !approveSelected;
-        if (rejectionCard) rejectionCard.hidden = !rejectSelected;
       }
 
       panelsEl.querySelectorAll("[data-content-admin-open-approval]").forEach((button) => {
@@ -4956,14 +4932,6 @@
           const actions = button.closest(".content-admin-record-actions");
           selectDonationReviewView(actions, "approve");
           actions?.querySelector("[data-donation-approval-message]")?.focus();
-        });
-      });
-
-      panelsEl.querySelectorAll("[data-content-admin-open-rejection]").forEach((button) => {
-        button.addEventListener("click", () => {
-          const actions = button.closest(".content-admin-record-actions");
-          selectDonationReviewView(actions, "reject");
-          actions?.querySelector("[data-donation-rejection-message]")?.focus();
         });
       });
 
@@ -5028,12 +4996,6 @@
         });
       });
 
-      panelsEl.querySelectorAll("[data-content-admin-cancel-rejection]").forEach((button) => {
-        button.addEventListener("click", () => {
-          selectDonationReviewView(button.closest(".content-admin-record-actions"), null);
-        });
-      });
-
       panelsEl.querySelectorAll("[data-content-admin-send-approval]").forEach((button) => {
         button.addEventListener("click", async () => {
           const record = getRecords("donations").find(
@@ -5073,29 +5035,38 @@
           const record = getRecords("donations").find(
             (item) => String(item.id) === String(button.dataset.recordId),
           );
-          const card = button.closest("[data-donation-rejection-card]");
-          const rejectionMessage = card?.querySelector("[data-donation-rejection-message]")?.value.trim() || "";
-          if (!record || !rejectionMessage) {
-            showToast("Please add a rejection explanation before notifying the donor.", "error");
+          if (!record) {
+            showToast("Donation record could not be found. Refresh and try again.", "error");
             return;
           }
 
           button.disabled = true;
+          button.textContent = "Rejecting payment…";
           syncPanelState("donations", "Rejecting payment and notifying donor…");
           try {
             const result = await invokePublicEdgeFunction("donation-approve", {
               donationId: record.id,
               decision: "reject",
-              rejectionMessage,
+              status: "rejected",
+              paymentStatus: "failed",
+              confirmationMethod: "admin_rejected",
+              rejectionMessage: "We could not verify this transfer in our bank records. If you have already sent it, please contact info@whiteimpactinitiative.org with your bank transaction reference so we can investigate.",
             });
             if (!result.success) throw new Error(result.message || "Donation rejection failed.");
             await loadSection("donations", record.id);
-            showToast(result.message || "Payment rejected and donor notified.");
+            if (result.emailSent === false) {
+              showToast(result.message || "Payment rejected, but the donor email could not be sent.", "error");
+            } else if (result.emailSent === null || result.emailSent === undefined) {
+              showToast("Payment rejected, but the server did not confirm a donor email. Deploy the updated donation review function to enable rejection emails.", "error");
+            } else {
+              showToast(result.message || "Payment rejected and donor notified.");
+            }
           } catch (error) {
             syncPanelState("donations", error.message || "Donation rejection failed.", "error");
             showToast(error.message || "Donation rejection failed.", "error");
           } finally {
             button.disabled = false;
+            button.textContent = "Reject payment now";
           }
         });
       });
@@ -5794,14 +5765,35 @@
   function initDonationTransferAcknowledgement() {
     const button = document.querySelector("[data-transfer-submitted]");
     const status = document.querySelector("[data-transfer-status]");
-    if (!button || !status) return;
+    const instructionsStep = document.querySelector('[data-donation-step="instructions"]');
+    if (!button || !status || !instructionsStep) return;
 
-    button.addEventListener("click", () => {
+    button.addEventListener("click", async () => {
+      const reference = instructionsStep.dataset.reference;
+      if (!reference) {
+        status.textContent = "Donation reference is missing. Please contact our team for help.";
+        status.hidden = false;
+        return;
+      }
+
       button.disabled = true;
-      button.textContent = "Transfer marked as sent";
-      status.textContent =
-        "Thank you. Your donation is still pending while our team verifies the transfer against bank records.";
+      button.textContent = "Notifying our team…";
+      status.textContent = "Sending your transfer notification to our team.";
       status.hidden = false;
+
+      try {
+        const result = await invokePublicEdgeFunction("donation-transfer-notify", { reference });
+        if (!result.success) {
+          throw new Error(result.message || "We could not notify the team. Please try again.");
+        }
+        button.textContent = "Transfer reported to our team";
+        status.textContent = result.message || "Your notification was sent. Your donation remains pending until staff verify the transfer.";
+      } catch (error) {
+        button.disabled = false;
+        button.textContent = "I've sent the transfer — notify our team";
+        status.textContent = error.message || "We could not notify the team. Please try again.";
+        showToast(status.textContent, "error");
+      }
     });
   }
 
