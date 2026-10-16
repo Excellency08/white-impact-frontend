@@ -4723,6 +4723,9 @@
             ]
           : [];
       const donationIsRejected = config.label === "Donations" && currentStatus.toLowerCase() === "rejected";
+      const donationReviewComplete = currentStatus.toLowerCase() === "verified" ||
+        record.paymentStatus === "succeeded" ||
+        (donationIsRejected && record.rejectionEmailSent === true);
       return `
         <div class="content-admin-readonly">
           <div class="content-admin-form-head">
@@ -4757,7 +4760,7 @@
                 </div>
               </div>`
             : ""}
-          ${config.label === "Donations" && currentStatus.toLowerCase() !== "verified" && record.paymentStatus !== "succeeded"
+          ${config.label === "Donations" && !donationReviewComplete
             ? `<div class="content-admin-record-actions">
                 <div class="donation-review-tabs" role="group" aria-label="Choose donation payment review action">
                   ${donationIsRejected ? "" : `<button class="donation-review-tab" id="donation-approve-tab-${escapeHtml(record.id)}" type="button" aria-pressed="false" aria-controls="donation-approve-panel-${escapeHtml(record.id)}" data-content-admin-open-approval data-record-id="${escapeHtml(record.id)}">Approve payment</button>`}
@@ -5768,6 +5771,7 @@
     const button = document.querySelector("[data-transfer-submitted]");
     const status = document.querySelector("[data-transfer-status]");
     const instructionsStep = document.querySelector('[data-donation-step="instructions"]');
+    const form = document.querySelector("[data-donation-form]");
     if (!button || !status || !instructionsStep) return;
 
     button.addEventListener("click", async () => {
@@ -5779,21 +5783,30 @@
       }
 
       button.disabled = true;
-      button.textContent = "Notifying our team…";
-      status.textContent = "Sending your transfer notification to our team.";
+      button.textContent = "Submitting transfer…";
+      status.textContent = "Recording your transfer for staff verification.";
       status.hidden = false;
 
       try {
-        const result = await invokePublicEdgeFunction("donation-transfer-notify", { reference });
+        const result = await invokePublicEdgeFunction("donation-submit", {
+          action: "confirm",
+          reference,
+          fullName: form?.querySelector('[name="fullName"]')?.value,
+          email: form?.querySelector('[name="email"]')?.value,
+          phone: form?.querySelector('[name="phone"]')?.value,
+          amount: form?.querySelector('[name="amount"]')?.value,
+          category: form?.querySelector('[name="category"]')?.value,
+          message: form?.querySelector('[name="message"]')?.value,
+        });
         if (!result.success) {
-          throw new Error(result.message || "We could not notify the team. Please try again.");
+          throw new Error(result.message || "We could not record your transfer. Please try again.");
         }
-        button.textContent = "Transfer reported to our team";
-        status.textContent = result.message || "Your notification was sent. Your donation remains pending until staff verify the transfer.";
+        button.textContent = "Transfer submitted for verification";
+        status.textContent = "Your transfer details were submitted. Your donation remains pending until staff verify the payment.";
       } catch (error) {
         button.disabled = false;
-        button.textContent = "I've sent the transfer — notify our team";
-        status.textContent = error.message || "We could not notify the team. Please try again.";
+        button.textContent = "I've sent the transfer";
+        status.textContent = error.message || "We could not record your transfer. Please try again.";
         showToast(status.textContent, "error");
       }
     });
@@ -5906,16 +5919,18 @@
     const submitButton = form.querySelector('[type="submit"]');
     let donationSubmitting = false;
     let donationSubmitted = false;
+    let donationPrepared = false;
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
-      if (donationSubmitting || donationSubmitted) return;
+      if (donationSubmitting || donationSubmitted || donationPrepared) return;
       if (!form.checkValidity()) {
         form.reportValidity();
         return;
       }
 
       const data = {
+        action: "prepare",
         fullName: document.querySelector("#donor-full-name")?.value,
         email: document.querySelector("#donor-email")?.value,
         phone: document.querySelector("#donor-phone")?.value,
@@ -5931,10 +5946,10 @@
         const result = await invokePublicEdgeFunction("donation-submit", data);
 
         if (result.success) {
-          donationSubmitted = true;
+          donationPrepared = true;
           if (submitButton) {
             submitButton.disabled = true;
-            submitButton.textContent = "Donation Submitted";
+            submitButton.textContent = "Bank Details Ready";
           }
           showDonationInstructions(result);
         } else {
@@ -5949,7 +5964,7 @@
         showToast("Network error. Please check your connection.", "error");
       } finally {
         donationSubmitting = false;
-        if (!donationSubmitted) setFormLoading(form, false);
+        if (!donationPrepared && !donationSubmitted) setFormLoading(form, false);
       }
     });
   }

@@ -362,7 +362,7 @@ function exposeAuthHelpers(client) {
     "paid_at", "created_at", "updated_at",
   ].join(", ");
 
-  const formatDonation = (row) => ({
+  const formatDonation = (row, rejectionEmailSent = null) => ({
     id: row.id,
     reference: row.reference,
     fullName: row.full_name || "",
@@ -385,6 +385,7 @@ function exposeAuthHelpers(client) {
     paidAt: row.paid_at || null,
     createdAt: row.created_at,
     updatedAt: row.updated_at || row.created_at,
+    rejectionEmailSent,
   });
 
   const getAdminDonations = async () => {
@@ -394,7 +395,29 @@ function exposeAuthHelpers(client) {
       .order("created_at", { ascending: false })
       .limit(300);
     if (result.error) return result;
-    return { data: (result.data || []).map(formatDonation), error: null };
+    const donations = result.data || [];
+    if (!donations.length) return { data: [], error: null };
+
+    const auditResult = await client
+      .from("audit_logs")
+      .select("entity_id, metadata, created_at")
+      .eq("entity_type", "donations")
+      .eq("action", "donation.reject")
+      .in("entity_id", donations.map((row) => String(row.id)))
+      .order("created_at", { ascending: false });
+    const latestRejectionNotice = new Map();
+    if (!auditResult.error) {
+      for (const entry of auditResult.data || []) {
+        if (!latestRejectionNotice.has(String(entry.entity_id))) {
+          latestRejectionNotice.set(String(entry.entity_id), entry.metadata?.emailSent === true);
+        }
+      }
+    }
+
+    return {
+      data: donations.map((row) => formatDonation(row, latestRejectionNotice.get(String(row.id)) ?? null)),
+      error: null,
+    };
   };
 
   const saveInitiative = async (record, values) => {
