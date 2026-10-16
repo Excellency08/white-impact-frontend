@@ -4724,8 +4724,8 @@
           : [];
       const donationIsRejected = config.label === "Donations" && currentStatus.toLowerCase() === "rejected";
       const donationReviewComplete = currentStatus.toLowerCase() === "verified" ||
-        record.paymentStatus === "succeeded" ||
-        (donationIsRejected && record.rejectionEmailSent === true);
+        record.paymentStatus === "succeeded";
+      const rejectionEmailSent = donationIsRejected && record.rejectionEmailSent === true;
       return `
         <div class="content-admin-readonly">
           <div class="content-admin-form-head">
@@ -4764,7 +4764,7 @@
             ? `<div class="content-admin-record-actions">
                 <div class="donation-review-tabs" role="group" aria-label="Choose donation payment review action">
                   ${donationIsRejected ? "" : `<button class="donation-review-tab" id="donation-approve-tab-${escapeHtml(record.id)}" type="button" aria-pressed="false" aria-controls="donation-approve-panel-${escapeHtml(record.id)}" data-content-admin-open-approval data-record-id="${escapeHtml(record.id)}">Approve payment</button>`}
-                  <button class="donation-review-tab donation-review-reject" type="button" data-content-admin-send-rejection data-rejection-resend="${donationIsRejected}" data-record-id="${escapeHtml(record.id)}">${donationIsRejected ? "Send rejection email" : "Reject payment now"}</button>
+                  <button class="donation-review-tab donation-review-reject" type="button" data-content-admin-send-rejection data-rejection-resend="${donationIsRejected}" data-record-id="${escapeHtml(record.id)}" ${rejectionEmailSent ? "disabled" : ""}>${rejectionEmailSent ? "Rejection email sent" : donationIsRejected ? "Send rejection email" : "Reject payment now"}</button>
                 </div>
                 ${donationIsRejected ? "" : `<div class="donation-approval-card" id="donation-approve-panel-${escapeHtml(record.id)}" role="region" aria-label="Approve donation and notify donor" data-donation-approval-card hidden>
                   <div>
@@ -5059,6 +5059,13 @@
             });
             if (!result.success) throw new Error(result.message || "Donation rejection failed.");
             await loadSection("donations", record.id);
+            if (result.emailSent === true) {
+              const updatedRecord = state.records.donations?.find(
+                (item) => String(item.id) === String(record.id),
+              );
+              if (updatedRecord) updatedRecord.rejectionEmailSent = true;
+              renderPanels();
+            }
             if (result.emailSent === false) {
               showToast(result.message || "Payment rejected, but the donor email could not be sent.", "error");
             } else if (result.emailSent === null || result.emailSent === undefined) {
