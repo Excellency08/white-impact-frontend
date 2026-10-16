@@ -3900,7 +3900,7 @@
             name: "status",
             label: "Status",
             type: "select",
-            options: ["pending", "payment_pending", "receipt_submitted", "verified", "failed"],
+            options: ["pending", "payment_pending", "receipt_submitted", "verified", "rejected", "failed"],
           },
           {
             name: "paymentStatus",
@@ -4756,9 +4756,12 @@
                 </div>
               </div>`
             : ""}
-          ${config.label === "Donations" && record.status !== "verified" && record.paymentStatus !== "succeeded"
+          ${config.label === "Donations" && !["verified", "rejected"].includes(String(record.status || "").toLowerCase()) && record.paymentStatus !== "succeeded"
             ? `<div class="content-admin-record-actions">
-                <button class="btn btn-primary" type="button" data-content-admin-open-approval data-record-id="${escapeHtml(record.id)}">Approve payment and notify donor</button>
+                <div class="content-admin-action-group" role="group" aria-label="Donation payment review actions">
+                  <button class="btn btn-primary" type="button" data-content-admin-open-approval data-record-id="${escapeHtml(record.id)}">Approve payment and notify donor</button>
+                  <button class="btn btn-ghost" type="button" data-content-admin-open-rejection data-record-id="${escapeHtml(record.id)}">Reject payment</button>
+                </div>
                 <div class="donation-approval-card" data-donation-approval-card hidden>
                   <div>
                     <p class="section-kicker">Approval message</p>
@@ -4776,6 +4779,25 @@
                   <div class="donation-approval-actions">
                     <button class="btn btn-ghost" type="button" data-content-admin-cancel-approval>Cancel</button>
                     <button class="btn btn-primary" type="button" data-content-admin-send-approval data-record-id="${escapeHtml(record.id)}">Send approval email</button>
+                  </div>
+                </div>
+                <div class="donation-approval-card" data-donation-rejection-card hidden>
+                  <div>
+                    <p class="section-kicker">Rejection notice</p>
+                    <h4>Confirm payment rejection</h4>
+                    <p class="section-desc">The donor will receive this explanation with their donation reference and amount. Ask them to contact the team if they already transferred.</p>
+                  </div>
+                  <dl class="donation-approval-summary">
+                    <div><dt>Donor</dt><dd>${escapeHtml(record.fullName || "Not provided")}</dd></div>
+                    <div><dt>Email</dt><dd>${escapeHtml(record.email || "Not provided")}</dd></div>
+                    <div><dt>Amount</dt><dd>₦${Number(record.amountNaira || 0).toLocaleString()}</dd></div>
+                    <div><dt>Reference</dt><dd>${escapeHtml(record.reference || "Not provided")}</dd></div>
+                  </dl>
+                  <label class="donation-approval-message-label" for="donation-rejection-message-${escapeHtml(record.id)}">Reason and message to donor</label>
+                  <textarea id="donation-rejection-message-${escapeHtml(record.id)}" data-donation-rejection-message rows="5">We could not verify this transfer in our bank records. If you have already sent the transfer, please contact info@whiteimpactinitiative.org with your bank transaction reference so we can investigate.</textarea>
+                  <div class="donation-approval-actions">
+                    <button class="btn btn-ghost" type="button" data-content-admin-cancel-rejection>Cancel</button>
+                    <button class="btn btn-primary" type="button" data-content-admin-send-rejection data-record-id="${escapeHtml(record.id)}">Reject payment and email donor</button>
                   </div>
                 </div>
               </div>`
@@ -4916,11 +4938,27 @@
 
       panelsEl.querySelectorAll("[data-content-admin-open-approval]").forEach((button) => {
         button.addEventListener("click", () => {
-          const card = button.parentElement?.querySelector("[data-donation-approval-card]");
+          const actions = button.closest(".content-admin-record-actions");
+          const card = actions?.querySelector("[data-donation-approval-card]");
           if (!card) return;
           card.hidden = false;
-          button.hidden = true;
+          actions.querySelectorAll("[data-content-admin-open-approval], [data-content-admin-open-rejection]").forEach((action) => {
+            action.hidden = true;
+          });
           card.querySelector("[data-donation-approval-message]")?.focus();
+        });
+      });
+
+      panelsEl.querySelectorAll("[data-content-admin-open-rejection]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const actions = button.closest(".content-admin-record-actions");
+          const card = actions?.querySelector("[data-donation-rejection-card]");
+          if (!card) return;
+          card.hidden = false;
+          actions.querySelectorAll("[data-content-admin-open-approval], [data-content-admin-open-rejection]").forEach((action) => {
+            action.hidden = true;
+          });
+          card.querySelector("[data-donation-rejection-message]")?.focus();
         });
       });
 
@@ -4982,9 +5020,22 @@
       panelsEl.querySelectorAll("[data-content-admin-cancel-approval]").forEach((button) => {
         button.addEventListener("click", () => {
           const card = button.closest("[data-donation-approval-card]");
-          const openButton = card?.parentElement?.querySelector("[data-content-admin-open-approval]");
+          const actions = card?.closest(".content-admin-record-actions");
           if (card) card.hidden = true;
-          if (openButton) openButton.hidden = false;
+          actions?.querySelectorAll("[data-content-admin-open-approval], [data-content-admin-open-rejection]").forEach((openButton) => {
+            openButton.hidden = false;
+          });
+        });
+      });
+
+      panelsEl.querySelectorAll("[data-content-admin-cancel-rejection]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const card = button.closest("[data-donation-rejection-card]");
+          const actions = card?.closest(".content-admin-record-actions");
+          if (card) card.hidden = true;
+          actions?.querySelectorAll("[data-content-admin-open-approval], [data-content-admin-open-rejection]").forEach((openButton) => {
+            openButton.hidden = false;
+          });
         });
       });
 
@@ -5016,6 +5067,38 @@
           } catch (error) {
             syncPanelState("donations", error.message || "Donation approval failed.", "error");
             showToast(error.message || "Donation approval failed.", "error");
+          } finally {
+            button.disabled = false;
+          }
+        });
+      });
+
+      panelsEl.querySelectorAll("[data-content-admin-send-rejection]").forEach((button) => {
+        button.addEventListener("click", async () => {
+          const record = getRecords("donations").find(
+            (item) => String(item.id) === String(button.dataset.recordId),
+          );
+          const card = button.closest("[data-donation-rejection-card]");
+          const rejectionMessage = card?.querySelector("[data-donation-rejection-message]")?.value.trim() || "";
+          if (!record || !rejectionMessage) {
+            showToast("Please add a rejection explanation before notifying the donor.", "error");
+            return;
+          }
+
+          button.disabled = true;
+          syncPanelState("donations", "Rejecting payment and notifying donor…");
+          try {
+            const result = await invokePublicEdgeFunction("donation-approve", {
+              donationId: record.id,
+              decision: "reject",
+              rejectionMessage,
+            });
+            if (!result.success) throw new Error(result.message || "Donation rejection failed.");
+            await loadSection("donations", record.id);
+            showToast(result.message || "Payment rejected and donor notified.");
+          } catch (error) {
+            syncPanelState("donations", error.message || "Donation rejection failed.", "error");
+            showToast(error.message || "Donation rejection failed.", "error");
           } finally {
             button.disabled = false;
           }
