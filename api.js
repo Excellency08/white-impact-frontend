@@ -5680,35 +5680,13 @@
   /* ─── Donation form ───────────────────────────────────────────── */
   function showDonationInstructions(result) {
     const { reference, donation, bank } = result;
-    const pendingDonation = {
-      reference: String(reference || ""),
-      amountNaira: Number(donation?.amountNaira || 0),
-      programArea: String(donation?.programArea || ""),
-      bank: {
-        bankName: String(bank?.bankName || ""),
-        accountName: String(bank?.accountName || ""),
-        accountNumber: String(bank?.accountNumber || ""),
-      },
-    };
-
-    try {
-      sessionStorage.setItem(
-        "wii.pendingDonation",
-        JSON.stringify(pendingDonation),
-      );
-      window.location.assign("donation-pending.html");
-      return;
-    } catch {
-      // Keep the transfer instructions on this page if browser storage is blocked.
-    }
-
     const formStep = document.querySelector('[data-donation-step="form"]');
     const instructionsStep = document.querySelector(
       '[data-donation-step="instructions"]',
     );
     if (!formStep || !instructionsStep) return;
 
-    const amount = pendingDonation.amountNaira;
+    const amount = Number(donation?.amountNaira || 0);
 
     document.querySelector("[data-bank-name]").textContent =
       bank?.bankName || "—";
@@ -5722,7 +5700,7 @@
       reference || "—";
 
     instructionsStep.dataset.reference = reference || "";
-    instructionsStep.dataset.programArea = pendingDonation.programArea;
+    instructionsStep.dataset.programArea = donation?.programArea || "";
 
     formStep.hidden = true;
     instructionsStep.hidden = false;
@@ -5733,6 +5711,20 @@
       hero.textContent =
         "Transfer to our account below using the payment reference. Your donation remains pending until our team verifies the payment.";
     }
+  }
+
+  function initDonationTransferAcknowledgement() {
+    const button = document.querySelector("[data-transfer-submitted]");
+    const status = document.querySelector("[data-transfer-status]");
+    if (!button || !status) return;
+
+    button.addEventListener("click", () => {
+      button.disabled = true;
+      button.textContent = "Transfer marked as sent";
+      status.textContent =
+        "Thank you. Your donation is still pending while our team verifies the transfer against bank records.";
+      status.hidden = false;
+    });
   }
 
   function initReceiptForm() {
@@ -5978,6 +5970,7 @@
   initVolunteerForm();
   initNewsletterForm();
   initDonationForm();
+  initDonationTransferAcknowledgement();
   initReceiptForm();
   initNewsletterConfirmationPage();
   initNewsletterUnsubscribePage();

@@ -4763,11 +4763,6 @@ body.inner-page main {
   align-items: start;
 }
 
-.donation-pending-wrap {
-  max-width: 54rem;
-  margin-inline: auto;
-}
-
 .donate-benefits {
   display: flex;
   flex-direction: column;
