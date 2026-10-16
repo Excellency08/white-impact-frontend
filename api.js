@@ -4722,6 +4722,7 @@
               { status: "reviewed", label: "Mark Reviewed" },
             ]
           : [];
+      const donationIsRejected = config.label === "Donations" && currentStatus.toLowerCase() === "rejected";
       return `
         <div class="content-admin-readonly">
           <div class="content-admin-form-head">
@@ -4756,13 +4757,13 @@
                 </div>
               </div>`
             : ""}
-          ${config.label === "Donations" && !["verified", "rejected"].includes(String(record.status || "").toLowerCase()) && record.paymentStatus !== "succeeded"
+          ${config.label === "Donations" && currentStatus.toLowerCase() !== "verified" && record.paymentStatus !== "succeeded"
             ? `<div class="content-admin-record-actions">
                 <div class="donation-review-tabs" role="group" aria-label="Choose donation payment review action">
-                  <button class="donation-review-tab" id="donation-approve-tab-${escapeHtml(record.id)}" type="button" aria-pressed="false" aria-controls="donation-approve-panel-${escapeHtml(record.id)}" data-content-admin-open-approval data-record-id="${escapeHtml(record.id)}">Approve payment</button>
-                  <button class="donation-review-tab donation-review-reject" type="button" data-content-admin-send-rejection data-record-id="${escapeHtml(record.id)}">Reject payment now</button>
+                  ${donationIsRejected ? "" : `<button class="donation-review-tab" id="donation-approve-tab-${escapeHtml(record.id)}" type="button" aria-pressed="false" aria-controls="donation-approve-panel-${escapeHtml(record.id)}" data-content-admin-open-approval data-record-id="${escapeHtml(record.id)}">Approve payment</button>`}
+                  <button class="donation-review-tab donation-review-reject" type="button" data-content-admin-send-rejection data-rejection-resend="${donationIsRejected}" data-record-id="${escapeHtml(record.id)}">${donationIsRejected ? "Send rejection email" : "Reject payment now"}</button>
                 </div>
-                <div class="donation-approval-card" id="donation-approve-panel-${escapeHtml(record.id)}" role="region" aria-label="Approve donation and notify donor" data-donation-approval-card hidden>
+                ${donationIsRejected ? "" : `<div class="donation-approval-card" id="donation-approve-panel-${escapeHtml(record.id)}" role="region" aria-label="Approve donation and notify donor" data-donation-approval-card hidden>
                   <div>
                     <p class="section-kicker">Approval message</p>
                     <h4>Confirm donor notification</h4>
@@ -4780,7 +4781,7 @@
                     <button class="btn btn-ghost" type="button" data-content-admin-cancel-approval>Cancel</button>
                     <button class="btn btn-primary" type="button" data-content-admin-send-approval data-record-id="${escapeHtml(record.id)}">Send approval email</button>
                   </div>
-                </div>
+                </div>`}
               </div>`
             : ""}
           ${config.label === "Donations" && record.receiptStoragePath
@@ -5041,8 +5042,9 @@
           }
 
           button.disabled = true;
-          button.textContent = "Rejecting payment…";
-          syncPanelState("donations", "Rejecting payment and notifying donor…");
+          const resend = button.dataset.rejectionResend === "true";
+          button.textContent = resend ? "Sending rejection email…" : "Rejecting payment…";
+          syncPanelState("donations", resend ? "Sending rejection email to donor…" : "Rejecting payment and notifying donor…");
           try {
             const result = await invokePublicEdgeFunction("donation-approve", {
               donationId: record.id,
@@ -5066,7 +5068,7 @@
             showToast(error.message || "Donation rejection failed.", "error");
           } finally {
             button.disabled = false;
-            button.textContent = "Reject payment now";
+            button.textContent = resend ? "Send rejection email" : "Reject payment now";
           }
         });
       });
