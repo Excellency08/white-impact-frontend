@@ -7554,18 +7554,6 @@ body:not(.admin-app-page):not(.admin-login-page) .challenge-card:hover {
   box-shadow: 0 22px 48px rgba(0, 26, 77, 0.18);
 }
 
-.mission .about-media::after {
-  content: "";
-  position: absolute;
-  z-index: -1;
-  width: 68%;
-  height: 68%;
-  right: -1.25rem;
-  bottom: -1.25rem;
-  border: 1px solid rgba(0, 26, 77, 0.16);
-  border-radius: var(--radius-xl);
-}
-
 .mission .about-badge {
   right: -0.75rem;
   bottom: -0.75rem;
@@ -7588,7 +7576,9 @@ body:not(.admin-app-page):not(.admin-login-page) .challenge-card:hover {
 .mission .prose > p:not(.section-kicker) {
   max-width: 68ch;
   line-height: 1.72;
-  text-align: left;
+  text-align: justify;
+  text-align-last: left;
+  hyphens: auto;
 }
 
 .mission .feature-list {
@@ -7691,7 +7681,10 @@ body[data-page="our-story"] .prose > p {
 
 @media (max-width: 600px) {
   .mission .about-content h2 {
-    font-size: clamp(2rem, 11vw, 2.7rem);
+    max-width: none;
+    width: 100%;
+    font-size: clamp(0.75rem, 5.8vw, 2.1rem);
+    white-space: nowrap;
   }
 
   .mission .feature-list {
