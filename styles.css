@@ -974,10 +974,11 @@ ul {
   position: absolute;
   bottom: -1rem;
   right: -1rem;
-  background: var(--color-surface);
+  z-index: 3;
+  background: transparent;
   padding: 1.25rem 1.5rem;
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
+  box-shadow: none;
 }
 
 .badge-year {
@@ -986,11 +987,13 @@ ul {
   font-size: 1.75rem;
   font-weight: 700;
   color: var(--color-primary);
+  text-shadow: 0 1px 5px rgba(255, 255, 255, 0.8);
 }
 
 .badge-text {
   font-size: 0.8125rem;
   color: var(--color-gray-600);
+  text-shadow: 0 1px 5px rgba(255, 255, 255, 0.9);
 }
 
 .about-content h2 {
@@ -1020,7 +1023,8 @@ ul {
   left: 1rem;
   bottom: 1rem;
   z-index: 2;
-  max-width: min(78%, 360px);
+  width: min(88%, 360px);
+  max-width: min(88%, 360px);
   padding: 1rem 1.15rem 0.9rem;
   background: rgba(0, 26, 77, 0.72);
   border: 1px solid rgba(255, 255, 255, 0.18);
@@ -1044,10 +1048,12 @@ ul {
 .about-image-overlay strong {
   display: block;
   font-family: var(--font-display);
-  font-size: clamp(1.2rem, 2vw, 1.8rem);
+  font-size: clamp(0.95rem, 2.4vw, 1.5rem);
   line-height: 1.2;
   color: var(--color-white);
   margin-bottom: 0.35rem;
+  letter-spacing: -0.025em;
+  white-space: nowrap;
 }
 
 .about-image-overlay p {
@@ -1055,6 +1061,13 @@ ul {
   color: rgba(255, 255, 255, 0.88);
   font-size: 0.8rem;
   line-height: 1.6;
+}
+
+body[data-page="our-story"] .split-section .prose > p:not(.section-kicker):not(.story-intro),
+body[data-page="our-story"] .expandable-content > p {
+  text-align: justify;
+  text-align-last: left;
+  hyphens: auto;
 }
 
 /* Stats */
@@ -7482,6 +7495,7 @@ body:not(.admin-app-page):not(.admin-login-page) .challenge-card:hover {
   body[data-page="our-story"] .about-image-overlay {
     left: 1rem;
     bottom: 1rem;
+    width: calc(100% - 2rem);
     max-width: calc(100% - 2rem);
   }
   .founder-highlight .founder-card { grid-template-columns: 1fr; }
